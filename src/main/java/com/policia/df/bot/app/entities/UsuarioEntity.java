@@ -4,6 +4,8 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "usuario")
 @Data
 public class UsuarioEntity {
@@ -16,5 +18,7 @@ public class UsuarioEntity {
     private String firtName;
 
     private String lastName;
+
+    private Long ultimaModificacao;
 
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.UUID;
+
 @Document(collection = "mensagem")
 @Data
 public class MensagemEntity {
@@ -19,11 +21,11 @@ public class MensagemEntity {
 
     private String text;
 
-    private String sessao;
+    private UUID sessao;
 
-    private CanalEntity canal;
+    private Long canalId;
 
-    private UsuarioEntity usuario;
+    private Long usuarioId;
 
     private String ipAddress;
 

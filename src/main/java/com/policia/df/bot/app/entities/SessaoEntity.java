@@ -11,16 +11,18 @@ public class SessaoEntity {
     @Id
     private String id;
 
-    private Long sessaoId;
+    private String sessaoId;
 
-    private CanalEntity canal;
+    private Long canal;
 
-    private UsuarioEntity usuario;
+    private Long usuario;
 
     private Long inicioSessao;
 
     private Long finalSessao;
 
     private Long expiresAt;
+
+    private Boolean ativo;
     
 }

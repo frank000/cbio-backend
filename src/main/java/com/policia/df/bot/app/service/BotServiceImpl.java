@@ -1,8 +1,11 @@
 package com.policia.df.bot.app.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.entities.UsuarioEntity;
 import com.policia.df.bot.core.service.BotService;
+import com.policia.df.bot.core.service.MensagemService;
+import com.policia.df.bot.core.service.SessaoService;
 import com.policia.df.bot.core.service.UsuarioService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 @Service
@@ -24,6 +29,10 @@ import java.util.logging.Logger;
 public class BotServiceImpl implements BotService {
 
     private final UsuarioService usuarioService;
+
+    private final MensagemService mensagemService;
+
+    private final SessaoService sessaoService;
 
     @Value("${telegram.url}")
     private String url;
@@ -39,24 +48,16 @@ public class BotServiceImpl implements BotService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Object connectToBot(Update update) throws Exception {
+    public Object connectToBot(Object receive) throws Exception {
 
-        UsuarioEntity usuario = usuarioService.buscarUsuarioPorIdUsuario(update.getMessage().getChatId());
+        //Cast para futuras aplicações além do telegram
+        Update update = (Update) receive;
 
-        if(usuario == null) {
-            usuario = new UsuarioEntity();
+        sessaoService.createSession(update);
 
-            usuario.setIdUsuario(update.getMessage().getChatId());
-            usuario.setFirtName(update.getMessage().getChat().getFirstName());
-            usuario.setLastName(update.getMessage().getChat().getLastName());
-        }
+        usuarioService.salvarUsuario(update);
 
-        try {
-            usuarioService.cadastrarUsuario(usuario);
-        } catch (Exception e) {
-            throw new Exception();
-        }
-
+        mensagemService.salvarMensagem(update.getMessage());
 
         OkHttpClient client = new OkHttpClient();
 
