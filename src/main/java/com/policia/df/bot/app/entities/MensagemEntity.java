@@ -21,12 +21,10 @@ public class MensagemEntity {
 
     private String text;
 
-    private UUID sessao;
+    private String sessao;
 
     private Long canalId;
 
     private Long usuarioId;
-
-    private String ipAddress;
 
 }

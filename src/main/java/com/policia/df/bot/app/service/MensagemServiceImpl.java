@@ -15,12 +15,20 @@ public class MensagemServiceImpl implements MensagemService {
     private final MensagemRepository repository;
 
     @Override
-    public void salvarMensagem(Message message) {
+    public void salvarMensagem(Update update, Long canal, String sessao) {
 
         MensagemEntity mensagem = new MensagemEntity();
 
-        mensagem.setCanalId(message.getFrom().getId());
-//        mensagem.se
+        mensagem.setCanalId(canal);
+        mensagem.setSessao("");
+        mensagem.setText(update.getMessage().getText());
+        mensagem.setChatId(update.getMessage().getChatId());
+        mensagem.setTimestamp(Long.parseLong(update.getMessage().getDate().toString()));
+        mensagem.setMessagemId(Long.parseLong(update.getMessage().getMessageId().toString()));
+        mensagem.setUsuarioId(update.getMessage().getFrom().getId());
+        mensagem.setSessao(sessao);
+
+//        System.out.println("<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" + update.getChannelPost().getText());
 
         repository.save(mensagem);
 

@@ -16,7 +16,7 @@ public class SessaoServiceImpl implements SessaoService {
     private final SessaoRepository repository;
 
     @Override
-    public void createSession(Update update) {
+    public String createSession(Update update) {
 
         String sessaoIdTemp = encode64(update.getMessage().getFrom().getId().toString());
 
@@ -33,7 +33,7 @@ public class SessaoServiceImpl implements SessaoService {
             sessao.setExpiresAt(agora + 120000); // 2 minutos
             sessao.setUsuario(update.getMessage().getFrom().getId());
 
-            repository.save(sessao);
+            return repository.save(sessao).getId();
         } else { //expirou
             if(agora > sessao.getExpiresAt()) {
                 sessao.setSessaoId(sessaoIdTemp);
@@ -45,7 +45,7 @@ public class SessaoServiceImpl implements SessaoService {
                 sessao.setExpiresAt(agora + 120000); // 2 minutos
             }
 
-            repository.save(sessao);
+            return repository.save(sessao).getId();
         }
 
     }

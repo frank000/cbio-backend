@@ -48,16 +48,16 @@ public class BotServiceImpl implements BotService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Object connectToBot(Object receive) throws Exception {
+    public Object connectToBot(Object receive, Long canal) throws Exception {
 
         //Cast para futuras aplicações além do telegram
         Update update = (Update) receive;
 
-        sessaoService.createSession(update);
+        String sessao = sessaoService.createSession(update);
 
         usuarioService.salvarUsuario(update);
 
-        mensagemService.salvarMensagem(update.getMessage());
+        mensagemService.salvarMensagem(update, canal, sessao);
 
         OkHttpClient client = new OkHttpClient();
 

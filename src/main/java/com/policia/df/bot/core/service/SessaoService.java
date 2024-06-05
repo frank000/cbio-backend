@@ -5,6 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 public interface SessaoService {
 
-    void createSession(Update update);
+    String createSession(Update update);
 
 }

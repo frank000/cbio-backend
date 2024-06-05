@@ -16,7 +16,7 @@ public class CanalEntity {
 
     private String token;
 
-    private Long idCanal;
+    private String idCanal;
 
     private String primeiroNome;
 
