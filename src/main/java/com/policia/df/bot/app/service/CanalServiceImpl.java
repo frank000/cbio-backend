@@ -14,4 +14,6 @@ public record CanalServiceImpl(CanalRepository repository) implements CanalServi
     public List<CanalEntity> listarTodos() {
         return repository.findAll();
     }
+
+
 }

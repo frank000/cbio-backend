@@ -15,10 +15,12 @@ public class SessaoEntity {
 
     private CanalEntity canal;
 
-    private UserEntity usuario;
+    private UsuarioEntity usuario;
 
     private Long inicioSessao;
 
     private Long finalSessao;
+
+    private Long expiresAt;
     
 }

@@ -1,7 +1,5 @@
 package com.policia.df.bot.core.v1.dto;
 
-import com.policia.df.bot.app.entities.CanalEntity;
-import com.policia.df.bot.app.entities.UserEntity;
 import lombok.Data;
 
 @Data

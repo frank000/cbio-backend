@@ -23,6 +23,8 @@ public class MensagemEntity {
 
     private CanalEntity canal;
 
-    private UserEntity usuario;
+    private UsuarioEntity usuario;
+
+    private String ipAddress;
 
 }

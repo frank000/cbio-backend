@@ -20,6 +20,8 @@ public class CanalEntity {
 
     private String primeiroNome;
 
-    private String username;
+    private String userName;
+
+    private String apiKey;
 
 }

@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public interface BotService {
 
-    public Object connectToBot(Update update) throws IOException;
+    public Object connectToBot(Update update) throws Exception;
 
     public Object sendMessage(RequestBody body) throws IOException;
 
