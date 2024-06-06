@@ -1,0 +1,18 @@
+{{- $configMapName := (print .Chart.Name "-configmap-" .Values.profile) -}}
+{{- $configMap := (lookup "v1" "ConfigMap" .Release.Namespace $configMapName) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Chart.Name }}-configmap-{{ .Values.profile }}"
+  labels:
+    app.kubernetes.io/name: "{{ .Chart.Name }}-configmap-{{ .Values.profile }}"
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+data:
+{{- if $configMap }}
+  {{ include "toYaml" $configMap.data | indent 2 }}
+{{- else }}
+  {{ include "toYaml" .Values.configMap | indent 2 }}
+{{- end }}

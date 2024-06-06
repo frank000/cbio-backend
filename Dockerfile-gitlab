@@ -1,0 +1,18 @@
+FROM openjdk:17
+VOLUME /tmp
+
+RUN mkdir /app
+WORKDIR /app
+
+ARG JAR_FILE=app.jar
+COPY ./target/*.jar /app/app.jar
+
+ARG PROFILE_ARG
+ENV PROFILE=$PROFILE_ARG
+
+ADD entrypoint.sh entrypoint.sh
+RUN chmod 755 entrypoint.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["./entrypoint.sh"]

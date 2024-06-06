@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ .Chart.Name }}-{{ .Values.profile }}"
+  labels:
+    app.kubernetes.io/name: "{{ .Chart.Name }}-{{ .Values.profile }}"
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nignx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    releaseTime: {{ now | quote }}
+spec:
+  tls:
+  - hosts:
+    - {{ .Values.requestHost }}
+    secretName: "{{ .Chart.Name }}-{{ .Values.profile }}-tls"
+  rules:
+  - host: {{ .Values.requestHost }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Chart.Name }}-{{ .Values.profile }}"
+            port:
+              number: 8080

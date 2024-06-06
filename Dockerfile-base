@@ -1,0 +1,9 @@
+FROM maven:3-openjdk-17-slim
+VOLUME /tmp
+
+RUN mkdir /home/app
+WORKDIR /home/app
+
+COPY . .
+
+RUN mvn clean package install:help && rm -rf /home/app

@@ -1,0 +1,47 @@
+---
+include:
+  - project: fabrica/devops
+    file: gitlab-ci-base.yml
+    ref: main
+
+variables:
+  PROFILE: ""
+  NAMESPACE: ""
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        PROFILE: prd
+        NAMESPACE: chatbot
+
+    - if: $CI_COMMIT_BRANCH == "homolog"
+      variables:
+        PROFILE: hml
+        NAMESPACE: chatbot-hml
+
+stages:
+  - rebuild-base
+  - build-maven
+  - build-image
+  - deploy
+
+rebuild-base:
+  stage: rebuild-base
+  extends: .rebuild-base-image
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /\[rebuild base\]/'
+
+build-maven:
+  stage: build-maven
+  extends: .build-maven
+
+build-image:
+  stage: build-image
+  extends: .build-image
+  needs: [build-maven]
+
+deploy:
+  stage: deploy
+  extends: .deploy
+  needs: [build-image]
