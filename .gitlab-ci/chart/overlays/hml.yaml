@@ -1,0 +1,5 @@
+profile: hml
+requestHost: bot-hml.rs.pm.df.gov.br
+resources:
+  cpu: 500m
+  memory: 1Gi

@@ -1,0 +1,6 @@
+profile: prd
+replicaCount: 1
+requestHost: bot.rs.pm.df.gov.br
+resources:
+  cpu: 1
+  memory: 1Gi

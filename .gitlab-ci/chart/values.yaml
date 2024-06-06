@@ -1,0 +1,17 @@
+profile: # dsv | hml | prd
+replicaCount: 1
+resources:
+  cpu: 50m
+  memory: 128Mi
+image:
+  repository: "chatbot"
+secrets:
+  MONGO_HOST:
+  MONGO_PORT:
+  MONGO_DATABASE:
+  MONGO_USERNAME:
+  MONGO_PASSWORD:
+  TELEGRAM_API_KEY:
+  KEYCLOAK_APIKEY_USERNAME:
+  KEYCLOAK_APIKEY_PASSWORD:
+  KEYCLOAK_API_SECRET:

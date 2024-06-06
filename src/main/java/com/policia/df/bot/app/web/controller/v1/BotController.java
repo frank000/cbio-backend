@@ -23,7 +23,7 @@ public record BotController(BotService service, CanalService canalService) {
             @org.springframework.web.bind.annotation.RequestBody Update update
 
     ) throws Exception {
-        if(!token.equals("66606b1dfb86023b887feef2")){
+        if(!token.equals("666194d53e2c9166f7242d6a")){
             throw new Exception("Forbidden");
         } else {
             service.connectToBot(update, 7219675152L);

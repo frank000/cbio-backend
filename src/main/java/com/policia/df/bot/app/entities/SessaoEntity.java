@@ -4,6 +4,8 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.UUID;
+
 @Document(collection = "sessao")
 @Data
 public class SessaoEntity {
@@ -11,7 +13,7 @@ public class SessaoEntity {
     @Id
     private String id;
 
-    private String sessaoId;
+    private UUID sessaoId;
 
     private Long canal;
 
@@ -24,5 +26,7 @@ public class SessaoEntity {
     private Long expiresAt;
 
     private Boolean ativo;
+
+    private String ultimaAcao;
     
 }

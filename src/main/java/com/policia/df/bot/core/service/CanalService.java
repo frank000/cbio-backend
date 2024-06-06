@@ -8,4 +8,6 @@ public interface CanalService {
 
     public List<CanalEntity> listarTodos();
 
+    public CanalEntity incluirCanal(CanalEntity canal);
+
 }

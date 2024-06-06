@@ -15,5 +15,10 @@ public record CanalServiceImpl(CanalRepository repository) implements CanalServi
         return repository.findAll();
     }
 
+    @Override
+    public CanalEntity incluirCanal(CanalEntity canal) {
+        return repository.save(canal);
+    }
+
 
 }
