@@ -9,6 +9,7 @@ public interface KeycloakService {
 
     List<UserRepresentation> pesquisarUsuario(String nome);
 
-    Response deletarUsuario(String id);
+
+    void deletarUsuario(String id);
 
 }

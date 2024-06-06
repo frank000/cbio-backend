@@ -44,7 +44,7 @@ public class KeycloakServiceImpl implements KeycloakService {
   @Override
   public List<UserRepresentation> pesquisarUsuario(String nome) {
 
-    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(nome, false);
+    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(nome, true);
 
     if(listUsers.isEmpty() || listUsers.size() == 0) {
       logger.info("Não foram encontrados usários.");
@@ -53,18 +53,19 @@ public class KeycloakServiceImpl implements KeycloakService {
   }
 
   @Override
-  public Response deletarUsuario(String id) {
+  public void deletarUsuario(String id) {
 
     logger.info("Início da deleção de um usuário.");
 
-    Response response = keycloak.realm(realm).users().delete(id);
+    try{
 
-    if(response.toString().isEmpty() || response.toString() == "") {
-      logger.info("Não foi possível deletar o usuário " + id + ".");
+      keycloak.realm(realm).users().delete(id);
+
+    } catch (Exception e){
+      String msgError = String.format("Não foi possível deletar o usuário de ID %s", id);
+      log.error(msgError, e);
+      throw new RuntimeException(msgError);
     }
-
-    return response;
-
   }
 
   public UsersResource getInstance() {

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Base64;
+import java.util.UUID;
 
 @Service
 @Data
@@ -16,13 +17,13 @@ public class SessaoServiceImpl implements SessaoService {
     private final SessaoRepository repository;
 
     @Override
-    public String createSession(Update update) {
+    public SessaoEntity validateSession(Update update, Long agora) {
 
-        String sessaoIdTemp = encode64(update.getMessage().getFrom().getId().toString());
+        Long expiresValue = 120000L;
 
-        SessaoEntity sessao = repository.findBySessaoIdAndAtivo(sessaoIdTemp, true);
+        UUID sessaoIdTemp = UUID.randomUUID();
 
-        Long agora = System.currentTimeMillis();
+        SessaoEntity sessao = repository.findByUsuarioAndAtivo(update.getMessage().getFrom().getId(), true);
 
         if(sessao == null) {
             sessao = new SessaoEntity();
@@ -30,24 +31,36 @@ public class SessaoServiceImpl implements SessaoService {
             sessao.setSessaoId(sessaoIdTemp);
             sessao.setInicioSessao(agora);
             sessao.setAtivo(true);
-            sessao.setExpiresAt(agora + 120000); // 2 minutos
+            sessao.setExpiresAt(agora + expiresValue); // 2 minutos
             sessao.setUsuario(update.getMessage().getFrom().getId());
 
-            return repository.save(sessao).getId();
+            return repository.save(sessao);
+
         } else { //expirou
             if(agora > sessao.getExpiresAt()) {
-                sessao.setSessaoId(sessaoIdTemp);
+
                 sessao.setAtivo(false);
-                sessao.setUsuario(update.getMessage().getFrom().getId());
                 sessao.setFinalSessao(agora);
+
             } else { //renova
-                sessao.setSessaoId(sessaoIdTemp);
-                sessao.setExpiresAt(agora + 120000); // 2 minutos
+                sessao.setExpiresAt(agora + expiresValue); // 2 minutos
             }
 
-            return repository.save(sessao).getId();
+            return repository.save(sessao);
+
         }
 
+    }
+
+    @Override
+    public Boolean sessaoValida(Long agora, SessaoEntity sessao) {
+        return agora <= sessao.getExpiresAt();
+    }
+
+    @Override
+    public void atualizarSessao(SessaoEntity sessao, String ultimaAcao) {
+        sessao.setUltimaAcao(ultimaAcao);
+        repository.save(sessao);
     }
 
     String encode64(String string) {

@@ -25,4 +25,14 @@ public class MensagemDto {
                 .toString();
     }
 
+    public String montarEnvio(String text, Long chatId) {
+        return new StringBuilder()
+                .append("{\"chat_id\":\"")
+                .append(chatId)
+                .append("\",\"text\":\"")
+                .append(text)
+                .append("\"}")
+                .toString();
+    }
+
 }

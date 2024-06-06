@@ -35,20 +35,12 @@ public class KeycloakController {
     }
 
     @DeleteMapping("/user/delete/{id}")
-    ResponseEntity deletarUsuario(
+    ResponseEntity<Void> deletarUsuario(
             @Valid @PathVariable("id") String id) {
 
-        ResponseEntity entity = null;
+          service.deletarUsuario(id);
 
-        Response response = service.deletarUsuario(id);
-
-        if(response.toString().isEmpty() || response.toString() == "") {
-            entity = new ResponseEntity(null, HttpStatus.NO_CONTENT);
-        } else {
-            entity = ResponseEntity.ok(response);
-        }
-
-        return entity;
+        return ResponseEntity.ok().build();
     }
 
 

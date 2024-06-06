@@ -3,16 +3,12 @@ package com.policia.df.bot.app.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.entities.UsuarioEntity;
-import com.policia.df.bot.core.service.BotService;
-import com.policia.df.bot.core.service.MensagemService;
-import com.policia.df.bot.core.service.SessaoService;
-import com.policia.df.bot.core.service.UsuarioService;
+import com.policia.df.bot.core.service.*;
+import com.policia.df.bot.core.v1.dto.DecisaoResposta;
+import com.policia.df.bot.core.v1.dto.MensagemDto;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -34,6 +30,8 @@ public class BotServiceImpl implements BotService {
 
     private final SessaoService sessaoService;
 
+    private final RespostaService respostaService;
+
     @Value("${telegram.url}")
     private String url;
 
@@ -48,22 +46,36 @@ public class BotServiceImpl implements BotService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Object connectToBot(Object receive, Long canal) throws Exception {
+    public void connectToBot(Object receive, Long canal) throws Exception {
 
-        //Cast para futuras aplicações além do telegram
         Update update = (Update) receive;
 
-        String sessao = sessaoService.createSession(update);
+        if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
 
-        usuarioService.salvarUsuario(update);
+        if(!("group".equals(update.getMessage().getChat().getType()) || "supergroup".equals(update.getMessage().getChat().getType()))) {
+            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."));
+            return;
+        }
 
-        mensagemService.salvarMensagem(update, canal, sessao);
+        Long agora = System.currentTimeMillis();
 
-        OkHttpClient client = new OkHttpClient();
+        SessaoEntity sessao = sessaoService.validateSession(update, agora);
 
-        logger.info("Passou por aqui. " + update.getMessage().getText() + " " + update.getMessage().getChatId());
+        if (sessaoService.sessaoValida(agora, sessao)) {
 
-        return new String("Será que retorna?");
+            DecisaoResposta resposta = respostaService.decidirResposta(update.getMessage().getText(), sessao.getUltimaAcao());
+
+            usuarioService.salvarUsuario(update);
+
+            mensagemService.salvarMensagem(update, canal, sessao.getId());
+
+            sessaoService.atualizarSessao(sessao, resposta.getAcao());
+
+            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()));
+        } else {
+            connectToBot(receive, canal);
+        }
+
     }
 
     @Override
@@ -89,5 +101,15 @@ public class BotServiceImpl implements BotService {
         var entity = objectMapper.readValue(response.string(), Object.class);
 
         return entity;
+    }
+
+    private RequestBody createResponseBody(Update update, String msg) {
+
+        String mensagem = new MensagemDto().montarEnvio(msg, update.getMessage().getChatId());
+
+        MediaType mediaType = MediaType.parse("application/json");
+
+        return RequestBody.create(mediaType, mensagem);
+
     }
 }
