@@ -1,5 +1,6 @@
 package com.policia.df.bot.app.entities;
 
+import com.policia.df.bot.app.repository.SessaoRepository;
 import jakarta.persistence.Id;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,5 +29,13 @@ public class SessaoEntity {
     private Boolean ativo;
 
     private String ultimaAcao;
-    
+
+    private String ultimoComando;
+
+    public void flush(SessaoRepository sessaoRepository){
+        this.setUltimoComando("");
+        this.setUltimaAcao("");
+        sessaoRepository.save(this);
+    }
+
 }

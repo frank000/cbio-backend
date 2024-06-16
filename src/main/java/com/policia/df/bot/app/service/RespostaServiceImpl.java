@@ -1,68 +1,76 @@
 package com.policia.df.bot.app.service;
 
+import com.policia.df.bot.app.command.CommandStrategy;
+import com.policia.df.bot.app.command.OtpCommand;
+import com.policia.df.bot.app.entities.SessaoEntity;
+import com.policia.df.bot.app.repository.SessaoRepository;
 import com.policia.df.bot.core.service.KeycloakService;
 import com.policia.df.bot.core.service.RespostaService;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public record RespostaServiceImpl(KeycloakService keycloakService) implements RespostaService {
+public record RespostaServiceImpl(
+        KeycloakService keycloakService,
+        ApplicationContext context,
+        SessaoRepository sessaoRepository) implements RespostaService {
 
     @Override
-    public DecisaoResposta decidirResposta(String texto, String ultimaAcao) {
+    public DecisaoResposta decidirResposta(String texto, String ultimaEtapa, SessaoEntity sessao) {
 
-        Pattern patternUsername = Pattern.compile("[*a-z]\\.[*a-z]", Pattern.CASE_INSENSITIVE);
 
-        Pattern patternOtp = Pattern.compile("otp", Pattern.CASE_INSENSITIVE);
 
-        Pattern patternReset = Pattern.compile("/reset", Pattern.CASE_INSENSITIVE);
+        Map<String, String> listaComandos = new HashMap<>();
+        listaComandos.put("otp", "otpCommand");
+        listaComandos.put("reset", "resetCommand");
 
-        if(patternReset.matcher(texto.trim()).find()) {
-            return resolveDecisao("Serviço reiniciado", "");
-        }
+        Pattern patternOtp = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = patternOtp.matcher(texto);
 
-        if(patternOtp.matcher(texto.trim()).find() && !"step_otp".equals(ultimaAcao)) {
-            return resolveDecisao("Por favor, digite o nome de usuário. Ex: fulano.ciclano", "step_otp");
-        }
+        boolean isComando = matcher.find();
 
-        if(!"step_otp".equals(ultimaAcao)) {
+        if(isComando && listaComandos.containsKey(matcher.group(0).replace("/", ""))) {
+            String commandName = matcher.group(0).replace("/", "");
+
+            sessao.setUltimoComando(commandName);
+            sessaoRepository.save(sessao);
+
+            CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(commandName));
+
+            boolean contemEtapa = commandStrategy
+                    .getFun()
+                    .containsKey(ultimaEtapa);
+
+            String etapaAExecutar = !contemEtapa? "init" : ultimaEtapa;
+
+
+            return commandStrategy
+                    .getFun()
+                    .get(etapaAExecutar)
+                    .apply(texto, sessao);
+
+        }else if(StringUtils.hasText(sessao.getUltimoComando())){
+
+            CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(sessao.getUltimoComando()));
+
+            return commandStrategy
+                    .getFun()
+                    .get(ultimaEtapa)
+                    .apply(texto, sessao);
+
+        }else{
             return resolveDecisao("Digite o que deseja fazer.", "");
         }
-
-        if(patternUsername.matcher(texto.trim()).find() && "step_otp".equals(ultimaAcao)) {
-
-            List<UserRepresentation> user = keycloakService.pesquisarUsuario(texto.toLowerCase());
-
-            if(user != null) {
-
-                try {
-
-                    keycloakService.deletarUsuario(user.get(0).getId().toLowerCase());
-
-                    return resolveDecisao(texto + " - OTP resetado com sucesso.", "");
-
-                } catch (Exception e) {
-
-                    return resolveDecisao("Erro ao deletar usuário. Informe novamente.", "step_otp");
-
-                }
-
-            } else {
-
-                return resolveDecisao("Usuário não encontrado. Informe novamente.", "step_otp");
-
-            }
-
-        } else {
-
-            return resolveDecisao("Verifique se o usuário está correto e informe novamente.", "step_otp");
-
-        }
-
     }
 
     DecisaoResposta resolveDecisao(String texto, String acao) {

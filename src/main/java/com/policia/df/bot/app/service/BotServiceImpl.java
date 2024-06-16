@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 
@@ -63,7 +64,9 @@ public class BotServiceImpl implements BotService {
 
         if (sessaoService.sessaoValida(agora, sessao)) {
 
-            DecisaoResposta resposta = respostaService.decidirResposta(update.getMessage().getText(), sessao.getUltimaAcao());
+            String ultimaAcao = StringUtils.hasText(sessao.getUltimaAcao())? sessao.getUltimaAcao() : "init";
+
+            DecisaoResposta resposta = respostaService.decidirResposta(update.getMessage().getText(), ultimaAcao, sessao);
 
             usuarioService.salvarUsuario(update);
 
