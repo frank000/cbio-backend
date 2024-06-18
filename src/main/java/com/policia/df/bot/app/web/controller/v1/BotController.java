@@ -6,6 +6,7 @@ import com.policia.df.bot.core.service.CanalService;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -15,7 +16,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/bot")
-public record BotController(BotService service, CanalService canalService) {
+public record BotController(
+        BotService service,
+        CanalService canalService,
+        @Value("telegram.token") String token
+) {
 
     @PostMapping(value = "/connect")
     ResponseEntity<Void> connect(
@@ -23,24 +28,25 @@ public record BotController(BotService service, CanalService canalService) {
             @org.springframework.web.bind.annotation.RequestBody Update update
 
     ) throws Exception {
-        if(!token.equals("666194d53e2c9166f7242d6a")){
-            throw new Exception("Forbidden");
+        if(!token.equals(token)){
+            throw new Exception("Canal não autorizado.");
         } else {
-            service.connectToBot(update, 7219675152L);
-            //salvar banco o token configuração
-            //id from
+
+            CanalEntity canal = canalService.getCanalPorId(token);
+
+            service.connectToBot(update, canal);
         }
         return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/enviar-mensagem")
-    Object sendMessage(@org.springframework.web.bind.annotation.RequestBody MensagemDto mensagem) throws IOException {
+    Object sendMessage(@org.springframework.web.bind.annotation.RequestBody MensagemDto mensagem, CanalEntity canal) throws IOException {
 
         MediaType mediaType = MediaType.parse("application/json");
 
         RequestBody body = okhttp3.RequestBody.create(mediaType, mensagem.getEnvio());
 
-        return service.sendMessage(body);
+        return service.sendMessage(body, canal);
     }
 
     @GetMapping(value = "/listar-todos-canais")

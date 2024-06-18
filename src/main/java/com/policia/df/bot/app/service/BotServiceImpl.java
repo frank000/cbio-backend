@@ -1,8 +1,8 @@
 package com.policia.df.bot.app.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.policia.df.bot.app.entities.CanalEntity;
 import com.policia.df.bot.app.entities.SessaoEntity;
-import com.policia.df.bot.app.entities.UsuarioEntity;
 import com.policia.df.bot.core.service.*;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
@@ -16,8 +16,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 @Service
@@ -33,11 +31,10 @@ public class BotServiceImpl implements BotService {
 
     private final RespostaService respostaService;
 
+    private final CanalService canalService;
+
     @Value("${telegram.url}")
     private String url;
-
-    @Value("${telegram.api.key}")
-    private String apiKey;
 
     @Value("${telegram.endpoint.send.message}")
     private String endpointSendMessage;
@@ -47,14 +44,14 @@ public class BotServiceImpl implements BotService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void connectToBot(Object receive, Long canal) throws Exception {
+    public void connectToBot(Object receive, CanalEntity canal) throws Exception {
 
         Update update = (Update) receive;
 
         if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
 
         if(!("group".equals(update.getMessage().getChat().getType()) || "supergroup".equals(update.getMessage().getChat().getType()))) {
-            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."));
+            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."), canal);
             return;
         }
 
@@ -70,11 +67,11 @@ public class BotServiceImpl implements BotService {
 
             usuarioService.salvarUsuario(update);
 
-            mensagemService.salvarMensagem(update, canal, sessao.getId());
+            mensagemService.salvarMensagem(update, Long.parseLong(canal.getIdCanal()), sessao.getId());
 
             sessaoService.atualizarSessao(sessao, resposta.getAcao());
 
-            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()));
+            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()), canal);
         } else {
             connectToBot(receive, canal);
         }
@@ -82,10 +79,10 @@ public class BotServiceImpl implements BotService {
     }
 
     @Override
-    public Object sendMessage(RequestBody body) throws IOException {
+    public Object sendMessage(RequestBody body, CanalEntity canal) throws IOException {
 
         String endpoint = new StringBuilder(url)
-                .append(apiKey)
+                .append(canal.getApiKey())
                 .append(endpointSendMessage)
                 .toString();
 

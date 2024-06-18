@@ -6,6 +6,7 @@ import com.policia.df.bot.core.service.CanalService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public record CanalServiceImpl(CanalRepository repository) implements CanalService {
@@ -18,6 +19,11 @@ public record CanalServiceImpl(CanalRepository repository) implements CanalServi
     @Override
     public CanalEntity incluirCanal(CanalEntity canal) {
         return repository.save(canal);
+    }
+
+    @Override
+    public CanalEntity getCanalPorId(String idCanal) {
+        return repository.findById(idCanal).orElseThrow();
     }
 
 

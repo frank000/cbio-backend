@@ -10,4 +10,6 @@ public interface CanalService {
 
     public CanalEntity incluirCanal(CanalEntity canal);
 
+    public CanalEntity getCanalPorId(String idCanal);
+
 }

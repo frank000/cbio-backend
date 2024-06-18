@@ -5,4 +5,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface CanalRepository extends MongoRepository<CanalEntity, String> {
 
+
 }
