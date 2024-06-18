@@ -6,6 +6,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 public interface MensagemService {
 
-    void salvarMensagem(Update update, Long canal, String sessao);
+    void salvarMensagem(Update update, Long identificadorCanal, String sessao);
 
 }

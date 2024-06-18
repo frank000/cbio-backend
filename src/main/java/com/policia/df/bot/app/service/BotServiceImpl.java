@@ -3,6 +3,7 @@ package com.policia.df.bot.app.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.policia.df.bot.app.entities.CanalEntity;
 import com.policia.df.bot.app.entities.SessaoEntity;
+import com.policia.df.bot.app.service.enuns.EtapaPadraoEnum;
 import com.policia.df.bot.core.service.*;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
@@ -44,14 +45,17 @@ public class BotServiceImpl implements BotService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void connectToBot(Object receive, CanalEntity canal) throws Exception {
+    public void connectToBot(Object receive, CanalEntity canalEntity) throws Exception {
 
         Update update = (Update) receive;
 
         if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
 
-        if(!("group".equals(update.getMessage().getChat().getType()) || "supergroup".equals(update.getMessage().getChat().getType()))) {
-            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."), canal);
+        boolean isGrupo = "group".equals(update.getMessage().getChat().getType());
+        boolean isSuperGrupo = "supergroup".equals(update.getMessage().getChat().getType());
+
+        if(!(isGrupo || isSuperGrupo)) {
+            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."), canalEntity);
             return;
         }
 
@@ -61,19 +65,19 @@ public class BotServiceImpl implements BotService {
 
         if (sessaoService.sessaoValida(agora, sessao)) {
 
-            String ultimaAcao = StringUtils.hasText(sessao.getUltimaAcao())? sessao.getUltimaAcao() : "init";
+            String ultimaAcao = StringUtils.hasText(sessao.getUltimaEtapa())? sessao.getUltimaEtapa() : EtapaPadraoEnum.INIT.getValor();
 
             DecisaoResposta resposta = respostaService.decidirResposta(update.getMessage().getText(), ultimaAcao, sessao);
 
             usuarioService.salvarUsuario(update);
 
-            mensagemService.salvarMensagem(update, Long.parseLong(canal.getIdCanal()), sessao.getId());
+            mensagemService.salvarMensagem(update, Long.parseLong(canalEntity.getIdCanal()), sessao.getId());
 
             sessaoService.atualizarSessao(sessao, resposta.getAcao());
 
-            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()), canal);
+            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()), canalEntity);
         } else {
-            connectToBot(receive, canal);
+            connectToBot(receive, canalEntity);
         }
 
     }

@@ -5,13 +5,12 @@ import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public interface CommandStrategy {
 
-    Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFun();
+    Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFuncaoEtapas();
 
-    default DecisaoResposta resolveDecisao(String texto, String acao) {
-        return new DecisaoResposta(texto, acao);
+    default DecisaoResposta resolveDecisao(String texto, String proximaEtada) {
+        return new DecisaoResposta(texto, proximaEtada);
     }
 }

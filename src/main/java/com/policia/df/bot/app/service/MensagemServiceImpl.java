@@ -15,11 +15,11 @@ public class MensagemServiceImpl implements MensagemService {
     private final MensagemRepository repository;
 
     @Override
-    public void salvarMensagem(Update update, Long canal, String sessao) {
+    public void salvarMensagem(Update update, Long identificadorCanal, String sessao) {
 
         MensagemEntity mensagem = new MensagemEntity();
 
-        mensagem.setCanalId(canal);
+        mensagem.setCanalId(identificadorCanal);
         mensagem.setSessao("");
         mensagem.setText(update.getMessage().getText());
         mensagem.setChatId(update.getMessage().getChatId());

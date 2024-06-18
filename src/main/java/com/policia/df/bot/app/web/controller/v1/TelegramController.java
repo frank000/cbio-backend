@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/bot")
-public record BotController(
+public record TelegramController(
         BotService service,
         CanalService canalService,
         @Value("telegram.token") String token
@@ -29,12 +29,12 @@ public record BotController(
 
     ) throws Exception {
         if(!token.equals(token)){
-            throw new Exception("Canal não autorizado.");
+            throw new Exception("Conexão não autorizada.");
         } else {
 
-            CanalEntity canal = canalService.getCanalPorId(token);
+            CanalEntity canalEntity = canalService.getCanalPorId(token);
 
-            service.connectToBot(update, canal);
+            service.connectToBot(update, canalEntity);
         }
         return ResponseEntity.ok().build();
     }

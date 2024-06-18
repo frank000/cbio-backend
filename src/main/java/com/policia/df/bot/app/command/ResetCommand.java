@@ -2,6 +2,7 @@ package com.policia.df.bot.app.command;
 
 import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.repository.SessaoRepository;
+import com.policia.df.bot.app.service.enuns.EtapaPadraoEnum;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,8 @@ public class ResetCommand implements CommandStrategy{
     private final SessaoRepository sessaoRepository;
 
     @Override
-    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFun() {
-        relacaoDeEtapasEFuncoes.put("init", (texto, sessao) -> getServiçoReiniciadoELimpaSessao(sessao));
+    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFuncaoEtapas() {
+        relacaoDeEtapasEFuncoes.put(EtapaPadraoEnum.INIT.getValor(), (texto, sessao) -> getServiçoReiniciadoELimpaSessao(sessao));
 
         return relacaoDeEtapasEFuncoes;
     }

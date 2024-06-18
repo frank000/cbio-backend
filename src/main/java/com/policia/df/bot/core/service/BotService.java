@@ -9,8 +9,8 @@ import java.io.IOException;
 
 public interface BotService {
 
-    public void connectToBot(Object receive, CanalEntity canal) throws Exception;
+    void connectToBot(Object receive, CanalEntity canal) throws Exception;
 
-    public Object sendMessage(RequestBody body, CanalEntity canal) throws IOException;
+    Object sendMessage(RequestBody body, CanalEntity canal) throws IOException;
 
 }

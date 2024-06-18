@@ -23,14 +23,14 @@ public class SessaoServiceImpl implements SessaoService {
 
         UUID sessaoIdTemp = UUID.randomUUID();
 
-        SessaoEntity sessao = repository.findByUsuarioAndAtivo(update.getMessage().getFrom().getId(), true);
+        SessaoEntity sessao = repository.findByAtivoAndUsuario(Boolean.TRUE, update.getMessage().getFrom().getId());
 
         if(sessao == null) {
             sessao = new SessaoEntity();
 
             sessao.setSessaoId(sessaoIdTemp);
             sessao.setInicioSessao(agora);
-            sessao.setAtivo(true);
+            sessao.setAtivo(Boolean.TRUE);
             sessao.setExpiresAt(agora + expiresValue); // 2 minutos
             sessao.setUsuario(update.getMessage().getFrom().getId());
 
@@ -39,7 +39,7 @@ public class SessaoServiceImpl implements SessaoService {
         } else { //expirou
             if(agora > sessao.getExpiresAt()) {
 
-                sessao.setAtivo(false);
+                sessao.setAtivo(Boolean.FALSE);
                 sessao.setFinalSessao(agora);
 
             } else { //renova
@@ -59,7 +59,7 @@ public class SessaoServiceImpl implements SessaoService {
 
     @Override
     public void atualizarSessao(SessaoEntity sessao, String ultimaAcao) {
-        sessao.setUltimaAcao(ultimaAcao);
+        sessao.setUltimaEtapa(ultimaAcao);
         repository.save(sessao);
     }
 

@@ -3,6 +3,7 @@ package com.policia.df.bot.app.entities;
 import com.policia.df.bot.app.repository.SessaoRepository;
 import jakarta.persistence.Id;
 import lombok.Data;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
@@ -18,6 +19,7 @@ public class SessaoEntity {
 
     private Long canal;
 
+    @Indexed
     private Long usuario;
 
     private Long inicioSessao;
@@ -28,13 +30,13 @@ public class SessaoEntity {
 
     private Boolean ativo;
 
-    private String ultimaAcao;
+    private String ultimaEtapa;
 
-    private String ultimoComando;
+    private String comandoExecucao;
 
     public void flush(SessaoRepository sessaoRepository){
-        this.setUltimoComando("");
-        this.setUltimaAcao("");
+        this.setComandoExecucao("");
+        this.setUltimaEtapa("");
         sessaoRepository.save(this);
     }
 

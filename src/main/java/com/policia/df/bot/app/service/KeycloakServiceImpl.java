@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @Service
@@ -42,14 +44,16 @@ public class KeycloakServiceImpl implements KeycloakService {
   private final Keycloak keycloak;
 
   @Override
-  public List<UserRepresentation> pesquisarUsuario(String nome) {
+  public Optional<List<UserRepresentation>> pesquisarUsuario(String nome) {
 
     List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(nome, true);
 
-    if(listUsers.isEmpty() || listUsers.size() == 0) {
+    if(CollectionUtils.isEmpty(listUsers)) {
       logger.info("Não foram encontrados usários.");
+      return Optional.empty();
+    }else{
+      return Optional.of(listUsers);
     }
-    return listUsers;
   }
 
   @Override
