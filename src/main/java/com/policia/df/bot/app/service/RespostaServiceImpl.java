@@ -67,7 +67,7 @@ public record RespostaServiceImpl(
                     .get(etapaAExecutar)
                     .apply(texto, sessao);
 
-        }else if(StringUtils.hasText(sessao.getComandoExecucao())){
+        } else if(StringUtils.hasText(sessao.getComandoExecucao())) {
 
             CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(sessao.getComandoExecucao()));
 
@@ -76,7 +76,7 @@ public record RespostaServiceImpl(
                     .get(ultimaEtapa)
                     .apply(texto, sessao);
 
-        }else{
+        } else {
             return resolveDecisao("Digite o que deseja fazer.", "");
         }
     }

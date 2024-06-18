@@ -11,9 +11,9 @@ public class EtapaDTO {
 
     private String comandoEtapa;
 
-    private String descricaoEtapa;
+    private String nomeEtapa;
 
-    private Integer ordemEtapa;
+    private String descricaoEtapa;
 
     private String mensagemEtapa;
 
