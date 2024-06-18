@@ -23,7 +23,7 @@ public class KeycloakController {
             @Valid @RequestParam String nome) {
         ResponseEntity entity = null;
 
-        List<UserRepresentation> response = service.pesquisarUsuario(nome);
+        List<UserRepresentation> response = service.pesquisarUsuario(nome).get();
 
         if(response.isEmpty() || response.size() == 0) {
             entity = new ResponseEntity(null, HttpStatus.NO_CONTENT);

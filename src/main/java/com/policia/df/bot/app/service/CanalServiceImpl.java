@@ -22,8 +22,12 @@ public record CanalServiceImpl(CanalRepository repository) implements CanalServi
     }
 
     @Override
-    public CanalEntity getCanalPorId(String idCanal) {
-        return repository.findById(idCanal).orElseThrow();
+    public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception {
+        try {
+            return repository.findCanalByTokenAndCliente(token, cliente);
+        } catch (Exception e) {
+            throw new Exception("Erro ao consultar canal.");
+        }
     }
 
 

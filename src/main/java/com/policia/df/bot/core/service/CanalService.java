@@ -10,6 +10,6 @@ public interface CanalService {
 
     public CanalEntity incluirCanal(CanalEntity canal);
 
-    public CanalEntity getCanalPorId(String idCanal);
+    public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception;
 
 }

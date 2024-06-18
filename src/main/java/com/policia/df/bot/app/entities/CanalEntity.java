@@ -24,4 +24,6 @@ public class CanalEntity {
 
     private String apiKey;
 
+    private String cliente;
+
 }

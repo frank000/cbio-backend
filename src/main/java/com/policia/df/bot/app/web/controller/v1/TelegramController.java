@@ -24,15 +24,16 @@ public record TelegramController(
 
     @PostMapping(value = "/connect")
     ResponseEntity<Void> connect(
-            @RequestParam("token")  String token,
+            @RequestParam("token") String token,
+            @RequestParam("cliente") String cliente,
             @org.springframework.web.bind.annotation.RequestBody Update update
 
     ) throws Exception {
-        if(!token.equals(token)){
+        if(!token.equals(token)) {
             throw new Exception("Conexão não autorizada.");
         } else {
 
-            CanalEntity canalEntity = canalService.getCanalPorId(token);
+            CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente);
 
             service.connectToBot(update, canalEntity);
         }
