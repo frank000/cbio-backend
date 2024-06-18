@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 @Service
 @Slf4j
 @Data
-public class TelegramServiceImpl implements BotService {
+public class TelegramServiceImpl implements TelegramService {
 
     private final UsuarioService usuarioService;
 
@@ -40,7 +40,7 @@ public class TelegramServiceImpl implements BotService {
     @Value("${telegram.endpoint.send.message}")
     private String endpointSendMessage;
 
-    Logger logger = Logger.getLogger(BotService.class.getName());
+    Logger logger = Logger.getLogger(TelegramService.class.getName());
 
     ObjectMapper objectMapper = new ObjectMapper();
 

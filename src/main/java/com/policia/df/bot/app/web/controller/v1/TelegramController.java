@@ -1,7 +1,7 @@
 package com.policia.df.bot.app.web.controller.v1;
 
 import com.policia.df.bot.app.entities.CanalEntity;
-import com.policia.df.bot.core.service.BotService;
+import com.policia.df.bot.core.service.TelegramService;
 import com.policia.df.bot.core.service.CanalService;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
 import okhttp3.MediaType;
@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/bot")
 public record TelegramController(
-        BotService service,
+        TelegramService service,
         CanalService canalService,
         @Value("telegram.token") String token
 ) {
