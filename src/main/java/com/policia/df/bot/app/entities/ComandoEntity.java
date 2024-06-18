@@ -15,6 +15,8 @@ public class ComandoEntity {
 
     private String nome;
 
+    private String nomeServico;
+
     private String descricao;
 
     private Boolean ativo;

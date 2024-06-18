@@ -2,16 +2,21 @@ package com.policia.df.bot.app.service;
 
 import com.policia.df.bot.app.command.CommandStrategy;
 import com.policia.df.bot.app.entities.SessaoEntity;
+import com.policia.df.bot.app.repository.ComandoRepository;
 import com.policia.df.bot.app.repository.SessaoRepository;
 import com.policia.df.bot.app.service.enuns.EtapaPadraoEnum;
+import com.policia.df.bot.app.service.mapper.ComandoMapper;
+import com.policia.df.bot.app.service.mapper.CycleAvoidingMappingContext;
 import com.policia.df.bot.core.service.KeycloakService;
 import com.policia.df.bot.core.service.RespostaService;
+import com.policia.df.bot.core.v1.dto.ComandoDTO;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,16 +25,22 @@ import java.util.regex.Pattern;
 public record RespostaServiceImpl(
         KeycloakService keycloakService,
         ApplicationContext context,
-        SessaoRepository sessaoRepository) implements RespostaService {
+        SessaoRepository sessaoRepository,
+        ComandoRepository comandoRepository,
+        ComandoMapper comandoMapper
+    ) implements RespostaService {
 
     @Override
     public DecisaoResposta decidirResposta(String texto, String ultimaEtapa, SessaoEntity sessao) {
 
-
-
         Map<String, String> listaComandos = new HashMap<>();
-        listaComandos.put("otp", "otpCommand");
-        listaComandos.put("reset", "resetCommand");
+
+        List<ComandoDTO> listaComandosRepo =
+                comandoMapper.listComandoEntityToListComandoDTO(comandoRepository.findAllByAtivo(Boolean.TRUE), new CycleAvoidingMappingContext());
+
+        listaComandosRepo.forEach(e -> {
+            listaComandos.put(e.getNome(), e.getNomeServico());
+        });
 
         Pattern patternComando = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
         Matcher matcher = patternComando.matcher(texto);
