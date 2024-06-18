@@ -7,6 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Mapper
 public interface ComandoMapper {
 
@@ -16,5 +18,5 @@ public interface ComandoMapper {
 
     ComandoDTO comandoEntityToComandoDTO(ComandoEntity entity, @Context CycleAvoidingMappingContext cycleAvoidingMappingContext);
 
-
+    List<ComandoDTO> listComandoEntityToListComandoDTO(List<ComandoEntity> listaEntity, @Context CycleAvoidingMappingContext cycleAvoidingMappingContext);
 }

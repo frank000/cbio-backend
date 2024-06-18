@@ -13,4 +13,6 @@ public class ComandoDTO {
 
     private String descricao;
 
+    private Boolean ativo;
+
 }

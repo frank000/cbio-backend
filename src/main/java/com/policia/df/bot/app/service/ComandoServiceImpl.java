@@ -8,6 +8,8 @@ import com.policia.df.bot.core.service.ComandoService;
 import com.policia.df.bot.core.v1.dto.ComandoDTO;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public record ComandoServiceImpl(ComandoRepository repository, ComandoMapper mapper) implements ComandoService {
     @Override
@@ -17,6 +19,7 @@ public record ComandoServiceImpl(ComandoRepository repository, ComandoMapper map
 
         if(comandoEnviar != null) {
             comandoEnviar.setDescricao(comandoDTO.getDescricao());
+            comandoEnviar.setAtivo(comandoDTO.getAtivo());
         } else {
             comandoEnviar = mapper.comandoDTOToComandoEntity(comandoDTO, new CycleAvoidingMappingContext());
         }
@@ -28,5 +31,10 @@ public record ComandoServiceImpl(ComandoRepository repository, ComandoMapper map
     @Override
     public ComandoDTO buscarPorNome(String nome) {
         return mapper.comandoEntityToComandoDTO(repository.findByNome(nome), new CycleAvoidingMappingContext());
+    }
+
+    @Override
+    public List<ComandoDTO> listarComandos() {
+        return mapper.listComandoEntityToListComandoDTO(repository.findAllByAtivo(Boolean.TRUE), new CycleAvoidingMappingContext());
     }
 }
