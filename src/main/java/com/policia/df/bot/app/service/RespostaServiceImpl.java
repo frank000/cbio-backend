@@ -31,8 +31,8 @@ public record RespostaServiceImpl(
         listaComandos.put("otp", "otpCommand");
         listaComandos.put("reset", "resetCommand");
 
-        Pattern patternOtp = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = patternOtp.matcher(texto);
+        Pattern patternComando = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = patternComando.matcher(texto);
 
         boolean isComando = matcher.find();
 

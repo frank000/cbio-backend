@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 @Service
 @Slf4j
 @Data
-public class BotServiceImpl implements BotService {
+public class TelegramServiceImpl implements BotService {
 
     private final UsuarioService usuarioService;
 
@@ -49,7 +49,7 @@ public class BotServiceImpl implements BotService {
 
         Update update = (Update) receive;
 
-        if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
+//        if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
 
         boolean isGrupo = "group".equals(update.getMessage().getChat().getType());
         boolean isSuperGrupo = "supergroup".equals(update.getMessage().getChat().getType());
