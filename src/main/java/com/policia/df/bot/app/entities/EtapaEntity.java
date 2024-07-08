@@ -25,4 +25,6 @@ public class EtapaEntity {
 
     private String tipoEtapa;
 
+    private Boolean ativo;
+
 }

@@ -61,7 +61,6 @@ public record RespostaServiceImpl(
 
             String etapaAExecutar = !contemEtapa? EtapaPadraoEnum.INIT.getValor() : ultimaEtapa;
 
-
             return commandStrategy
                     .getFuncaoEtapas()
                     .get(etapaAExecutar)

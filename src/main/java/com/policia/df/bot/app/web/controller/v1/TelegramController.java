@@ -49,11 +49,4 @@ public record TelegramController(
 
         return service.sendMessage(body, canal);
     }
-
-    @GetMapping(value = "/listar-todos-canais")
-    List<CanalEntity> listTabCanal() {
-        return canalService.listarTodos();
-    }
-
-
 }

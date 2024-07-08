@@ -1,15 +1,10 @@
-package com.policia.df.bot.app.entities;
+package com.policia.df.bot.core.v1.dto;
 
-import jakarta.persistence.Id;
 import lombok.Data;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 
 @Data
-@Document(collection = "canal")
-public class CanalEntity {
+public class CanalDTO {
 
-    @Id
     private String id;
 
     private String nome;
