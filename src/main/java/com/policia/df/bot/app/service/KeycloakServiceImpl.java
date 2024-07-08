@@ -4,6 +4,7 @@ import com.policia.df.bot.core.service.KeycloakService;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,7 +73,9 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
   }
 
-  public UsersResource getInstance() {
-    return keycloak.realm(realm).users();
+  public String getToken() {
+
+    return keycloak.tokenManager().getAccessToken().getToken();
+
   }
 }
