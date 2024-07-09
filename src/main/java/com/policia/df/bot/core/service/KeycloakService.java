@@ -10,7 +10,8 @@ public interface KeycloakService {
 
     Optional<List<UserRepresentation>> pesquisarUsuario(String nome);
 
-
     void deletarUsuario(String id);
+
+    public String getToken();
 
 }
