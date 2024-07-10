@@ -31,7 +31,7 @@ public record RespostaServiceImpl(
     ) implements RespostaService {
 
     @Override
-    public DecisaoResposta decidirResposta(String texto, String ultimaEtapa, SessaoEntity sessao) {
+    public List<DecisaoResposta> decidirResposta(String texto, String ultimaEtapa, SessaoEntity sessao) {
 
         Map<String, String> listaComandos = new HashMap<>();
 
@@ -80,7 +80,7 @@ public record RespostaServiceImpl(
         }
     }
 
-    DecisaoResposta resolveDecisao(String texto, String proximaEtapa) {
-        return new DecisaoResposta(texto, proximaEtapa);
+    List<DecisaoResposta> resolveDecisao(String texto, String proximaEtapa) {
+        return List.of(new DecisaoResposta(texto, proximaEtapa));
     }
 }

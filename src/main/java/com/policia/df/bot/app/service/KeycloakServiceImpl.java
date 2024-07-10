@@ -4,6 +4,7 @@ import com.policia.df.bot.core.service.KeycloakService;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +58,19 @@ public class KeycloakServiceImpl implements KeycloakService {
   }
 
   @Override
+  public Optional<List<UserRepresentation>> pesquisarUsuarioPorMatricula(String matricula) {
+
+    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByEmail(matricula, false);
+
+    if(CollectionUtils.isEmpty(listUsers)) {
+      logger.info("Não foram encontrados usários.");
+      return Optional.empty();
+    }else{
+      return Optional.of(listUsers);
+    }
+  }
+
+  @Override
   public void deletarUsuario(String id) {
 
     logger.info("Início da deleção de um usuário.");
@@ -72,7 +86,9 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
   }
 
-  public UsersResource getInstance() {
-    return keycloak.realm(realm).users();
+  public String getToken() {
+
+    return keycloak.tokenManager().getAccessToken().getToken();
+
   }
 }

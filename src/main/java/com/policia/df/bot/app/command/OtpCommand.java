@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class OtpCommand implements CommandStrategy {
 
     private final SessaoRepository sessaoRepository;
-    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> relacaoDeEtapasEFuncoes = new HashMap<>();
+    public Map<String, BiFunction<String, SessaoEntity, List<DecisaoResposta>>> relacaoDeEtapasEFuncoes = new HashMap<>();
 
     private final KeycloakService keycloakService;
 
@@ -38,9 +38,6 @@ public class OtpCommand implements CommandStrategy {
         this.sessaoRepository = sessaoRepository;
         this.etapaRepository = etapaRepository;
 
-//        relacaoDeEtapasEFuncoes.put(EtapaPadraoEnum.INIT.getValor(), (texto, sessao) -> resolveDecisao("Por favor, digite o nome de usuário. Ex: fulano.ciclano.", "step_otp"));
-//        relacaoDeEtapasEFuncoes.put("step_otp", this::keycloak);
-
     }
 
     @PostConstruct
@@ -51,7 +48,7 @@ public class OtpCommand implements CommandStrategy {
         listaEtapas.forEach(e -> {
             if("texto".equalsIgnoreCase(e.getTipoEtapa())) {
 
-                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> resolveDecisao(e.getMensagemEtapa(), e.getProximaEtapa()));
+                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> List.of(resolveDecisao(e.getMensagemEtapa(), e.getProximaEtapa())));
 
             } else {
 
@@ -59,22 +56,19 @@ public class OtpCommand implements CommandStrategy {
 
             }
         });
-
-//        relacaoDeEtapasEFuncoes.put(EtapaPadraoEnum.INIT.getValor(), (texto, sessao) -> resolveDecisao("Por favor, digite o nome de usuário. Ex: fulano.ciclano.", "step_otp"));
-//        relacaoDeEtapasEFuncoes.put("step_otp", this::keycloak);
     }
 
     @Override
-    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFuncaoEtapas() {
+    public Map<String, BiFunction<String, SessaoEntity, List<DecisaoResposta>>> getFuncaoEtapas() {
         return relacaoDeEtapasEFuncoes;
     }
 
 
-    public DecisaoResposta keycloak(String texto, SessaoEntity sessao) {
+    public List<DecisaoResposta> keycloak(String texto, SessaoEntity sessao) {
 
         if(!isUsuarioDigitadoCorretamente(texto)) {
 
-            return resolveDecisao("Usuário digitado incorretamente. O usuário possui o seguinte padrão: ''fulano.ciclano''.", "step_otp");
+            return List.of(resolveDecisao("Usuário digitado incorretamente. O usuário possui o seguinte padrão: ''fulano.ciclano''.", "step_otp"));
         }
 
         Optional<List<UserRepresentation>> listUsuarios = keycloakService.pesquisarUsuario(texto.toLowerCase());
@@ -90,15 +84,15 @@ public class OtpCommand implements CommandStrategy {
                 keycloakService.deletarUsuario(userRepresentation.getId().toLowerCase());
                 sessao.flush(sessaoRepository);
 
-                return resolveDecisao(texto + " - OTP resetado com sucesso.", "");
+                return List.of(resolveDecisao(texto + " - OTP resetado com sucesso.", ""));
             } catch (Exception e) {
 
                 log.error("Erro na busca do usuário no keycloak. Erro ", e);
-                return resolveDecisao("Erro ao deletar usuário. Informe novamente.", "step_otp");
+                return List.of(resolveDecisao("Erro ao deletar usuário. Informe novamente.", "step_otp"));
             }
         } else {
 
-            return resolveDecisao("Usuário não encontrado. Informe novamente.", "step_otp");
+            return List.of(resolveDecisao("Usuário não encontrado. Informe novamente.", "step_otp"));
 
         }
     }
