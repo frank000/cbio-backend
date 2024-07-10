@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Service
@@ -45,11 +46,9 @@ public class TelegramServiceImpl implements TelegramService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void connectToBot(Object receive, CanalEntity canalEntity) throws Exception {
+    public void connectToBot(Update update, CanalEntity canalEntity) throws Exception {
 
-        Update update = (Update) receive;
-
-//        if(update == null || update.getMessage() == null || update.getMessage().getText() == null) return;
+        if(update.getMessage() == null && update.getCallbackQuery() == null) return;
 
         boolean isGrupo = "group".equals(update.getMessage().getChat().getType());
         boolean isSuperGrupo = "supergroup".equals(update.getMessage().getChat().getType());
@@ -67,17 +66,21 @@ public class TelegramServiceImpl implements TelegramService {
 
             String ultimaAcao = StringUtils.hasText(sessao.getUltimaEtapa())? sessao.getUltimaEtapa() : EtapaPadraoEnum.INIT.getValor();
 
-            DecisaoResposta resposta = respostaService.decidirResposta(update.getMessage().getText(), ultimaAcao, sessao);
+            List<DecisaoResposta> resposta = respostaService.decidirResposta(update.getMessage().getText(), ultimaAcao, sessao);
 
             usuarioService.salvarUsuario(update);
 
             mensagemService.salvarMensagem(update, Long.parseLong(canalEntity.getIdCanal()), sessao.getId());
 
-            sessaoService.atualizarSessao(sessao, resposta.getAcao());
+            sessaoService.atualizarSessao(sessao, resposta.get(0).getAcao());
 
-            if(resposta != null) sendMessage(createResponseBody(update, resposta.getTexto()), canalEntity);
+            if(resposta != null) {
+                for (DecisaoResposta e : resposta) {
+                    sendMessage(createResponseBody(update, e.getTexto()), canalEntity);
+                }
+            }
         } else {
-            connectToBot(receive, canalEntity);
+            connectToBot(update, canalEntity);
         }
 
     }

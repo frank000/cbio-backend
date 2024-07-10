@@ -19,7 +19,7 @@ import java.util.function.BiFunction;
 @RequiredArgsConstructor
 public class ResetCommand implements CommandStrategy{
 
-    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> relacaoDeEtapasEFuncoes = new HashMap<>();
+    public Map<String, BiFunction<String, SessaoEntity, List<DecisaoResposta>>> relacaoDeEtapasEFuncoes = new HashMap<>();
 
     private final SessaoRepository sessaoRepository;
 
@@ -33,7 +33,7 @@ public class ResetCommand implements CommandStrategy{
         listaEtapas.forEach(e -> {
             if("texto".equalsIgnoreCase(e.getTipoEtapa())) {
 
-                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> resolveDecisao(e.getMensagemEtapa(), e.getProximaEtapa()));
+                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> List.of(resolveDecisao(e.getMensagemEtapa(), e.getProximaEtapa())));
 
             } else {
 
@@ -41,23 +41,18 @@ public class ResetCommand implements CommandStrategy{
 
             }
         });
-
-//        relacaoDeEtapasEFuncoes.put(EtapaPadraoEnum.INIT.getValor(), (texto, sessao) -> resolveDecisao("Por favor, digite o nome de usuário. Ex: fulano.ciclano.", "step_otp"));
-//        relacaoDeEtapasEFuncoes.put("step_otp", this::keycloak);
     }
 
 
 
     @Override
-    public Map<String, BiFunction<String, SessaoEntity, DecisaoResposta>> getFuncaoEtapas() {
-//        relacaoDeEtapasEFuncoes.put(EtapaPadraoEnum.INIT.getValor(), (texto, sessao) -> getServiçoReiniciadoELimpaSessao(sessao));
-
+    public Map<String, BiFunction<String, SessaoEntity, List<DecisaoResposta>>> getFuncaoEtapas() {
         return relacaoDeEtapasEFuncoes;
     }
 
-    private DecisaoResposta getServiçoReiniciadoELimpaSessao(String texto, SessaoEntity sessao) {
+    private List<DecisaoResposta> getServiçoReiniciadoELimpaSessao(String texto, SessaoEntity sessao) {
         sessao.flush(sessaoRepository);
-        return resolveDecisao("Serviço reiniciado", "");
+        return List.of(resolveDecisao("Serviço reiniciado", ""));
     }
 
 

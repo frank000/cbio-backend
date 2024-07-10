@@ -58,6 +58,19 @@ public class KeycloakServiceImpl implements KeycloakService {
   }
 
   @Override
+  public Optional<List<UserRepresentation>> pesquisarUsuarioPorMatricula(String matricula) {
+
+    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByEmail(matricula, false);
+
+    if(CollectionUtils.isEmpty(listUsers)) {
+      logger.info("Não foram encontrados usários.");
+      return Optional.empty();
+    }else{
+      return Optional.of(listUsers);
+    }
+  }
+
+  @Override
   public void deletarUsuario(String id) {
 
     logger.info("Início da deleção de um usuário.");
