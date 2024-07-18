@@ -33,52 +33,62 @@ public record RespostaServiceImpl(
     @Override
     public List<DecisaoResposta> decidirResposta(String texto, String ultimaEtapa, SessaoEntity sessao) {
 
-        Map<String, String> listaComandos = new HashMap<>();
+        if(texto!= null) {
+            Map<String, String> listaComandos = new HashMap<>();
 
-        List<ComandoDTO> listaComandosRepo =
-                comandoMapper.listComandoEntityToListComandoDTO(comandoRepository.findAllByAtivo(Boolean.TRUE), new CycleAvoidingMappingContext());
+            List<ComandoDTO> listaComandosRepo =
+                    comandoMapper.listComandoEntityToListComandoDTO(comandoRepository.findAllByAtivo(Boolean.TRUE), new CycleAvoidingMappingContext());
 
-        listaComandosRepo.forEach(e -> {
-            listaComandos.put(e.getNome(), e.getNomeServico());
-        });
+            listaComandosRepo.forEach(e -> {
+                listaComandos.put(e.getNome(), e.getNomeServico());
+            });
 
-        Pattern patternComando = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = patternComando.matcher(texto);
+            Pattern patternComando = Pattern.compile("\\/[*a-z]+", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = patternComando.matcher(texto);
 
-        boolean isComando = matcher.find();
+            boolean isComando = matcher.find();
 
-        if(isComando && listaComandos.containsKey(matcher.group(0).replace("/", ""))) {
-            String commandName = matcher.group(0).replace("/", "");
+            if(isComando && listaComandos.containsKey(matcher.group(0).replace("/", ""))) {
+                String commandName = matcher.group(0).replace("/", "");
 
-            sessao.setComandoExecucao(commandName);
-            sessaoRepository.save(sessao);
+                sessao.setComandoExecucao(commandName);
+                sessaoRepository.save(sessao);
 
-            CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(commandName));
+                CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(commandName));
 
-            boolean contemEtapa = commandStrategy
-                    .getFuncaoEtapas()
-                    .containsKey(ultimaEtapa);
+                boolean contemEtapa = commandStrategy
+                        .getFuncaoEtapas()
+                        .containsKey(ultimaEtapa);
 
-            String etapaAExecutar = !contemEtapa? EtapaPadraoEnum.INIT.getValor() : ultimaEtapa;
+                String etapaAExecutar = !contemEtapa? EtapaPadraoEnum.INIT.getValor() : ultimaEtapa;
 
-            return commandStrategy
-                    .getFuncaoEtapas()
-                    .get(etapaAExecutar)
-                    .apply(texto, sessao);
+                return commandStrategy
+                        .getFuncaoEtapas()
+                        .get(etapaAExecutar)
+                        .apply(texto, sessao);
 
-        } else if(StringUtils.hasText(sessao.getComandoExecucao())) {
+            } else if(StringUtils.hasText(sessao.getComandoExecucao())) {
 
-            CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(sessao.getComandoExecucao()));
+                CommandStrategy commandStrategy = (CommandStrategy)context.getBean(listaComandos.get(sessao.getComandoExecucao()));
 
-            return commandStrategy
-                    .getFuncaoEtapas()
-                    .get(ultimaEtapa)
-                    .apply(texto, sessao);
+                return commandStrategy
+                        .getFuncaoEtapas()
+                        .get(ultimaEtapa)
+                        .apply(texto, sessao);
 
+            } else {
+                return repostaPadrao();
+            }
         } else {
-            return resolveDecisao("Digite o que deseja fazer.", "");
+            return repostaPadrao();
         }
+
     }
+
+    List<DecisaoResposta> repostaPadrao() {
+        return List.of(new DecisaoResposta("Digite o que deseja fazer.", ""));
+    }
+
 
     List<DecisaoResposta> resolveDecisao(String texto, String proximaEtapa) {
         return List.of(new DecisaoResposta(texto, proximaEtapa));
