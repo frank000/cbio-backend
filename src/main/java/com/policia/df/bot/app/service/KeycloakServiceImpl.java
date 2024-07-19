@@ -60,7 +60,7 @@ public class KeycloakServiceImpl implements KeycloakService {
   @Override
   public Optional<List<UserRepresentation>> pesquisarUsuarioPorMatricula(String matricula) {
 
-    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByEmail(matricula, false);
+    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(matricula, false);
 
     if(CollectionUtils.isEmpty(listUsers)) {
       logger.info("Não foram encontrados usários.");
