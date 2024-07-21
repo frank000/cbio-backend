@@ -52,6 +52,8 @@ public class OtpCommand implements CommandStrategy {
 
             } else {
 
+                //Incluir o cache
+
                 relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), this::keycloak);
 
             }

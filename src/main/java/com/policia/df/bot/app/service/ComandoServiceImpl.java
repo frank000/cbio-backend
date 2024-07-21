@@ -37,7 +37,7 @@ public record ComandoServiceImpl(ComandoRepository repository, ComandoMapper map
 
     @Override
     public List<ComandoDTO> listarComandos() {
-        return mapper.listComandoEntityToListComandoDTO(repository.findAllByAtivo(Boolean.TRUE), new CycleAvoidingMappingContext());
+        return mapper.listComandoEntityToListComandoDTO(repository.findAll(), new CycleAvoidingMappingContext());
     }
 
     @Override
