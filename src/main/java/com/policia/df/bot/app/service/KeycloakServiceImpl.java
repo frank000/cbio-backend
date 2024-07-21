@@ -3,6 +3,7 @@ package com.policia.df.bot.app.service;
 import com.policia.df.bot.core.service.KeycloakService;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
+import okhttp3.OkHttp;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -50,7 +51,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(nome, true);
 
     if(CollectionUtils.isEmpty(listUsers)) {
-      logger.info("Não foram encontrados usários.");
+      logger.info("Não foram encontrados usuários.");
       return Optional.empty();
     }else{
       return Optional.of(listUsers);
@@ -61,10 +62,10 @@ public class KeycloakServiceImpl implements KeycloakService {
   @Override
   public Optional<List<UserRepresentation>> pesquisarUsuarioPorMatricula(String matricula) {
 
-    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByUsername(matricula, false);
+    List<UserRepresentation> listUsers = keycloak.realm(realm).users().searchByFirstName(matricula, false);
 
     if(CollectionUtils.isEmpty(listUsers)) {
-      logger.info("Não foram encontrados usários.");
+      logger.info("Não foram encontrados usuários.");
       return Optional.empty();
     }else{
       return Optional.of(listUsers);
@@ -77,7 +78,6 @@ public class KeycloakServiceImpl implements KeycloakService {
     logger.info("Início da deleção de um usuário.");
 
     try{
-
       keycloak.realm(realm).users().delete(id);
 
     } catch (Exception e){

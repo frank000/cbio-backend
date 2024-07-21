@@ -7,13 +7,14 @@ import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.repository.EtapaRepository;
 import com.policia.df.bot.app.repository.SessaoRepository;
 import com.policia.df.bot.core.service.KeycloakService;
+import com.policia.df.bot.core.service.PessoaService;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
 import com.policia.df.bot.core.v1.dto.EquipamentoRadioDTO;
+import com.policia.df.bot.core.v1.dto.PessoaDTO;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -39,14 +40,20 @@ public class RadioCommand implements CommandStrategy {
 
     private final EtapaRepository etapaRepository;
 
+    private final PessoaService pessoaService;
+
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-    public RadioCommand(KeycloakService keycloakService, SessaoRepository sessaoRepository, EtapaRepository etapaRepository) {
-
+    public RadioCommand(
+            KeycloakService keycloakService,
+            SessaoRepository sessaoRepository,
+            EtapaRepository etapaRepository,
+            PessoaService pessoaService
+    ) {
         this.keycloakService = keycloakService;
         this.sessaoRepository = sessaoRepository;
         this.etapaRepository = etapaRepository;
-
+        this.pessoaService = pessoaService;
     }
 
     @PostConstruct
@@ -58,7 +65,13 @@ public class RadioCommand implements CommandStrategy {
             if("texto".equalsIgnoreCase(e.getTipoEtapa())) {
                 relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> List.of(resolveDecisao(e.getMensagemEtapa(), e.getProximaEtapa())));
             } else if("step_radio_identificacao".equalsIgnoreCase(e.getNomeEtapa())) {
-                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), this::buscarUsuarioPorMatriculaKeycloak);
+                relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), (texto, sessao) -> {
+                    try {
+                        return buscarUsuarioPorMatriculaKeycloak(texto, sessao);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
             } else if("step_radio_confirmacao_usuario".equalsIgnoreCase(e.getNomeEtapa())) {
                 relacaoDeEtapasEFuncoes.put(e.getNomeEtapa(), this::confirmaUsuario);
             } else {
@@ -167,13 +180,15 @@ public class RadioCommand implements CommandStrategy {
 
     }
 
-    private List<DecisaoResposta> buscarUsuarioPorMatriculaKeycloak(String texto, SessaoEntity sessao) {
+    private List<DecisaoResposta> buscarUsuarioPorMatriculaKeycloak(String texto, SessaoEntity sessao) throws IOException {
 
-        Optional<List<UserRepresentation>> listUsuarios = keycloakService.pesquisarUsuarioPorMatricula(texto.toLowerCase().trim());
+        String pessoa = pessoaService.buscarPorMatricula(texto);
 
-        if(listUsuarios.isPresent()) {
+//        Optional<List<UserRepresentation>> listUsuarios = keycloakService.pesquisarUsuarioPorMatricula(texto.toLowerCase().trim());
+
+        if(pessoa != null) {
             return List.of(
-                    new DecisaoResposta(listUsuarios.get().get(0).getFirstName(), "step_radio_confirmacao_usuario"),
+                    new DecisaoResposta(pessoa, "step_radio_confirmacao_usuario"),
                     new DecisaoResposta("Confirma os dados do solicitante? ","step_radio_confirmacao_usuario")
             );
         }
