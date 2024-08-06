@@ -31,8 +31,6 @@ public class TelegramController {
 
     TelegramService service;
     CanalService canalService;
-    @Value("telegram.token")
-    private String token;
     ObjectMapper objectMapper;
 
     public TelegramController(TelegramService service, CanalService canalService, ObjectMapper objectMapper) {

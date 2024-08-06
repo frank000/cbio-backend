@@ -7,5 +7,5 @@ public interface CanalRepository extends MongoRepository<CanalEntity, String> {
 
     CanalEntity findCanalByTokenAndCliente(String token, String cliente);
 
-    Boolean existsByTokenAndNome(String token, String nome);
+    Boolean existsByTokenAndNomeAndAtivoIsTrue(String token, String nome);
 }

@@ -1,17 +1,14 @@
 package com.policia.df.bot.app.service;
 
 import com.policia.df.bot.app.entities.CanalEntity;
-import com.policia.df.bot.app.entities.EtapaEntity;
 import com.policia.df.bot.app.repository.CanalRepository;
 import com.policia.df.bot.app.service.mapper.CanalMapper;
 import com.policia.df.bot.app.service.mapper.CycleAvoidingMappingContext;
 import com.policia.df.bot.core.service.CanalService;
 import com.policia.df.bot.core.v1.dto.CanalDTO;
-import com.policia.df.bot.core.v1.dto.EtapaDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) implements CanalService {
@@ -38,7 +35,7 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
     @Override
     public Boolean existsByTokenAndCliente(String token, String nomeCanal) throws Exception {
         try {
-            return repository.existsByTokenAndNome(token, nomeCanal);
+            return repository.existsByTokenAndNomeAndAtivoIsTrue(token, nomeCanal);
         } catch (Exception e) {
             throw new Exception("Erro ao consultar canal.");
         }
