@@ -159,13 +159,16 @@ public class TelegramServiceImpl implements TelegramService {
                         TelegramUtils.bold("--->>>"),
                         obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES).get(GitlabEventDTO.Chaves.TARGETBRANCH)
                 );
+
         String usuario = "%s: %s \n"
                 .formatted(
                         TelegramUtils.bold("Usuário"),
                         obj.getEvent(GitlabEventDTO.Chaves.USER).get(GitlabEventDTO.Chaves.NAME));
+
         String projeto = "%s: %s \n".formatted(
                 TelegramUtils.bold("Projeto"),
                 obj.getEvent(GitlabEventDTO.Chaves.PROJETO).get(GitlabEventDTO.Chaves.NAME));
+
         msg =  TelegramUtils.bold("MERGE REQUEST") + "\n" +
                 projeto +
                 acao +
