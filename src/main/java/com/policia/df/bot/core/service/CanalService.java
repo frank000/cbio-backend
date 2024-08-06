@@ -8,12 +8,13 @@ import java.util.List;
 
 public interface CanalService {
 
-    public List<CanalEntity> listarTodos();
+    List<CanalEntity> listarTodos();
 
-    public CanalEntity incluirCanal(CanalEntity canal);
+    CanalEntity incluirCanal(CanalEntity canal);
 
-    public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception;
+    CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception;
 
-    public void alterar(CanalDTO canal) throws Exception;
+    void alterar(CanalDTO canal) throws Exception;
 
+    Boolean existsByTokenAndCliente(String token, String cliente) throws Exception;
 }

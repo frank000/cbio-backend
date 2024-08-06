@@ -119,6 +119,26 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.gitlab4j/gitlab4j-api -->
+		<dependency>
+			<groupId>org.gitlab4j</groupId>
+			<artifactId>gitlab4j-api</artifactId>
+			<version>6.0.0-rc.5</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>6.3.1</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<dependencyManagement>

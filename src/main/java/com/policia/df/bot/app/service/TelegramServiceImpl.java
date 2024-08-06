@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.policia.df.bot.app.entities.CanalEntity;
 import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.service.enuns.EtapaPadraoEnum;
+import com.policia.df.bot.app.service.utils.TelegramUtils;
 import com.policia.df.bot.core.service.*;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
+import com.policia.df.bot.core.v1.dto.GitlabEventDTO;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,7 @@ public class TelegramServiceImpl implements TelegramService {
         boolean isSuperGrupo = "supergroup".equals(update.getMessage().getChat().getType());
 
         if(!(isGrupo || isSuperGrupo)) {
-            sendMessage(createResponseBody(update, "Acesso negado. Entre em contato com o administrador."), canalEntity);
+            sendMessage(createResponseBodyPorChatId(String.valueOf(update.getMessage().getChatId()), "Acesso negado. Entre em contato com o administrador."), canalEntity);
             return;
         }
 
@@ -76,7 +78,7 @@ public class TelegramServiceImpl implements TelegramService {
 
             if(resposta != null) {
                 for (DecisaoResposta e : resposta) {
-                    sendMessage(createResponseBody(update, e.getTexto()), canalEntity);
+                    sendMessage(createResponseBodyPorChatId(String.valueOf(update.getMessage().getChatId()), e.getTexto()), canalEntity);
                 }
             }
         } else {
@@ -106,17 +108,69 @@ public class TelegramServiceImpl implements TelegramService {
         ResponseBody response = client.newCall(request).execute().body();
 
         var entity = objectMapper.readValue(response.string(), Object.class);
+        log.info("Resultado do envio: %s".formatted(entity.toString()));
 
         return entity;
     }
 
-    private RequestBody createResponseBody(Update update, String msg) {
+    @Override
+    public RequestBody createResponseBodyPorChatId(String chatId, String msg) {
 
-        String mensagem = new MensagemDto().montarEnvio(msg, update.getMessage().getChatId());
+        String mensagem = new MensagemDto().montarEnvio(msg, chatId);
 
         MediaType mediaType = MediaType.parse("application/json");
 
         return RequestBody.create(mediaType, mensagem);
 
+    }
+
+    @Override
+    public void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception {
+        CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente);
+        String msg = "";
+
+        if(obj != null &&  obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES) != null){
+            msg = getMenssagemMergeRequest(obj);
+        }
+
+        //estamos usando o primeiro nome para mandar mensagem para o grupo
+        //Inicialmente ao configurar um canal, não temos tal informação
+        //TODO ao evoluir, fazer um passo onde possamos adicionar um novo id do grupo.
+        String groupId = "-" + canalEntity.getPrimeiroNome();
+
+        sendMessage(
+                createResponseBodyPorChatId(
+                        groupId,
+                        msg),
+                canalEntity);
+    }
+
+    private String getMenssagemMergeRequest(GitlabEventDTO obj) {
+        String msg;
+        String acao = "%s: %s \n"
+                .formatted(
+                        TelegramUtils.bold("Ação"),
+                        obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES).get(GitlabEventDTO.Chaves.ACTION));
+
+        String detalhe = "%s: %s %s %s \n"
+                .formatted(
+                        TelegramUtils.bold("Branchs de"),
+                        obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES).get(GitlabEventDTO.Chaves.SOURCEBRANCH),
+                        TelegramUtils.bold("--->>>"),
+                        obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES).get(GitlabEventDTO.Chaves.TARGETBRANCH)
+                );
+        String usuario = "%s: %s \n"
+                .formatted(
+                        TelegramUtils.bold("Usuário"),
+                        obj.getEvent(GitlabEventDTO.Chaves.USER).get(GitlabEventDTO.Chaves.NAME));
+        String projeto = "%s: %s \n".formatted(
+                TelegramUtils.bold("Projeto"),
+                obj.getEvent(GitlabEventDTO.Chaves.PROJETO).get(GitlabEventDTO.Chaves.NAME));
+        msg =  TelegramUtils.bold("MERGE REQUEST") + "\n" +
+                projeto +
+                acao +
+                detalhe +
+                usuario;
+        return msg;
     }
 }
