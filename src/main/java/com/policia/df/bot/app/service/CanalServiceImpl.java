@@ -26,7 +26,7 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
     @Override
     public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception {
         try {
-            return repository.findCanalByTokenAndCliente(token, cliente);
+            return repository.findCanalByTokenAndClienteAndAtivoIsTrue(token, cliente);
         } catch (Exception e) {
             throw new Exception("Erro ao consultar canal.");
         }
