@@ -36,6 +36,15 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
     }
 
     @Override
+    public Boolean existsByTokenAndCliente(String token, String nomeCanal) throws Exception {
+        try {
+            return repository.existsByTokenAndNome(token, nomeCanal);
+        } catch (Exception e) {
+            throw new Exception("Erro ao consultar canal.");
+        }
+    }
+
+    @Override
     public void alterar(CanalDTO canal) throws Exception {
 
         if(canal.getId() == null || canal.getId().isEmpty()) throw new Exception("Informe um id para alteração.");

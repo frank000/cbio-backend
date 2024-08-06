@@ -25,12 +25,14 @@ public class MensagemDto {
                 .toString();
     }
 
-    public String montarEnvio(String text, Long chatId) {
+    public String montarEnvio(String text, String chatId) {
         return new StringBuilder()
                 .append("{\"chat_id\":\"")
                 .append(chatId)
                 .append("\",\"text\":\"")
                 .append(text)
+                .append("\",\"parse_mode\":\"")
+                .append("markdown")
                 .append("\"}")
                 .toString();
     }
