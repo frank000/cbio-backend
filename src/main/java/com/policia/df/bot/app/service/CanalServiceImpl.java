@@ -26,7 +26,7 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
     @Override
     public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception {
         try {
-            return repository.findCanalByTokenAndClienteAndAtivoIsTrue(token, cliente);
+            return repository.findCanalByTokenAndClienteAndAtivoTrue(token, cliente);
         } catch (Exception e) {
             throw new Exception("Erro ao consultar canal.");
         }
@@ -35,7 +35,7 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
     @Override
     public Boolean existsByTokenAndCliente(String token, String nomeCanal) throws Exception {
         try {
-            return repository.existsByTokenAndNomeAndAtivoIsTrue(token, nomeCanal);
+            return repository.existsByTokenAndNomeAndAtivoTrue(token, nomeCanal);
         } catch (Exception e) {
             throw new Exception("Erro ao consultar canal.");
         }
@@ -65,5 +65,8 @@ public record CanalServiceImpl(CanalRepository repository, CanalMapper mapper) i
         repository.save(mapper.canalDTOToCanalEntity(canal, new CycleAvoidingMappingContext()));
     }
 
+    public void deleta(String id){
+        repository.deleteById(id);
+    }
 
 }

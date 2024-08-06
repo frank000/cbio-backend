@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface CanalRepository extends MongoRepository<CanalEntity, String> {
 
-    CanalEntity findCanalByTokenAndClienteAndAtivoIsTrue(String token, String cliente);
+    CanalEntity findCanalByTokenAndClienteAndAtivoTrue(String token, String cliente);
 
-    Boolean existsByTokenAndNomeAndAtivoIsTrue(String token, String nome);
+    Boolean existsByTokenAndNomeAndAtivoTrue(String token, String nome);
 }
