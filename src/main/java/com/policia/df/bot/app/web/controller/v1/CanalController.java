@@ -3,7 +3,7 @@ package com.policia.df.bot.app.web.controller.v1;
 import com.policia.df.bot.app.entities.CanalEntity;
 import com.policia.df.bot.core.service.CanalService;
 import com.policia.df.bot.core.v1.dto.CanalDTO;
-import com.policia.df.bot.core.v1.dto.EtapaDTO;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +28,12 @@ public record CanalController(CanalService service) {
     private void alterar(@RequestBody CanalDTO canal) throws Exception {
 
         service.alterar(canal);
+
+    }
+    @DeleteMapping(value = "/deleta/{id}")
+    private void deleta( @Valid @PathVariable("id") String id) {
+
+        service.deleta(id);
 
     }
 

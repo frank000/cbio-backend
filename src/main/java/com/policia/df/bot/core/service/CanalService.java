@@ -17,4 +17,7 @@ public interface CanalService {
     void alterar(CanalDTO canal) throws Exception;
 
     Boolean existsByTokenAndCliente(String token, String cliente) throws Exception;
+
+    void deleta(String id);
+
 }
