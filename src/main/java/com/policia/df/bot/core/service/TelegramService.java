@@ -16,4 +16,6 @@ public interface TelegramService {
     RequestBody createResponseBodyPorChatId(String chatId, String msg);
 
     void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception;
+
+    void processaMensagem(Update update, CanalEntity canalEntity);
 }

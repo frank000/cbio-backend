@@ -1,16 +1,11 @@
 package com.policia.df.bot.app.service;
 
-import com.policia.df.bot.app.entities.ComandoEntity;
 import com.policia.df.bot.app.entities.EtapaEntity;
-import com.policia.df.bot.app.repository.ComandoRepository;
 import com.policia.df.bot.app.repository.EtapaRepository;
 import com.policia.df.bot.app.service.mapper.CycleAvoidingMappingContext;
 import com.policia.df.bot.app.service.mapper.EtapaMapper;
 import com.policia.df.bot.core.service.EtapaService;
 import com.policia.df.bot.core.v1.dto.EtapaDTO;
-import org.checkerframework.checker.units.qual.C;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

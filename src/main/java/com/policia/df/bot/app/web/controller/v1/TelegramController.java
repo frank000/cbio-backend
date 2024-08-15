@@ -3,6 +3,7 @@ package com.policia.df.bot.app.web.controller.v1;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.policia.df.bot.app.entities.CanalEntity;
+import com.policia.df.bot.core.service.CalendarGoogleService;
 import com.policia.df.bot.core.service.CanalService;
 import com.policia.df.bot.core.service.TelegramService;
 import com.policia.df.bot.core.v1.dto.GitlabEventDTO;
@@ -11,13 +12,11 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Map;
 
 @RestController
@@ -28,11 +27,26 @@ public class TelegramController {
     TelegramService service;
     CanalService canalService;
     ObjectMapper objectMapper;
+    CalendarGoogleService calendarService;
 
-    public TelegramController(TelegramService service, CanalService canalService, ObjectMapper objectMapper) {
+    public TelegramController(TelegramService service, CanalService canalService, ObjectMapper objectMapper, CalendarGoogleService calendarService1) {
         this.service = service;
         this.canalService = canalService;
         this.objectMapper = objectMapper;
+        this.calendarService = calendarService1;
+    }
+    @PostMapping(value = "/webhook")
+    @PreAuthorize("@validacaoCallbackService.validaToken('TELEGRAM', #token)")
+    ResponseEntity<Void> webhook(
+            @RequestParam("token") String token,
+            @RequestParam("cliente") String cliente,
+            @org.springframework.web.bind.annotation.RequestBody Update update
+
+    ) throws Exception {
+        CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente);
+
+        service.processaMensagem(update, canalEntity);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/connect")
@@ -80,6 +94,9 @@ public class TelegramController {
         return ResponseEntity.ok().build();
     }
 
-
+    @GetMapping("teste/{id}")
+    public void teste(@PathVariable String id) throws GeneralSecurityException, IOException {
+        calendarService.executa(id);
+    }
 
 }

@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.policia.df.bot.app.entities.CanalEntity;
 import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.service.enuns.EtapaPadraoEnum;
+import com.policia.df.bot.app.service.mapper.CanalMapper;
+import com.policia.df.bot.app.service.mapper.CycleAvoidingMappingContext;
 import com.policia.df.bot.app.service.utils.TelegramUtils;
 import com.policia.df.bot.core.service.*;
 import com.policia.df.bot.core.v1.dto.DecisaoResposta;
+import com.policia.df.bot.core.v1.dto.EntradaMensagemDTO;
 import com.policia.df.bot.core.v1.dto.GitlabEventDTO;
 import com.policia.df.bot.core.v1.dto.MensagemDto;
 import lombok.Data;
@@ -36,6 +39,10 @@ public class TelegramServiceImpl implements TelegramService {
     private final RespostaService respostaService;
 
     private final CanalService canalService;
+
+    private final CanalMapper canalMapper;
+
+    private final ChatbotForwardService forwardService;
 
     @Value("${telegram.url}")
     private String url;
@@ -175,5 +182,25 @@ public class TelegramServiceImpl implements TelegramService {
                 detalhe +
                 usuario;
         return msg;
+    }
+
+    @Override
+    public void processaMensagem(Update update, CanalEntity canalEntity) {
+        if(update.getMessage() == null && update.getCallbackQuery() == null) return;
+
+        EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
+                .builder()
+                .mensagem(update.getMessage() != null ? update.getMessage().getText() : "")
+                .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
+                .identificadorRemetente(String.valueOf(update.getMessage().getChatId()))
+                .build();
+        try{
+            forwardService.processaMensagem(entradaMensagemDTO);
+        } catch (Exception e) {
+            String msg = String.format("Exceção: %s", e.getMessage());
+            throw new RuntimeException(msg);
+        }
+
+
     }
 }
