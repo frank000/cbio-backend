@@ -69,9 +69,11 @@ public class TelegramServiceImpl implements TelegramService {
 
         Long agora = System.currentTimeMillis();
 
-        SessaoEntity sessao = sessaoService.validateSession(update, agora);
+        SessaoEntity sessao = sessaoService.validaOuCriaSessaoAtivaPorUsuario(
+                update.getMessage().getFrom().getId(),
+                agora);
 
-        if (sessaoService.sessaoValida(agora, sessao)) {
+        if (sessaoService.isSessaoValidaTempo(agora, sessao)) {
 
             String ultimaAcao = StringUtils.hasText(sessao.getUltimaEtapa())? sessao.getUltimaEtapa() : EtapaPadraoEnum.INIT.getValor();
 

@@ -4,6 +4,7 @@ import com.policia.df.bot.app.entities.SessaoEntity;
 import com.policia.df.bot.app.repository.SessaoRepository;
 import com.policia.df.bot.core.service.SessaoService;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -17,43 +18,51 @@ public class SessaoServiceImpl implements SessaoService {
     private final SessaoRepository repository;
 
     @Override
-    public SessaoEntity validateSession(Update update, Long agora) {
+    public SessaoEntity validaOuCriaSessaoAtivaPorUsuario(Long usuarioId, Long agora) {
 
         Long expiresValue = 120000L;
 
-        UUID sessaoIdTemp = UUID.randomUUID();
-
-        SessaoEntity sessao = repository.findByAtivoAndUsuario(Boolean.TRUE, update.getMessage().getFrom().getId());
+        SessaoEntity sessao = repository.findByAtivoAndUsuario(Boolean.TRUE, usuarioId);
 
         if(sessao == null) {
-            sessao = new SessaoEntity();
 
-            sessao.setSessaoId(sessaoIdTemp);
-            sessao.setInicioSessao(agora);
-            sessao.setAtivo(Boolean.TRUE);
-            sessao.setExpiresAt(agora + expiresValue); // 2 minutos
-            sessao.setUsuario(update.getMessage().getFrom().getId());
+            return criaESalvaSessao(usuarioId, agora, expiresValue);
 
-            return repository.save(sessao);
+        } else {
 
-        } else { //expirou
-            if(agora > sessao.getExpiresAt()) {
-
-                sessao.setAtivo(Boolean.FALSE);
-                sessao.setFinalSessao(agora);
-
-            } else { //renova
-                sessao.setExpiresAt(agora + expiresValue); // 2 minutos
-            }
-
-            return repository.save(sessao);
-
+            return expiraOuRenovaSessao(agora, sessao, expiresValue);
         }
 
     }
 
+    private @NotNull SessaoEntity expiraOuRenovaSessao(Long agora, SessaoEntity sessao, Long expiresValue) {
+        if(agora > sessao.getExpiresAt()) {
+
+            sessao.setAtivo(Boolean.FALSE);
+            sessao.setFinalSessao(agora);
+
+        } else { //renova
+            sessao.setExpiresAt(agora + expiresValue); // 2 minutos
+        }
+
+        return repository.save(sessao);
+    }
+
+    private @NotNull SessaoEntity criaESalvaSessao(Long usuarioId, Long agora, Long expiresValue) {
+        SessaoEntity sessao;
+        sessao = SessaoEntity.builder()
+                .sessaoId(UUID.randomUUID())
+                .usuario(usuarioId)
+                .inicioSessao(agora)
+                .ativo(Boolean.TRUE)
+                .expiresAt(agora + expiresValue)
+                .build();
+
+        return repository.save(sessao);
+    }
+
     @Override
-    public Boolean sessaoValida(Long agora, SessaoEntity sessao) {
+    public Boolean isSessaoValidaTempo(Long agora, SessaoEntity sessao) {
         return agora <= sessao.getExpiresAt();
     }
 
