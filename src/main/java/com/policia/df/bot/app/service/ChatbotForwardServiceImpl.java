@@ -23,6 +23,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
         DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(entradaMensagemDTO.getMensagem())
                 .identificadorRemetente(entradaMensagemDTO.getIdentificadorRemetente())
+                .canal(entradaMensagemDTO.getCanal())
                 .build();
 
        assistentService.processaDialogoAssistent(dialogoDTO)

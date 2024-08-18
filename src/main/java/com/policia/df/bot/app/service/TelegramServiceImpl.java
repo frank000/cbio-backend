@@ -192,9 +192,9 @@ public class TelegramServiceImpl implements TelegramService {
 
         EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
                 .builder()
-                .mensagem(update.getMessage() != null ? update.getMessage().getText() : "")
+                .mensagem(update.getMessage() != null ? update.getMessage().getText() : update.getCallbackQuery().getData())
                 .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
-                .identificadorRemetente(String.valueOf(update.getMessage().getChatId()))
+                .identificadorRemetente(getIdentificadorRemetente(update))
                 .build();
         try{
             forwardService.processaMensagem(entradaMensagemDTO);
@@ -204,5 +204,11 @@ public class TelegramServiceImpl implements TelegramService {
         }
 
 
+    }
+
+    private static String getIdentificadorRemetente(Update update) {
+        boolean isMsgEnviadaDiretamentePeloUsuario = update.getMessage() != null && update.getMessage().getChatId() != null;
+
+        return String.valueOf(isMsgEnviadaDiretamentePeloUsuario ? update.getMessage().getChatId() :  update.getCallbackQuery().getMessage().getChatId());
     }
 }
