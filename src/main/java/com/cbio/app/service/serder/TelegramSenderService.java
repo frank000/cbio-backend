@@ -1,7 +1,10 @@
 package com.cbio.app.service.serder;
 
 import com.cbio.app.client.TelegramClient;
-import com.cbio.core.v1.dto.DialogoDTO;
+import com.cbio.app.entities.SessaoEntity;
+import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.core.service.SessaoService;
+import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 public class TelegramSenderService implements Sender {
 
     private final TelegramClient telegramClient;
+    private final SessaoService sessaoService;
 
     @Override
     public void envia(DialogoDTO dialogoDTO){

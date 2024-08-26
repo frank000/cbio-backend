@@ -1,6 +1,16 @@
 package com.cbio.chat.services;
 
+import com.cbio.app.entities.SessaoEntity;
+import com.cbio.chat.mappers.DialogoMapper;
+import com.cbio.chat.models.DialogoEntity;
 import com.cbio.chat.repositories.ChatChannelCustomRepository;
+import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.chat.repositories.DialogoRepository;
+import com.cbio.core.service.AttendantService;
+import com.cbio.core.service.ChatbotForwardService;
+import com.cbio.core.service.SessaoService;
+import com.cbio.core.v1.dto.AttendantDTO;
+import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.google.common.collect.Lists;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.ChatMessageDTO;
@@ -16,7 +26,6 @@ import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.chat.repositories.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +39,17 @@ public class ChatService implements IChatService {
     private final ChatMessageRepository chatMessageRepository;
 
     private final UserService userService;
+
+    private final SessaoService sessaoService;
+
+
+    private final AttendantService attendantService;
+
     private final ChatChannelCustomRepository chatChannelCustomRepository;
 
     private final int MAX_PAGABLE_CHAT_MESSAGES = 100;
 
+    private final ChatbotForwardService forwardService;
 
 
     private String getExistingChannel(ChatChannelInitializationDTO chatChannelInitializationDTO) {
@@ -46,11 +62,25 @@ public class ChatService implements IChatService {
         return (channel != null && !channel.isEmpty()) ? channel.get(0).getId() : null;
     }
 
+
+    //TODO Colocar no Reedis
+    public ChatChannelInitializationDTO getChatChannelInitializationDTO(String channelId) {
+        ChatChannelEntity chatChannelEntity = chatChannelRepository.findById(channelId)
+                .orElseThrow(() -> new RuntimeException("Chat não encontrado."));
+
+        return ChatChannelInitializationDTO.builder()
+                .userIdOne(chatChannelEntity.getUserOne().getUuid())
+                .userIdTwo(chatChannelEntity.getUserTwo().getUuid())
+                .initCanal(chatChannelEntity.getInitCanal())
+                .build();
+    }
+
     private String newChatSession(ChatChannelInitializationDTO chatChannelInitializationDTO)
             throws BeansException, UserNotFoundException {
         ChatChannelEntity channel = new ChatChannelEntity(
                 userService.getUser(chatChannelInitializationDTO.getUserIdOne()),
-                userService.getUser(chatChannelInitializationDTO.getUserIdTwo())
+                userService.getUser(chatChannelInitializationDTO.getUserIdTwo()),
+                chatChannelInitializationDTO.getInitCanal()
         );
 
         chatChannelRepository.save(channel);
@@ -89,7 +119,8 @@ public class ChatService implements IChatService {
     }
 
     public List<ChatMessageDTO> getExistingChatMessages(String channelUuid) {
-        ChatChannelEntity channel = chatChannelRepository.getChannelDetails(channelUuid);
+        ChatChannelEntity channel = chatChannelRepository.findById(channelUuid)
+                .orElseThrow(() -> new RuntimeException("Chat não encontrado."));
 
         List<ChatMessageEntity> chatMessages =
                 chatMessageRepository.getExistingChatMessages(
@@ -102,5 +133,36 @@ public class ChatService implements IChatService {
         List<ChatMessageEntity> messagesByLatest = Lists.reverse(chatMessages);
 
         return ChatMessageMapper.mapMessagesToChatDTOs(messagesByLatest);
+    }
+
+
+    public void receiveMessageAttendant(EntradaMensagemDTO entradaMensagemDTO, String channelId, String attendantId){
+
+        SessaoEntity sessaoEntity = sessaoService.buscaSessaoAtivaPorUsuarioCanal(
+                Long.valueOf(entradaMensagemDTO.getIdentificadorRemetente()),
+                entradaMensagemDTO.getCanal().getNome(),
+                channelId);
+
+        DialogoDTO dialogoDTO = DialogoDTO.builder()
+                .mensagem(formatAnswearToClient(entradaMensagemDTO, attendantId))
+                .identificadorRemetente(entradaMensagemDTO.getIdentificadorRemetente())
+                .canal(sessaoEntity.getCanal())
+                .channelUuid(channelId)
+                .build();
+
+        forwardService.enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), dialogoDTO);
+
+
+
+    }
+
+    private String formatAnswearToClient(EntradaMensagemDTO entradaMensagemDTO, String attendantId) {
+        AttendantDTO attendantDTO = attendantService.buscaPorId(attendantId);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("*").append(attendantDTO.getNome()).append("*\n");
+        sb.append(entradaMensagemDTO.getMensagem());
+
+        return sb.toString();
     }
 }

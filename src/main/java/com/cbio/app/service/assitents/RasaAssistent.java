@@ -2,7 +2,7 @@ package com.cbio.app.service.assitents;
 
 import com.cbio.app.client.RasaClient;
 import com.cbio.core.service.AssistentBotService;
-import com.cbio.core.v1.dto.DialogoDTO;
+import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
 import com.cbio.core.v1.dto.RasaMessageOutDTO;
 import lombok.RequiredArgsConstructor;

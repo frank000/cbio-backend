@@ -70,7 +70,7 @@ public class TelegramServiceImpl implements TelegramService {
 
         SessaoEntity sessao = sessaoService.validaOuCriaSessaoAtivaPorUsuarioCanal(
                 update.getMessage().getFrom().getId(),
-                canalEntity.getNome(),
+                canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()),
                 agora);
 
         if (sessaoService.isSessaoValidaTempo(agora, sessao)) {

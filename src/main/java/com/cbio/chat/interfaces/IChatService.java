@@ -16,4 +16,6 @@ public interface IChatService {
       throws BeansException, UserNotFoundException;
   
   List<ChatMessageDTO> getExistingChatMessages(String channelUuid);
+
+  ChatChannelInitializationDTO getChatChannelInitializationDTO(String channelId);
 }

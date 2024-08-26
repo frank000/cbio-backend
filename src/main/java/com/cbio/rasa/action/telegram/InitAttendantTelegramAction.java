@@ -6,6 +6,7 @@ import com.cbio.chat.services.ChatService;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.AttendantDTO;
+import com.cbio.core.v1.dto.CanalDTO;
 import io.github.jrasa.Action;
 import io.github.jrasa.CollectingDispatcher;
 import io.github.jrasa.domain.Domain;
@@ -44,27 +45,32 @@ public class InitAttendantTelegramAction implements Action {
         if (tracker.getCurrentState() != null && tracker.getCurrentState().getSenderId() != null) {
 
             String senderId = tracker.getCurrentState().getSenderId();
-//            simpMessagingTemplate
-//                    .convertAndSend("/topic/demo", "HoOoooopppeee !! ");
+
+            String canal = "TELEGRAM";
             SessaoEntity sessaoEntity = sessaoService
                     .validaOuCriaSessaoAtivaPorUsuarioCanal(
                             Long.valueOf(senderId),
-                            "TELEGRAM",
+                            CanalDTO.builder()
+                                    .nome(canal)
+                                    .build(),
                             System.currentTimeMillis());
 
             try {
-                AttendantDTO attendantDTO = attendantService.fetch();
-                sessaoEntity.setAtendimentoAberto(Boolean.TRUE);
-                sessaoEntity.setUlitmoAtendente(attendantDTO);
-                sessaoService.salva(sessaoEntity);
 
+                AttendantDTO attendantDTO = attendantService.fetch();
                 ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
                         .userIdOne(attendantDTO.getId())
                         .userIdTwo(senderId)
+                        .initCanal(canal)
                         .build();
 
                 String channelUuid = chatService.establishChatSession(chatChannelInitialization);
 
+
+                sessaoEntity.setChannelUuid(channelUuid);
+                sessaoEntity.setAtendimentoAberto(Boolean.TRUE);
+                sessaoEntity.setUlitmoAtendente(attendantDTO);
+                sessaoService.salva(sessaoEntity);
                 //TODO disparar websocket para lista de atendimentos
                 //TODO disparar websocket para lista do atendente
 

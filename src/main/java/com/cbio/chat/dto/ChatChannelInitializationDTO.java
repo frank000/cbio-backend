@@ -11,4 +11,6 @@ public class ChatChannelInitializationDTO {
   private String userIdOne;
 
   private String userIdTwo;
+
+  private String initCanal;
 }

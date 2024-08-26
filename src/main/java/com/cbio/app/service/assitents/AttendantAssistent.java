@@ -2,7 +2,7 @@ package com.cbio.app.service.assitents;
 
 import com.cbio.app.client.RasaClient;
 import com.cbio.core.service.AssistentBotService;
-import com.cbio.core.v1.dto.DialogoDTO;
+import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
 import com.cbio.core.v1.dto.RasaMessageOutDTO;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service("attendantAssistent")
@@ -36,7 +35,8 @@ public class AttendantAssistent implements AssistentBotService {
 
 
             simpMessagingTemplate
-                    .convertAndSend("/topic/demo", rasaMessageDTO);
+                    .convertAndSend(String.format("/topic/demo.%s", dialogo.getChannelUuid()),
+                            rasaMessageDTO);
             return Optional.empty();
 
         } catch (Exception e) {

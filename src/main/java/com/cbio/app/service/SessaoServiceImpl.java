@@ -3,6 +3,7 @@ package com.cbio.app.service;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.repository.SessaoRepository;
 import com.cbio.core.service.SessaoService;
+import com.cbio.core.v1.dto.CanalDTO;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -29,16 +30,22 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
     @Override
-    public SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, Long agora){
+    public SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, CanalDTO canal, Long agora){
 
         Long expiresValue = 120000L;
 
-        Optional<SessaoEntity> byAtivoAndIdentificadorUsuarioAndCanal = sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanal(Boolean.TRUE, usuarioId, canal);
+        Optional<SessaoEntity> byAtivoAndIdentificadorUsuarioAndCanal = sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNome(Boolean.TRUE, usuarioId, canal.getNome());
 
         return byAtivoAndIdentificadorUsuarioAndCanal
                 .orElseGet(() -> criaESalvaSessao(usuarioId, agora, expiresValue, canal));
 
 
+
+    }
+
+    public SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId){
+        return sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNomeAndChannelUuid(Boolean.TRUE, usuarioId, canal, channelId)
+                .orElseThrow(() -> new RuntimeException("Sessão não encontrada."));
 
     }
 
@@ -55,7 +62,7 @@ public class SessaoServiceImpl implements SessaoService {
         return sessaoRepository.save(sessao);
     }
 
-    private @NotNull SessaoEntity criaESalvaSessao(Long usuarioId, Long agora, Long expiresValue, String canal) {
+    private @NotNull SessaoEntity criaESalvaSessao(Long usuarioId, Long agora, Long expiresValue, CanalDTO canal) {
         SessaoEntity sessao;
         sessao = SessaoEntity.builder()
                 .sessaoId(UUID.randomUUID())

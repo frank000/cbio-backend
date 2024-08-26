@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatChannelRepository extends MongoRepository<ChatChannelEntity, String> {
@@ -33,9 +34,6 @@ public interface ChatChannelRepository extends MongoRepository<ChatChannelEntity
   public String getChannelUuid(
       @Param("userIdOne") long userIdOne, @Param("userIdTwo") long userIdTwo);
 
-  @Query(" FROM"
-      + "    ChatChannel c"
-      + "  WHERE"
-      + "    c.uuid IS :uuid")
-  public ChatChannelEntity getChannelDetails(@Param("uuid") String uuid);
+
+   Optional<ChatChannelEntity> findById(@Param("id") String id);
 }

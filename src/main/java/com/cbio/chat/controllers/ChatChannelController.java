@@ -1,6 +1,6 @@
 package com.cbio.chat.controllers;
 
-import com.cbio.app.entities.AttendantEntity;
+import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.ChatMessageDTO;
 import com.cbio.chat.dto.EstablishedChatChannelDTO;
@@ -8,9 +8,11 @@ import com.cbio.chat.exceptions.IsSameUserException;
 import com.cbio.chat.exceptions.UserNotFoundException;
 import com.cbio.chat.http.JSONResponseHelper;
 import com.cbio.chat.interfaces.IChatChannelController;
-import com.cbio.chat.models.UserChatEntity;
 import com.cbio.chat.services.ChatService;
 import com.cbio.chat.services.UserService;
+import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,12 +36,28 @@ public class ChatChannelController implements IChatChannelController {
     @Autowired
     private UserService userService;
 
-    @MessageMapping("/demo")
-    @SendTo("/topic/demo")
-    public String asdf()
-            throws BeansException, UserNotFoundException {
+    @MessageMapping("/demo.{channelId}")
+    @SendTo("/topic/demo.{channelId}")
+    public void receiveFromAttedant(@DestinationVariable String channelId, String message)
+            throws BeansException {
 
-        return "Hello";
+        ChatChannelInitializationDTO chatChannelInitializationDTO = chatService.getChatChannelInitializationDTO(channelId);
+
+
+        EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
+                .builder()
+                .mensagem(message.replace("\"", ""))
+                .canal(
+                        CanalDTO.builder()
+                                .nome(chatChannelInitializationDTO.getInitCanal())
+                                .build()
+                )
+                .identificadorRemetente(chatChannelInitializationDTO.getUserIdTwo())
+                .build();
+
+        chatService.receiveMessageAttendant(entradaMensagemDTO, channelId, chatChannelInitializationDTO.getUserIdOne());
+
+
     }
     @MessageMapping("/private.chat.{channelId}")
     @SendTo("/topic/private.chat.{channelId}")

@@ -2,6 +2,7 @@ package com.cbio.app.entities;
 
 import com.cbio.app.repository.SessaoRepository;
 import com.cbio.core.v1.dto.AttendantDTO;
+import com.cbio.core.v1.dto.CanalDTO;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,7 +26,7 @@ public class SessaoEntity {
 
     private UUID sessaoId;
 
-    private String canal;
+    private CanalDTO canal;
 
     @Indexed
     private Long identificadorUsuario;
@@ -41,6 +42,8 @@ public class SessaoEntity {
     private Boolean atendimentoAberto;
 
     private String ultimaEtapa;
+
+    private String channelUuid;
 
     private String comandoExecucao;
 

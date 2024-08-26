@@ -1,6 +1,6 @@
 package com.cbio.core.service;
 
-import com.cbio.core.v1.dto.DialogoDTO;
+import com.cbio.chat.dto.DialogoDTO;
 
 import java.util.Optional;
 

@@ -1,7 +1,9 @@
 package com.cbio.core.v1.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
+@Builder
 @Data
 public class CanalDTO {
 
