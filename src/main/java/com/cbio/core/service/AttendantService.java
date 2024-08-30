@@ -1,11 +1,12 @@
 package com.cbio.core.service;
 
-import com.cbio.core.v1.dto.AttendantDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
 
 public interface AttendantService  {
 
-    void salva(AttendantDTO attendantDTO);
-    AttendantDTO buscaPorId(String id);
+    void salva(UsuarioDTO attendantDTO);
 
-    AttendantDTO fetch();
+    UsuarioDTO buscaPorId(String id);
+
+    UsuarioDTO fetch();
 }

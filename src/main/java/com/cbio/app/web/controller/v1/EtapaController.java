@@ -1,5 +1,6 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.EtapaService;
 import com.cbio.core.v1.dto.EtapaDTO;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/v1/etapa")
-public record EtapaController(EtapaService service) {
+public record EtapaController(EtapaService service) implements SecuredRestController {
 
     @PostMapping(value = "/adicionar")
     private void adicionarEtapa(EtapaDTO etapaDTO) {

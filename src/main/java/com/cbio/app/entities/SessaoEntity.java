@@ -3,6 +3,7 @@ package com.cbio.app.entities;
 import com.cbio.app.repository.SessaoRepository;
 import com.cbio.core.v1.dto.AttendantDTO;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,13 +42,15 @@ public class SessaoEntity {
 
     private Boolean atendimentoAberto;
 
+    private LocalDateTime dataHoraAtendimentoAberto;
+
     private String ultimaEtapa;
 
     private String channelUuid;
 
     private String comandoExecucao;
 
-    private AttendantDTO ulitmoAtendente;
+    private UsuarioDTO ulitmoAtendente;
 
     private List<AtendimentoDTO> atendimentoDTOS;
 

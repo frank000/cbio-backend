@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserPresenceService implements IUserPresenceService, ChannelInterceptor {
   @Autowired 
-  private UserService userService;
+  private UserChatService userService;
 
   @Override
   public void postSend(Message<?> message, MessageChannel channel, boolean sent) {

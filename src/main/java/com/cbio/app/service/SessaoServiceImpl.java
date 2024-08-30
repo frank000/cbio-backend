@@ -6,8 +6,13 @@ import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +22,8 @@ import java.util.UUID;
 public class SessaoServiceImpl implements SessaoService {
 
     private final SessaoRepository sessaoRepository;
+
+    private final MongoTemplate mongoTemplate;
 
 
     @Override
@@ -96,5 +103,24 @@ public class SessaoServiceImpl implements SessaoService {
         String decodedString = new String(decodedBytes);
 
         return decodedString;
+    }
+
+
+
+    public Long alteraTemplatesDeCertificado(){
+
+        Update update = new Update();
+        update.set("atendimentoAberto", Boolean.FALSE);
+        update.set("dataHoraAtendimentoAberto", null);
+
+        LocalDateTime oneHourPast = LocalDateTime.now().minusHours(1L);
+
+        Query query = new Query().addCriteria(
+                Criteria.where("atendimentoAberto").is(Boolean.TRUE)
+                        .andOperator(Criteria.where("dataHoraAtendimentoAberto").lt(oneHourPast))
+        );
+
+        return mongoTemplate.updateMulti(query, update, SessaoEntity.class).getModifiedCount();
+
     }
 }

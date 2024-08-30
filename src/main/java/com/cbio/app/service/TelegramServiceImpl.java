@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 @Data
 public class TelegramServiceImpl implements TelegramService {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioTelegramService usuarioService;
 
     private final MensagemService mensagemService;
 

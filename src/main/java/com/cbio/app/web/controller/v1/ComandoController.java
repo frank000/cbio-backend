@@ -1,5 +1,6 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.ComandoService;
 import com.cbio.core.v1.dto.ComandoDTO;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/v1/comando")
-public record ComandoController(ComandoService service) {
+public record ComandoController(ComandoService service) implements SecuredRestController {
 
     @PostMapping(value = "/adicionar")
     public void adicionarComando(ComandoDTO comandoDTO) {

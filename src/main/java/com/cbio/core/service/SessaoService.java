@@ -19,4 +19,5 @@ public interface SessaoService {
 
     void salva(SessaoEntity sessao);
 
+    Long alteraTemplatesDeCertificado();
 }

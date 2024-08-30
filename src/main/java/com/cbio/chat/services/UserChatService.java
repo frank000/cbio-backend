@@ -11,7 +11,6 @@ import com.cbio.chat.repositories.UserRepository;
 import com.cbio.chat.strategies.IUserRetrievalStrategy;
 import com.cbio.chat.strategies.UserRetrievalByEmailStrategy;
 import com.cbio.chat.strategies.UserRetrievalByIdStrategy;
-import com.cbio.chat.strategies.UserRetrievalBySecurityContextStrategy;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService, IUserService {
+public class UserChatService implements UserDetailsService, IUserService {
 
   private final UserRepository userRepository;
   private final AttendantRepository attendantRepository;

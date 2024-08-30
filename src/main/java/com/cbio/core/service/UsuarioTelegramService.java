@@ -3,7 +3,7 @@ package com.cbio.core.service;
 import com.cbio.app.entities.UsuarioEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-public interface UsuarioService {
+public interface UsuarioTelegramService {
 
     public UsuarioEntity cadastrarUsuario(UsuarioEntity usuario);
 

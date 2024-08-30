@@ -32,6 +32,7 @@
 		<telegrambots.version>5.5.0</telegrambots.version>
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
 		<lombok.version>1.18.30</lombok.version>
+		<keycloak-version>24.0.4</keycloak-version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -70,8 +71,16 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
 
-<!--		customs-->
+		<!--		customs-->
 
 		<dependency>
 			<groupId>jakarta.persistence</groupId>
@@ -131,6 +140,12 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.6.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-admin-client</artifactId>
+			<version>${keycloak-version}</version>
 		</dependency>
 	</dependencies>
 

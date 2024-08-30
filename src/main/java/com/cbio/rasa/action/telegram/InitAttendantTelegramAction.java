@@ -7,6 +7,7 @@ import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.AttendantDTO;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
 import io.github.jrasa.Action;
 import io.github.jrasa.CollectingDispatcher;
 import io.github.jrasa.domain.Domain;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -57,7 +59,7 @@ public class InitAttendantTelegramAction implements Action {
 
             try {
 
-                AttendantDTO attendantDTO = attendantService.fetch();
+                UsuarioDTO attendantDTO = attendantService.fetch();
                 ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
                         .userIdOne(attendantDTO.getId())
                         .userIdTwo(senderId)
@@ -70,6 +72,7 @@ public class InitAttendantTelegramAction implements Action {
                 sessaoEntity.setChannelUuid(channelUuid);
                 sessaoEntity.setAtendimentoAberto(Boolean.TRUE);
                 sessaoEntity.setUlitmoAtendente(attendantDTO);
+                sessaoEntity.setDataHoraAtendimentoAberto(LocalDateTime.now());
                 sessaoService.salva(sessaoEntity);
                 //TODO disparar websocket para lista de atendimentos
                 //TODO disparar websocket para lista do atendente

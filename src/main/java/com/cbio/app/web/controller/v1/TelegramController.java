@@ -1,5 +1,6 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.web.SecuredRestController;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cbio.app.entities.CanalEntity;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/bot")
-public class TelegramController {
+public class TelegramController implements SecuredRestController {
 
 
     TelegramService service;

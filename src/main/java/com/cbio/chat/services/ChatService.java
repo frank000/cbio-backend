@@ -1,19 +1,9 @@
 package com.cbio.chat.services;
 
 import com.cbio.app.entities.SessaoEntity;
-import com.cbio.chat.mappers.DialogoMapper;
-import com.cbio.chat.models.DialogoEntity;
-import com.cbio.chat.repositories.ChatChannelCustomRepository;
-import com.cbio.chat.dto.DialogoDTO;
-import com.cbio.chat.repositories.DialogoRepository;
-import com.cbio.core.service.AttendantService;
-import com.cbio.core.service.ChatbotForwardService;
-import com.cbio.core.service.SessaoService;
-import com.cbio.core.v1.dto.AttendantDTO;
-import com.cbio.core.v1.dto.EntradaMensagemDTO;
-import com.google.common.collect.Lists;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.ChatMessageDTO;
+import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.chat.dto.NotificationDTO;
 import com.cbio.chat.exceptions.IsSameUserException;
 import com.cbio.chat.exceptions.UserNotFoundException;
@@ -22,8 +12,15 @@ import com.cbio.chat.mappers.ChatMessageMapper;
 import com.cbio.chat.models.ChatChannelEntity;
 import com.cbio.chat.models.ChatMessageEntity;
 import com.cbio.chat.models.UserChatEntity;
+import com.cbio.chat.repositories.ChatChannelCustomRepository;
 import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.chat.repositories.ChatMessageRepository;
+import com.cbio.core.service.AttendantService;
+import com.cbio.core.service.ChatbotForwardService;
+import com.cbio.core.service.SessaoService;
+import com.cbio.core.v1.dto.EntradaMensagemDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
+import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeansException;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +35,7 @@ public class ChatService implements IChatService {
 
     private final ChatMessageRepository chatMessageRepository;
 
-    private final UserService userService;
+    private final UserChatService userService;
 
     private final SessaoService sessaoService;
 
@@ -157,10 +154,11 @@ public class ChatService implements IChatService {
     }
 
     private String formatAnswearToClient(EntradaMensagemDTO entradaMensagemDTO, String attendantId) {
-        AttendantDTO attendantDTO = attendantService.buscaPorId(attendantId);
+        UsuarioDTO attendantDTO = attendantService.buscaPorId(attendantId);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("*").append(attendantDTO.getNome()).append("*\n");
+        sb.append("*").append(attendantDTO.getName())
+                .append("*\n");
         sb.append(entradaMensagemDTO.getMensagem());
 
         return sb.toString();

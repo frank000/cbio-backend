@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @Builder
-@Document(collection = "user")
+@Document(collection = "userChat")
 public class UserChatEntity {
 
   @Id

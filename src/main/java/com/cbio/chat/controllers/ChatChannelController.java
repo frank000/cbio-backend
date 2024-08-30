@@ -1,6 +1,5 @@
 package com.cbio.chat.controllers;
 
-import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.ChatMessageDTO;
 import com.cbio.chat.dto.EstablishedChatChannelDTO;
@@ -9,9 +8,8 @@ import com.cbio.chat.exceptions.UserNotFoundException;
 import com.cbio.chat.http.JSONResponseHelper;
 import com.cbio.chat.interfaces.IChatChannelController;
 import com.cbio.chat.services.ChatService;
-import com.cbio.chat.services.UserService;
+import com.cbio.chat.services.UserChatService;
 import com.cbio.core.v1.dto.CanalDTO;
-import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +32,7 @@ public class ChatChannelController implements IChatChannelController {
     private ChatService chatService;
 
     @Autowired
-    private UserService userService;
+    private UserChatService userService;
 
     @MessageMapping("/demo.{channelId}")
     @SendTo("/topic/demo.{channelId}")
