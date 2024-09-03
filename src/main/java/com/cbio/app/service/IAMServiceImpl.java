@@ -84,11 +84,11 @@ public class IAMServiceImpl implements IAMService {
 
         Map<String, List<String>> attributes = new HashMap<>();
         attributes.put("sid", List.of(userVO.getIdUser()));
+        attributes.put("companyId", List.of(userVO.getIdCompany()));
         attributes.put("tempPassword", List.of("false"));
 
         CredentialRepresentation credential = Credentials
                 .createPasswordCredentials(userVO.getPassword());
-        System.out.println("senha > " + userVO.getPassword());
 //        credential.setType("password");
         UserRepresentation user = new UserRepresentation();
         user.setUsername(userVO.getUserName());

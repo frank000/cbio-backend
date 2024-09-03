@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
     private final IAMService iamService;
 
     @Override
-    public void salva(UsuarioDTO usuarioDTO, String password) {
+    public UsuarioDTO salva(UsuarioDTO usuarioDTO, String password, String role) {
 
         UsuarioEntity entity = usuarioMapper.toEntity(usuarioDTO);
         entity = usuarioRepository.save(entity);
@@ -33,14 +33,16 @@ public class UserServiceImpl implements UserService {
                 .userName(entity.getEmail())
                 .firstname(entity.getName())
                 .idUser(entity.getId())
+                .idCompany(entity.getCompany().getId())
                 .password(password)
                 .email(entity.getEmail())
                 .build();
 
-        String id = iamService.addUser(userKeycloak, IAMServiceImpl.ROLE_ADMIN);
+        String id = iamService.addUser(userKeycloak, role);
         entity.setIdKeycloak(id);
 
-        usuarioRepository.save(entity);
+        UsuarioEntity save = usuarioRepository.save(entity);
+        return usuarioMapper.toDto(save);
     }
 
     @Override

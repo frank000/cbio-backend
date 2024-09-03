@@ -1,7 +1,7 @@
 package com.cbio.app.client;
 
 import com.cbio.core.v1.dto.RasaMessageDTO;
-import com.cbio.core.v1.dto.RasaMessageOutDTO;
+import com.cbio.core.v1.dto.outchatmessages.RasaMessageOutDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

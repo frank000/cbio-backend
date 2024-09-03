@@ -1,9 +1,8 @@
 package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
-import com.cbio.app.base.repository.CompanyGridRepository;
+import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.entities.CompanyEntity;
-import com.cbio.app.service.mapper.CompanyMapper;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.CompanyService;
 import com.cbio.core.v1.dto.CompanyDTO;
@@ -36,6 +35,14 @@ public class CompanyController implements SecuredRestController {
 
         return ResponseEntity
                 .ok( companyService.findById(id));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+
+        companyService.delete(id);
+        return ResponseEntity
+                .ok().build();
     }
 
 

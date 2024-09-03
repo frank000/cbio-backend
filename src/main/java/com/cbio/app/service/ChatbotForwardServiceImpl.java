@@ -1,22 +1,24 @@
 package com.cbio.app.service;
 
-import com.cbio.app.service.mapper.CanalMapper;
-import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
-import com.cbio.core.service.ChatbotForwardService;
-import com.cbio.core.service.SessaoService;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.service.assitents.AttendantAssistent;
 import com.cbio.app.service.assitents.RasaAssistent;
 import com.cbio.app.service.enuns.AssistentEnum;
 import com.cbio.app.service.enuns.CanalSenderEnum;
 import com.cbio.app.service.serder.Sender;
-import com.cbio.core.service.AssistentBotService;
 import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.chat.models.ChatChannelEntity;
+import com.cbio.chat.repositories.ChatChannelRepository;
+import com.cbio.core.service.AssistentBotService;
+import com.cbio.core.service.ChatbotForwardService;
+import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -24,14 +26,14 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
     private final ApplicationContext applicationContext;
 
-
     private final SessaoService sessaoService;
 
-    private final CanalMapper canalMapper;
+
 
     @Override
     public void processaMensagem(EntradaMensagemDTO entradaMensagemDTO){
 
+        LocalDateTime now = LocalDateTime.now();
         SessaoEntity sessaoEntity = sessaoService.validaOuCriaSessaoAtivaPorUsuarioCanal(
                 Long.valueOf(entradaMensagemDTO.getIdentificadorRemetente()),
                 entradaMensagemDTO.getCanal(),
@@ -41,10 +43,17 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
         DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(entradaMensagemDTO.getMensagem())
                 .identificadorRemetente(entradaMensagemDTO.getIdentificadorRemetente())
+                .toIdentifier(sessaoEntity.getUltimoAtendente().getId())
                 .canal(entradaMensagemDTO.getCanal())
-                .channelUuid(sessaoEntity.getChannelUuid())
+                .createdDateTime(now)
+                .channelUuid((sessaoEntity.getLastChannelChat() != null)? sessaoEntity.getLastChannelChat().getChannelUuid() : null)
                 .build();
-
+//
+        if(Boolean.TRUE.equals(sessaoEntity.getAtendimentoAberto())) {
+            dialogoDTO.setSessionId(sessaoEntity.getId());
+        }
+//
+//
         AssistentBotService assistentBotService;
 
         if(Boolean.TRUE.equals(sessaoEntity.getAtendimentoAberto())){

@@ -6,6 +6,8 @@ public interface CompanyService {
 
     CompanyDTO save(CompanyDTO companyDTO);
 
+    void delete(String id);
+
     CompanyDTO findById(String id);
 
 }

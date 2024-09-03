@@ -23,8 +23,8 @@ public class BotApplication {
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
-	@Bean
-	public Encoder feignFormEncoder() {
-		return new SpringFormEncoder();
-	}
+//	@Bean
+//	public Encoder feignFormEncoder() {
+//		return new SpringFormEncoder();
+//	}
 }

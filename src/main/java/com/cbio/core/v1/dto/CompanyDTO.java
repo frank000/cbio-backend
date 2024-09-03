@@ -1,6 +1,7 @@
 package com.cbio.core.v1.dto;
 
 import com.cbio.core.v1.enuns.EstadosEnum;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.io.Serializable;
 
 @Getter
 @Setter
+@Builder
 public class CompanyDTO implements Serializable {
 
     private String id;

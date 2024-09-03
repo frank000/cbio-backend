@@ -13,4 +13,7 @@ import java.io.Serializable;
 public class CompanyFiltroGridDTO implements Serializable, FiltroDTOInterface {
 
     private String busca;
+    private String idCompany;
+
+
 }

@@ -1,5 +1,6 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.service.IAMServiceImpl;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.UserService;
@@ -18,7 +19,7 @@ public class UsuarioController implements SecuredRestController {
     @PostMapping
     public ResponseEntity<Void> save(@RequestBody UsuarioDTO.UsuarioFormDTO usuarioDTO) {
         usuarioDTO.setId(null);
-        userService.salva(usuarioDTO, usuarioDTO.getPassword());
+        userService.salva(usuarioDTO, usuarioDTO.getPassword(), IAMServiceImpl.ROLE_ADMIN);
 
         return ResponseEntity.ok().build();
     }

@@ -1,4 +1,4 @@
-package com.cbio.core.v1.dto;
+package com.cbio.core.v1.dto.outchatmessages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

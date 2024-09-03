@@ -3,9 +3,11 @@ package com.cbio.core.v1.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Builder
 @Data
-public class CanalDTO {
+public class CanalDTO implements Serializable {
 
     private String id;
 
@@ -24,5 +26,7 @@ public class CanalDTO {
     private String cliente;
 
     private Boolean ativo;
+
+    private CompanyDTO company;
 
 }

@@ -1,7 +1,12 @@
 package com.cbio.app.service;
 
+import com.cbio.app.base.utils.DateRocketUtils;
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.app.repository.SessaoCustomRepository;
 import com.cbio.app.repository.SessaoRepository;
+import com.cbio.chat.dto.SessionFiltroDTO;
+import com.cbio.chat.dto.WebsocketNotificationDTO;
+import com.cbio.core.service.AuthService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import lombok.Data;
@@ -11,17 +16,18 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Data
 public class SessaoServiceImpl implements SessaoService {
 
     private final SessaoRepository sessaoRepository;
+    private final SessaoCustomRepository sessaoCustomRepository;
+    private final AuthService authService;
 
     private final MongoTemplate mongoTemplate;
 
@@ -51,7 +57,7 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
     public SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId){
-        return sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNomeAndChannelUuid(Boolean.TRUE, usuarioId, canal, channelId)
+        return sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNomeAndLastChannelChatChannelUuid(Boolean.TRUE, usuarioId, canal, channelId)
                 .orElseThrow(() -> new RuntimeException("Sessão não encontrada."));
 
     }
@@ -122,5 +128,41 @@ public class SessaoServiceImpl implements SessaoService {
 
         return mongoTemplate.updateMulti(query, update, SessaoEntity.class).getModifiedCount();
 
+    }
+
+    @Override
+    public List<WebsocketNotificationDTO> getChatSessions() {
+
+        Map<String, Object> claimsUserLogged = authService.getClaimsUserLogged();
+
+        Object userId = claimsUserLogged.get("userId");
+
+
+        if(userId != null) {
+
+            List<WebsocketNotificationDTO> websocketNotificationDTOS = new ArrayList<>();
+            SessionFiltroDTO filter = SessionFiltroDTO.builder()
+                    .attendantId((String) userId)
+                    .build();
+
+             sessaoCustomRepository.buscaListaSessoes(filter)
+                     .forEach(sessaoEntity ->
+                             websocketNotificationDTOS.add(WebsocketNotificationDTO.builder()
+                                     .userId(sessaoEntity.getId())
+                                     .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
+                                     .name(StringUtils.hasText(sessaoEntity.getNome())? sessaoEntity.getNome() : null)
+                                     .active(true)
+                                     .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
+                                     .preview("ROCKETCHAT:Cliente solicita atendimento")
+                                     .build()));
+             return websocketNotificationDTOS;
+        }else{
+            throw new RuntimeException("Usuario não existe no token. Favor contactar os administradores.");
+        }
+    }
+
+    @Override
+    public SessaoEntity getSessionById(String id) {
+        return sessaoRepository.findById(id).orElseThrow(() -> new RuntimeException("Sessão não encontrada."));
     }
 }

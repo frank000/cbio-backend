@@ -8,11 +8,13 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 
 @Getter
 @Setter
 @Builder
-@Document(collection = "dialogo")
+@Document("dialogo")
 public class DialogoEntity {
 
   @Id
@@ -22,8 +24,14 @@ public class DialogoEntity {
 
   private String identificadorRemetente;
 
+  private String toIdentifier;
+
   private CanalDTO canal;
 
   private String channelUuid;
+
+  private LocalDateTime createdDateTime;
+
+
 
 }

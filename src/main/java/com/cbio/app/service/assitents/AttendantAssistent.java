@@ -1,10 +1,12 @@
 package com.cbio.app.service.assitents;
 
-import com.cbio.app.client.RasaClient;
-import com.cbio.core.service.AssistentBotService;
+import com.cbio.app.base.utils.DateRocketUtils;
 import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.chat.services.WebsocketPath;
+import com.cbio.core.service.AssistentBotService;
 import com.cbio.core.v1.dto.RasaMessageDTO;
-import com.cbio.core.v1.dto.RasaMessageOutDTO;
+import com.cbio.core.v1.dto.outchatmessages.AttendantMessageOutDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,23 +22,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AttendantAssistent implements AssistentBotService {
 
-    private final RasaClient rasaClient;
-
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     public Optional<DialogoDTO> processaDialogoAssistent(DialogoDTO dialogo) {
 
         try {
-            RasaMessageOutDTO rasaMessageDTO = RasaMessageOutDTO
-                    .builder()
-                    .mensagem(dialogo.getMensagem())
-                    .identificadorRemetente(dialogo.getIdentificadorRemetente())
+            AttendantMessageOutDTO message = AttendantMessageOutDTO.builder()
+                    .text(dialogo.getMensagem())
+                    .toUserId(dialogo.getSessionId())
+                    .fromUserId(dialogo.getToIdentifier())
+                    .time(DateRocketUtils.getDateTimeFormated(dialogo.getCreatedDateTime()))
                     .build();
 
-
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(message);
             simpMessagingTemplate
-                    .convertAndSend(String.format("/topic/demo.%s", dialogo.getChannelUuid()),
-                            rasaMessageDTO);
+                    .convertAndSend(String.format(WebsocketPath.Constants.CHAT, dialogo.getChannelUuid()),
+                            json);
+
             return Optional.empty();
 
         } catch (Exception e) {

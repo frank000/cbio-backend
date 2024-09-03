@@ -38,4 +38,8 @@ public class CompanyServiceImpl implements CompanyService {
         return companyMapper.toDto(entity);
     }
 
+    @Override
+    public void delete(String id) {
+        companyRepository.findById(id).ifPresent(companyRepository::delete);
+    }
 }

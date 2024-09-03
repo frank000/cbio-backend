@@ -5,11 +5,13 @@ import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+import java.io.Serializable;
+
 
 @Getter
 @Setter
 @Builder
-public class UsuarioDTO {
+public class UsuarioDTO implements Serializable {
 
     private String id;
 

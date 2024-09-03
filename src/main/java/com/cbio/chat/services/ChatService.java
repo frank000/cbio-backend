@@ -26,6 +26,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -72,12 +73,13 @@ public class ChatService implements IChatService {
                 .build();
     }
 
-    private String newChatSession(ChatChannelInitializationDTO chatChannelInitializationDTO)
+    private String newChatSession(ChatChannelInitializationDTO chatChannelInitializationDTO, LocalDateTime initTime)
             throws BeansException, UserNotFoundException {
         ChatChannelEntity channel = new ChatChannelEntity(
                 userService.getUser(chatChannelInitializationDTO.getUserIdOne()),
                 userService.getUser(chatChannelInitializationDTO.getUserIdTwo()),
-                chatChannelInitializationDTO.getInitCanal()
+                chatChannelInitializationDTO.getInitCanal(),
+                initTime
         );
 
         chatChannelRepository.save(channel);
@@ -85,7 +87,7 @@ public class ChatService implements IChatService {
         return channel.getId();
     }
 
-    public String establishChatSession(ChatChannelInitializationDTO chatChannelInitializationDTO)
+    public String establishChatSession(ChatChannelInitializationDTO chatChannelInitializationDTO, LocalDateTime initTime)
             throws IsSameUserException, BeansException, UserNotFoundException {
         if (chatChannelInitializationDTO.getUserIdOne() == chatChannelInitializationDTO.getUserIdTwo()) {
             throw new IsSameUserException();
@@ -94,7 +96,7 @@ public class ChatService implements IChatService {
         String uuid = getExistingChannel(chatChannelInitializationDTO);
 
         // If channel doesn't already exist, create a new one
-        return (uuid != null) ? uuid : newChatSession(chatChannelInitializationDTO);
+        return (uuid != null) ? uuid : newChatSession(chatChannelInitializationDTO, initTime);
     }
 
     public void submitMessage(String channelId, ChatMessageDTO chatMessageDTO)
@@ -133,22 +135,19 @@ public class ChatService implements IChatService {
     }
 
 
-    public void receiveMessageAttendant(EntradaMensagemDTO entradaMensagemDTO, String channelId, String attendantId){
+    public void receiveMessageAttendant(EntradaMensagemDTO entradaMensagemDTO, String channelId, String attendantId) {
 
-        SessaoEntity sessaoEntity = sessaoService.buscaSessaoAtivaPorUsuarioCanal(
-                Long.valueOf(entradaMensagemDTO.getIdentificadorRemetente()),
-                entradaMensagemDTO.getCanal().getNome(),
-                channelId);
+        //getIdentificadorRemetente retorna o ID da Sessão do Usuário setado no Cotroler
+        SessaoEntity sessaoEntity = sessaoService.getSessionById(entradaMensagemDTO.getIdentificadorRemetente());
 
-        DialogoDTO dialogoDTO = DialogoDTO.builder()
+                DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(formatAnswearToClient(entradaMensagemDTO, attendantId))
-                .identificadorRemetente(entradaMensagemDTO.getIdentificadorRemetente())
+                .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
                 .canal(sessaoEntity.getCanal())
                 .channelUuid(channelId)
                 .build();
 
         forwardService.enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), dialogoDTO);
-
 
 
     }

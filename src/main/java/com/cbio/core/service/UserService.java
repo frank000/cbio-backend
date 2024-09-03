@@ -4,7 +4,7 @@ import com.cbio.core.v1.dto.UsuarioDTO;
 
 public interface UserService {
 
-    void salva(UsuarioDTO usuarioDTO, String password);
+    UsuarioDTO salva(UsuarioDTO usuarioDTO, String password, String role);
 
     UsuarioDTO buscaPorId(String id);
 

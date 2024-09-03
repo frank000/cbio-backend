@@ -1,5 +1,6 @@
-package com.cbio.app.base.repository;
+package com.cbio.app.repository.grid;
 
+import com.cbio.app.base.repository.AbstractRepositoryGrid;
 import com.cbio.core.v1.dto.CompanyFiltroGridDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -11,7 +12,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor

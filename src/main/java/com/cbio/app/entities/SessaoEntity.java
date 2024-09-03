@@ -1,7 +1,6 @@
 package com.cbio.app.entities;
 
 import com.cbio.app.repository.SessaoRepository;
-import com.cbio.core.v1.dto.AttendantDTO;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import jakarta.persistence.Id;
@@ -27,6 +26,10 @@ public class SessaoEntity {
 
     private UUID sessaoId;
 
+    private String nome;
+
+    private String cpf;
+
     private CanalDTO canal;
 
     @Indexed
@@ -46,11 +49,11 @@ public class SessaoEntity {
 
     private String ultimaEtapa;
 
-    private String channelUuid;
+    private ChannelChatDTO lastChannelChat;
 
     private String comandoExecucao;
 
-    private UsuarioDTO ulitmoAtendente;
+    private UsuarioDTO ultimoAtendente;
 
     private List<AtendimentoDTO> atendimentoDTOS;
 
@@ -69,4 +72,16 @@ public class SessaoEntity {
 
         private LocalDateTime dataHora;
     }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class ChannelChatDTO implements Serializable {
+
+        private String channelUuid;
+
+        private LocalDateTime dateTimeStart;
+    }
+
+
 }

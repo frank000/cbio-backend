@@ -4,7 +4,7 @@ import com.cbio.app.client.RasaClient;
 import com.cbio.core.service.AssistentBotService;
 import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
-import com.cbio.core.v1.dto.RasaMessageOutDTO;
+import com.cbio.core.v1.dto.outchatmessages.RasaMessageOutDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

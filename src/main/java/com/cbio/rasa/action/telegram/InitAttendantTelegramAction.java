@@ -1,11 +1,14 @@
 package com.cbio.rasa.action.telegram;
 
+import com.cbio.app.base.utils.DateRocketUtils;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
+import com.cbio.chat.dto.WebsocketNotificationDTO;
 import com.cbio.chat.services.ChatService;
+import com.cbio.chat.services.WebsocketPath;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
-import com.cbio.core.v1.dto.AttendantDTO;
+import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import io.github.jrasa.Action;
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +35,8 @@ public class InitAttendantTelegramAction implements Action {
     private final SessaoService sessaoService;
     private final AttendantService attendantService;
     private final ChatService chatService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
+    private final UserService userService;
 
     @Override
     public String name() {
@@ -58,23 +64,41 @@ public class InitAttendantTelegramAction implements Action {
                             System.currentTimeMillis());
 
             try {
+                LocalDateTime now = LocalDateTime.now();
 
                 UsuarioDTO attendantDTO = attendantService.fetch();
                 ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
                         .userIdOne(attendantDTO.getId())
-                        .userIdTwo(senderId)
+                        .userIdTwo(sessaoEntity.getId())
                         .initCanal(canal)
                         .build();
 
-                String channelUuid = chatService.establishChatSession(chatChannelInitialization);
+                String channelUuid = chatService.establishChatSession(chatChannelInitialization, now);
 
-
-                sessaoEntity.setChannelUuid(channelUuid);
+                sessaoEntity.setLastChannelChat(
+                        SessaoEntity.ChannelChatDTO.builder()
+                                .channelUuid(channelUuid)
+                                .dateTimeStart(now)
+                                .build());
                 sessaoEntity.setAtendimentoAberto(Boolean.TRUE);
-                sessaoEntity.setUlitmoAtendente(attendantDTO);
-                sessaoEntity.setDataHoraAtendimentoAberto(LocalDateTime.now());
+                sessaoEntity.setUltimoAtendente(attendantDTO);
+                sessaoEntity.setDataHoraAtendimentoAberto(now);
                 sessaoService.salva(sessaoEntity);
-                //TODO disparar websocket para lista de atendimentos
+
+
+                simpMessagingTemplate
+                        .convertAndSend(
+                                String.format(WebsocketPath.Constants.CHAT, attendantDTO.getId()),
+                                WebsocketNotificationDTO.builder()
+                                        .userId(sessaoEntity.getId())
+                                        .channelId(channelUuid)
+                                        .name(StringUtils.hasText(sessaoEntity.getNome())? sessaoEntity.getNome() : null)
+                                        .active(true)
+                                        .time(DateRocketUtils.getDateTimeFormated(now))
+                                        .preview("ROCKETCHAT:Cliente solicita atendimento")
+                                        .build());
+                //TODO disparar websocket para lista do UserID
+
                 //TODO disparar websocket para lista do atendente
 
             } catch (Exception e) {

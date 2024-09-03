@@ -1,8 +1,10 @@
 package com.cbio.core.service;
 
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.chat.dto.WebsocketNotificationDTO;
 import com.cbio.core.v1.dto.CanalDTO;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SessaoService {
@@ -20,4 +22,8 @@ public interface SessaoService {
     void salva(SessaoEntity sessao);
 
     Long alteraTemplatesDeCertificado();
+
+    List<WebsocketNotificationDTO> getChatSessions();
+
+    SessaoEntity getSessionById(String id);
 }

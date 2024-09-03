@@ -1,12 +1,14 @@
 package com.cbio.app.entities;
 
+import com.cbio.core.v1.dto.CompanyDTO;
 import jakarta.persistence.Id;
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
 @Data
-@Document(collection = "canal")
+@Document("canal")
 public class CanalEntity {
 
     @Id
@@ -27,5 +29,7 @@ public class CanalEntity {
     private String cliente;
 
     private Boolean ativo;
+
+    private CompanyDTO company;
 
 }

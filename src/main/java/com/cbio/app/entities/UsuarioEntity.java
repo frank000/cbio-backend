@@ -9,7 +9,7 @@ import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "user")
+@Document("user")
 @Data
 @Builder
 public class UsuarioEntity {

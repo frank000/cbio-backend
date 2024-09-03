@@ -11,6 +11,8 @@ public class UserKeycloak {
 
     private String idUser;
 
+    private String idCompany;
+
     private String userName;
 
     private String email;

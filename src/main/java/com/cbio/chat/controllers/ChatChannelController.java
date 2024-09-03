@@ -11,6 +11,9 @@ import com.cbio.chat.services.ChatService;
 import com.cbio.chat.services.UserChatService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
+import com.cbio.core.v1.dto.outchatmessages.AttendantMessageOutDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -34,17 +38,21 @@ public class ChatChannelController implements IChatChannelController {
     @Autowired
     private UserChatService userService;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+
     @MessageMapping("/demo.{channelId}")
     @SendTo("/topic/demo.{channelId}")
     public void receiveFromAttedant(@DestinationVariable String channelId, String message)
-            throws BeansException {
+            throws BeansException, JsonProcessingException {
 
         ChatChannelInitializationDTO chatChannelInitializationDTO = chatService.getChatChannelInitializationDTO(channelId);
-
+        AttendantMessageOutDTO attendantMessageOutDTO = objectMapper.readValue(message, AttendantMessageOutDTO.class);
 
         EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
                 .builder()
-                .mensagem(message.replace("\"", ""))
+                .mensagem(attendantMessageOutDTO.getText().replace("\"", ""))
                 .canal(
                         CanalDTO.builder()
                                 .nome(chatChannelInitializationDTO.getInitCanal())
@@ -69,7 +77,7 @@ public class ChatChannelController implements IChatChannelController {
     @PutMapping("/private-chat/channel")
     public ResponseEntity<String> establishChatChannel(@RequestBody ChatChannelInitializationDTO chatChannelInitialization)
             throws IsSameUserException, UserNotFoundException {
-        String channelUuid = chatService.establishChatSession(chatChannelInitialization);
+        String channelUuid = chatService.establishChatSession(chatChannelInitialization, LocalDateTime.now());
 
         EstablishedChatChannelDTO establishedChatChannel = new EstablishedChatChannelDTO(
                 channelUuid,
