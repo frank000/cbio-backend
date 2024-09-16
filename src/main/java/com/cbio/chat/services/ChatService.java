@@ -143,8 +143,10 @@ public class ChatService implements IChatService {
                 DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(formatAnswearToClient(entradaMensagemDTO, attendantId))
                 .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
+                        .toIdentifier(sessaoEntity.getId())
                 .canal(sessaoEntity.getCanal())
                 .channelUuid(channelId)
+                        .createdDateTime(LocalDateTime.now())
                 .build();
 
         forwardService.enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), dialogoDTO);

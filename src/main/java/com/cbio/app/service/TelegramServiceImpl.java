@@ -135,7 +135,8 @@ public class TelegramServiceImpl implements TelegramService {
 
     @Override
     public void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception {
-        CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente);
+        CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente)
+                .orElseThrow(()->new RuntimeException("Canal não encontrado"));
         String msg = "";
 
         if (obj != null && obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES) != null) {
@@ -187,16 +188,10 @@ public class TelegramServiceImpl implements TelegramService {
     }
 
     @Override
-    public void processaMensagem(Update update, CanalEntity canalEntity) {
-        if (update.getMessage() == null && update.getCallbackQuery() == null) return;
+    public void processaMensagem(EntradaMensagemDTO entradaMensagemDTO, CanalEntity canalEntity) {
 
-        EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
-                .builder()
-                .mensagem(update.getMessage() != null ? update.getMessage().getText() : update.getCallbackQuery().getData())
-                .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
-                .identificadorRemetente(getIdentificadorRemetente(update))
-                .build();
         try {
+            entradaMensagemDTO.setIdentificadorRemetente(getIdentificadorRemetente((Update) entradaMensagemDTO.getMensagemObject()));
             forwardService.processaMensagem(entradaMensagemDTO);
         } catch (Exception e) {
             String msg = String.format("Exceção: %s", e.getMessage());

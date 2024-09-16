@@ -30,6 +30,7 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html").permitAll()
                 .requestMatchers("/v1/login").permitAll()
+
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/v1/bot/**").permitAll()
                 .requestMatchers("/v1/action-server/**").permitAll()
@@ -40,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/public/stomp/**").permitAll()
                 .requestMatchers("/public/websocket/**").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
+                .requestMatchers("/v1/whatsapp/**").permitAll()
                 .anyRequest()
                 .authenticated());
 

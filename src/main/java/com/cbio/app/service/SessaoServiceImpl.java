@@ -31,6 +31,11 @@ public class SessaoServiceImpl implements SessaoService {
 
     private final MongoTemplate mongoTemplate;
 
+    @Override
+    public SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId) {
+        return sessaoRepository.findByAtivoAndIdentificadorUsuario(Boolean.TRUE, usuarioId)
+                .orElseThrow(() -> new RuntimeException("Erro ao iniciar atendimento extorno - Sessão não encontrada"));
+    }
 
     @Override
     public Optional<SessaoEntity> buscaSessaoUsuarioCanal(Long identificadorUsuario, String canal) {
@@ -43,7 +48,7 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
     @Override
-    public SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, CanalDTO canal, Long agora){
+    public SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, CanalDTO canal, Long agora) {
 
         Long expiresValue = 120000L;
 
@@ -52,11 +57,9 @@ public class SessaoServiceImpl implements SessaoService {
         return byAtivoAndIdentificadorUsuarioAndCanal
                 .orElseGet(() -> criaESalvaSessao(usuarioId, agora, expiresValue, canal));
 
-
-
     }
 
-    public SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId){
+    public SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId) {
         return sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNomeAndLastChannelChatChannelUuid(Boolean.TRUE, usuarioId, canal, channelId)
                 .orElseThrow(() -> new RuntimeException("Sessão não encontrada."));
 
@@ -112,8 +115,7 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
 
-
-    public Long alteraTemplatesDeCertificado(){
+    public Long alteraTemplatesDeCertificado() {
 
         Update update = new Update();
         update.set("atendimentoAberto", Boolean.FALSE);
@@ -138,25 +140,27 @@ public class SessaoServiceImpl implements SessaoService {
         Object userId = claimsUserLogged.get("userId");
 
 
-        if(userId != null) {
+        if (userId != null) {
 
             List<WebsocketNotificationDTO> websocketNotificationDTOS = new ArrayList<>();
             SessionFiltroDTO filter = SessionFiltroDTO.builder()
                     .attendantId((String) userId)
                     .build();
 
-             sessaoCustomRepository.buscaListaSessoes(filter)
-                     .forEach(sessaoEntity ->
-                             websocketNotificationDTOS.add(WebsocketNotificationDTO.builder()
-                                     .userId(sessaoEntity.getId())
-                                     .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
-                                     .name(StringUtils.hasText(sessaoEntity.getNome())? sessaoEntity.getNome() : null)
-                                     .active(true)
-                                     .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
-                                     .preview("ROCKETCHAT:Cliente solicita atendimento")
-                                     .build()));
-             return websocketNotificationDTOS;
-        }else{
+            sessaoCustomRepository.buscaListaSessoes(filter)
+                    .forEach(sessaoEntity ->
+                            websocketNotificationDTOS.add(WebsocketNotificationDTO.builder()
+                                    .userId(sessaoEntity.getId())
+                                    .nameCanal(sessaoEntity.getCanal().getNome())
+                                    .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
+                                    .name(StringUtils.hasText(sessaoEntity.getNome()) ? sessaoEntity.getNome() : null)
+                                    .active(true)
+                                    .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
+                                    .preview("ROCKETCHAT:Cliente solicita atendimento")
+                                    .build()));
+            return websocketNotificationDTOS;
+        } else {
+
             throw new RuntimeException("Usuario não existe no token. Favor contactar os administradores.");
         }
     }

@@ -12,5 +12,6 @@ public class EntradaMensagemDTO {
     private String mensagem;
     private CanalDTO canal;
     private String identificadorRemetente;
+    private Object mensagemObject;
 
 }

@@ -4,6 +4,7 @@ import com.cbio.app.entities.CanalEntity;
 import com.cbio.core.v1.dto.CanalDTO;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CanalService {
 
@@ -13,7 +14,7 @@ public interface CanalService {
 
     CanalDTO incluirCanal(CanalDTO canal);
 
-    CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception;
+    Optional<CanalEntity> findCanalByTokenAndCliente(String token, String cliente) throws Exception;
 
     void alterar(CanalDTO canal) throws Exception;
 

@@ -21,7 +21,7 @@ public class DialogoServiceImpl implements DialogoService {
     public DialogoDTO saveDialogo(DialogoDTO dialogo) {
 
         DialogoEntity dialogoEntity = dialogoMapper.toEntity(dialogo);
-        return dialogoMapper.toDto(dialogoEntity);
+        return dialogoMapper.toDto( dialogoRepository.save(dialogoEntity));
     }
 
 

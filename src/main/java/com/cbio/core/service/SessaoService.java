@@ -13,6 +13,8 @@ public interface SessaoService {
 
     SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId);
 
+    SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId);
+
     Boolean isSessaoValidaTempo(Long agora, SessaoEntity sessao);
 
     void atualizarSessao(SessaoEntity sessao, String ultimaAcao);

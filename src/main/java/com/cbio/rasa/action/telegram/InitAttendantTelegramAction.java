@@ -54,14 +54,8 @@ public class InitAttendantTelegramAction implements Action {
 
             String senderId = tracker.getCurrentState().getSenderId();
 
-            String canal = "TELEGRAM";
             SessaoEntity sessaoEntity = sessaoService
-                    .validaOuCriaSessaoAtivaPorUsuarioCanal(
-                            Long.valueOf(senderId),
-                            CanalDTO.builder()
-                                    .nome(canal)
-                                    .build(),
-                            System.currentTimeMillis());
+                    .buscaSessaoAtivaPorIdentificadorUsuario(Long.valueOf(senderId));
 
             try {
                 LocalDateTime now = LocalDateTime.now();
@@ -70,7 +64,7 @@ public class InitAttendantTelegramAction implements Action {
                 ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
                         .userIdOne(attendantDTO.getId())
                         .userIdTwo(sessaoEntity.getId())
-                        .initCanal(canal)
+                        .initCanal(sessaoEntity.getCanal().getNome())
                         .build();
 
                 String channelUuid = chatService.establishChatSession(chatChannelInitialization, now);

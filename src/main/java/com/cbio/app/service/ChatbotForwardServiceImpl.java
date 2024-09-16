@@ -11,10 +11,12 @@ import com.cbio.chat.models.ChatChannelEntity;
 import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.core.service.AssistentBotService;
 import com.cbio.core.service.ChatbotForwardService;
+import com.cbio.core.service.DialogoService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +30,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
     private final SessaoService sessaoService;
 
-
+    private final DialogoService dialogoService;
 
     @Override
     public void processaMensagem(EntradaMensagemDTO entradaMensagemDTO){
@@ -40,17 +42,21 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
                 System.currentTimeMillis()
         );
 
-        DialogoDTO dialogoDTO = DialogoDTO.builder()
+        DialogoDTO.DialogoDTOBuilder dialogoDTOBuilder = DialogoDTO.builder()
                 .mensagem(entradaMensagemDTO.getMensagem())
                 .identificadorRemetente(entradaMensagemDTO.getIdentificadorRemetente())
-                .toIdentifier(sessaoEntity.getUltimoAtendente().getId())
                 .canal(entradaMensagemDTO.getCanal())
                 .createdDateTime(now)
-                .channelUuid((sessaoEntity.getLastChannelChat() != null)? sessaoEntity.getLastChannelChat().getChannelUuid() : null)
-                .build();
+                .channelUuid((sessaoEntity.getLastChannelChat() != null) ? sessaoEntity.getLastChannelChat().getChannelUuid() : null);
+
+        if(sessaoEntity.getUltimoAtendente() != null){
+            dialogoDTOBuilder.toIdentifier(ObjectUtils.defaultIfNull(sessaoEntity.getUltimoAtendente().getId(), null));
+
+        }
+
 //
         if(Boolean.TRUE.equals(sessaoEntity.getAtendimentoAberto())) {
-            dialogoDTO.setSessionId(sessaoEntity.getId());
+            dialogoDTOBuilder.sessionId(sessaoEntity.getId());
         }
 //
 //
@@ -62,6 +68,8 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
             assistentBotService = (RasaAssistent)applicationContext.getBean(AssistentEnum.RASA.getBeanName());
         }
 
+        DialogoDTO dialogoDTO = dialogoDTOBuilder.build();
+        dialogoService.saveDialogo(dialogoDTO);
 
         assistentBotService.processaDialogoAssistent(dialogoDTO)
                 .filter(dialogoDTO1 -> isNotCommand(dialogoDTO1))
@@ -79,6 +87,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
         CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
         Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
         senderService.envia(dialogoResposta);
+        dialogoService.saveDialogo(dialogoResposta);
     }
 
     private static boolean isNotCommand(DialogoDTO dialogoDTO1) {

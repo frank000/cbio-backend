@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -33,7 +34,7 @@ public class CanalServiceImpl implements CanalService {
     }
 
     @Override
-    public CanalEntity findCanalByTokenAndCliente(String token, String cliente) throws Exception {
+    public Optional<CanalEntity> findCanalByTokenAndCliente(String token, String cliente) throws Exception {
         try {
             return canalRepository.findCanalByTokenAndClienteAndAtivoTrue(token, cliente);
         } catch (Exception e) {

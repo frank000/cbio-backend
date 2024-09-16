@@ -7,14 +7,10 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.IOException;
 
-public interface TelegramService extends ProcessableService{
+public interface WhatsappService extends ProcessableService{
 
     void connectToBot(Update update, CanalEntity canal) throws Exception;
 
     Object sendMessage(RequestBody body, CanalEntity canal) throws IOException;
-
-    RequestBody createResponseBodyPorChatId(String chatId, String msg);
-
-    void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception;
 
 }

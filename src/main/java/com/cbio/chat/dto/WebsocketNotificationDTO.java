@@ -18,6 +18,8 @@ public class WebsocketNotificationDTO implements Serializable {
 
     private String name;
 
+    private String nameCanal;
+
     private String path;
 
     private String time;

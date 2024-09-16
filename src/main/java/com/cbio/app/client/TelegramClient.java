@@ -23,7 +23,7 @@ public interface TelegramClient {
 //    Optional<ApiResponse<Message>> sendPhoto(@PathVariable String token, MessageFotoDTO sendPhoto);
 //
 //    @PostMapping("{token}/sendVideo")
-//    Optional<ApiResponse<Message>> sendVideo(@PathVariable String token, MessageVideoDTO sendVideo);
+//    Optional<ApiResponse<Message>> sendVideo(@Path1Variable String token, MessageVideoDTO sendVideo);
 //
 //    @PostMapping("{token}/sendAudio")
 //    Optional<ApiResponse<Message>> sendAudio(@PathVariable String token, MessageAudioDTO sendAudio);
