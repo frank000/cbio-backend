@@ -4,6 +4,7 @@ import com.cbio.app.configuration.KeyCloakConfig;
 import com.cbio.app.configuration.keycloak.Credentials;
 import com.cbio.core.service.IAMService;
 import com.cbio.core.v1.dto.UserKeycloak;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -179,8 +180,9 @@ public class IAMServiceImpl implements IAMService {
         logger.info("Verificando se o usuário já existe no Keycloak: " + userVO.getFirstname() + " - " + userVO.getUserName());
         String id = getUserId(userVO);
         if (StringUtils.isNotBlank(id) && deleteIfExists) {
-            logger.info("Usuário já existe no Keycloak: " + userVO.getFirstname() + " - " + userVO.getUserName());
-            deleteUser(userVO);
+            throw new BadRequestException("Usuário já existe. Tente outro email ou contate um administrador.");
+//            logger.info("Usuário já existe no Keycloak: " + userVO.getFirstname() + " - " + userVO.getUserName());
+//            deleteUser(userVO);
         }
     }
 

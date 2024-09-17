@@ -10,6 +10,7 @@ import com.cbio.core.service.AuthService;
 import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import com.cbio.core.v1.enuns.PerfilEnum;
+import jakarta.ws.rs.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,7 +45,7 @@ public class AttendantServiceImpl implements AttendantService {
                     .id((String) companyId)
                     .build());
         }else{
-            throw new RuntimeException("Companhia não existe no token. Favor contactar os administradores.");
+            throw new ForbiddenException("Possívelmente você não tem permissão para essa ação. Certfique-se ser um administrador da companhia.");
         }
 
 
