@@ -12,6 +12,7 @@ import com.whatsapp.api.domain.webhook.Message;
 import com.whatsapp.api.domain.webhook.WebHook;
 import com.whatsapp.api.domain.webhook.WebHookEvent;
 import com.whatsapp.api.domain.webhook.type.MessageStatus;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +39,6 @@ public class WhatsappController {
 
     ) throws Exception {
         WebHookEvent event = WebHook.constructEvent(payload);
-    //    ObjectMapper mapper = new ObjectMapper();
-     //   WebhookEvent cliente = mapper.readValue(payload, WebhookEvent.class);
 
         AtomicReference<String> displayPhoneNumber = new AtomicReference<>();
         AtomicReference<String> identificadorRementente = new AtomicReference<>();
@@ -83,19 +82,6 @@ public class WhatsappController {
 //
             service.processaMensagem(entradaMensagemDTO, canalEntity);
         }
-
-//        WhatsappBusinessCloudApi whatsappBusinessCloudApi = factory.newBusinessCloudApi(ApiVersion.V20_0);
-//        String s = "+5561982166248";
-//        var message = Message.MessageBuilder.builder()//
-//                .setTo(s)//
-//                .buildTextMessage(new TextMessage()//
-//                        .setBody(Formatter.bold("Hello world!") + "\nSome code here: \n" + Formatter.code("hello world code here"))//
-//                        .setPreviewUrl(false));
-//
-//
-//        String s1 = "+15551313286";
-//        whatsappBusinessCloudApi.sendMessage(s, message);
-//        System.out.println(cliente);
         return ResponseEntity.ok().build();
     }
 

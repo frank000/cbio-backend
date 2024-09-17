@@ -45,4 +45,11 @@ public class DialogoServiceImpl implements DialogoService {
         dialogoMapper.fromDto(dialogo, dialogoEntity);
         return dialogoMapper.toDto(dialogoRepository.save(dialogoEntity));
     }
+
+    @Override
+    public List<DialogoDTO> getAllBySender(String identificadorRementente) {
+        List<DialogoEntity> allByIdentificadorRemetente = dialogoRepository.findAllByIdentificadorRemetenteOrderByCreatedDateTime(identificadorRementente);
+
+        return dialogoMapper.toDto(allByIdentificadorRemetente);
+    }
 }

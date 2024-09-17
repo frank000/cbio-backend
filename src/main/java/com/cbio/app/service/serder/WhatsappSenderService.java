@@ -9,6 +9,7 @@ import com.whatsapp.api.configuration.ApiVersion;
 import com.whatsapp.api.domain.messages.*;
 import com.whatsapp.api.domain.messages.response.MessageResponse;
 import com.whatsapp.api.domain.messages.type.ButtonType;
+import com.whatsapp.api.domain.messages.type.HeaderType;
 import com.whatsapp.api.domain.messages.type.InteractiveMessageType;
 import com.whatsapp.api.impl.WhatsappBusinessCloudApi;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WhatsappSenderService implements Sender {
 
-    private final TelegramClient telegramClient;
-    private final SessaoService sessaoService;
+    private static final int QNTD_MAX_BUTTONS = 2;
 
     @Override
     public void envia(DialogoDTO dialogoDTO) {
@@ -36,14 +36,14 @@ public class WhatsappSenderService implements Sender {
             Message message;
 
             if (dialogoDTO.getButtons().isEmpty()) {
-
+                //TEXT
                 message = Message.MessageBuilder.builder()//
                         .setTo("+" + dialogoDTO.getIdentificadorRemetente())//
                         .buildTextMessage(new TextMessage()//
                                 .setBody(dialogoDTO.getMensagem())//
                                 .setPreviewUrl(false));
-            } else {
-
+            } else if(dialogoDTO.getButtons().size() <= QNTD_MAX_BUTTONS) {
+                //BUTTONS
                 List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
                 Action actionButtons = new Action();
                 itens
@@ -70,8 +70,32 @@ public class WhatsappSenderService implements Sender {
                                                 .setText(dialogoDTO.getMensagem())) //
                         );
 
+            }else{
+                //OPTION
+                List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
+                Action actionButtons = new Action();
+                actionButtons.setButtonText(dialogoDTO.getMensagem());
+                Section opcoes = new Section()
+                        .setTitle("Opções");
+                itens
+                        .stream()
+                        .forEach(
+                                button -> opcoes.addRow(new Row()
+                                        .setId(button.getPayload())
+                                        .setTitle(button.getTitle())
+                                        .setDescription(button.getPayload()))
+                        );
 
-
+                message = Message.MessageBuilder.builder()//
+                        .setTo("+" + dialogoDTO.getIdentificadorRemetente())//
+                        .buildInteractiveMessage(
+                                InteractiveMessage.build()
+                                        .setAction(actionButtons)
+                                        .setType(InteractiveMessageType.LIST)
+                                        .setHeader(new Header() //
+                                                .setType(HeaderType.TEXT) //
+                                                .setText(dialogoDTO.getMensagem()))
+                        );
             }
 
             WhatsappApiFactory factory = WhatsappApiFactory.newInstance(dialogoDTO.getCanal().getApiKey());

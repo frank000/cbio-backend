@@ -49,9 +49,8 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
                 .createdDateTime(now)
                 .channelUuid((sessaoEntity.getLastChannelChat() != null) ? sessaoEntity.getLastChannelChat().getChannelUuid() : null);
 
-        if(sessaoEntity.getUltimoAtendente() != null){
+        if(sessaoEntity.getUltimoAtendente() != null && Boolean.TRUE.equals(sessaoEntity.getAtendimentoAberto())){
             dialogoDTOBuilder.toIdentifier(ObjectUtils.defaultIfNull(sessaoEntity.getUltimoAtendente().getId(), null));
-
         }
 
 //
@@ -86,6 +85,8 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
     public void enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
         CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
         Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
+        dialogoResposta.setCreatedDateTime(LocalDateTime.now());
+
         senderService.envia(dialogoResposta);
         dialogoService.saveDialogo(dialogoResposta);
     }

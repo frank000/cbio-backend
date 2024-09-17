@@ -4,6 +4,8 @@ import com.cbio.app.base.utils.DateRocketUtils;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.repository.SessaoCustomRepository;
 import com.cbio.app.repository.SessaoRepository;
+import com.cbio.app.service.enuns.CanalSenderEnum;
+import com.cbio.app.service.utils.PhoneNumberUtil;
 import com.cbio.chat.dto.SessionFiltroDTO;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
 import com.cbio.core.service.AuthService;
@@ -11,6 +13,7 @@ import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -153,16 +156,35 @@ public class SessaoServiceImpl implements SessaoService {
                                     .userId(sessaoEntity.getId())
                                     .nameCanal(sessaoEntity.getCanal().getNome())
                                     .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
-                                    .name(StringUtils.hasText(sessaoEntity.getNome()) ? sessaoEntity.getNome() : null)
+                                    .name(getNameOrNumber(sessaoEntity))
                                     .active(true)
+                                    .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
                                     .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
-                                    .preview("ROCKETCHAT:Cliente solicita atendimento")
+                                    //.preview("ROCKETCHAT:Cliente solicita atendimento")
                                     .build()));
+
             return websocketNotificationDTOS;
         } else {
 
             throw new RuntimeException("Usuario não existe no token. Favor contactar os administradores.");
         }
+    }
+
+    @Nullable
+    private String getNameOrNumber(SessaoEntity sessaoEntity) {
+        return StringUtils.hasText(sessaoEntity.getNome()) ? sessaoEntity.getNome() : getNumber(sessaoEntity);
+    }
+
+    @Nullable
+    private String getNumber(SessaoEntity sessaoEntity) {
+        String result;
+
+        if (CanalSenderEnum.WHATSAPP.name().equals(sessaoEntity.getCanal().getNome())) {
+            result = PhoneNumberUtil.format(String.valueOf(sessaoEntity.getIdentificadorUsuario()), "+XX(XX)XXXX-XXXX", 12);
+        } else {
+            result = "Novo usuário";
+        }
+        return result;
     }
 
     @Override

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ public class DialogoEntity {
 
   private String mensagem;
 
+  @Indexed
   private String identificadorRemetente;
 
   private String toIdentifier;

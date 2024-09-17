@@ -10,4 +10,5 @@ import java.util.Optional;
 
 public interface DialogoRepository extends MongoRepository<DialogoEntity, String> {
 
+    List<DialogoEntity> findAllByIdentificadorRemetenteOrderByCreatedDateTime(String identificadorRementente);
 }

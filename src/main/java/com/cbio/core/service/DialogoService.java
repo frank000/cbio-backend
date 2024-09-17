@@ -14,6 +14,9 @@ public interface DialogoService {
 
     List<DialogoDTO> getAll();
 
+    List<DialogoDTO> getAllBySender(String identificadorRementente);
+
+
 
 
 }
