@@ -4,6 +4,7 @@ import com.cbio.app.repository.SessaoRepository;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import jakarta.persistence.Id;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,13 +51,29 @@ public class SessaoEntity {
 
     private String ultimaEtapa;
 
+    @Setter(AccessLevel.NONE)
     private ChannelChatDTO lastChannelChat;
+
+    @Getter(AccessLevel.NONE)
+    private List<ChannelChatDTO> historyLastChannelChat;
 
     private String comandoExecucao;
 
     private UsuarioDTO ultimoAtendente;
 
     private List<AtendimentoDTO> atendimentoDTOS;
+
+    public void setLastChannelChat(ChannelChatDTO lastChannelChat){
+        this.lastChannelChat = lastChannelChat;
+        this.getHistoryLastChannelChat().add(lastChannelChat);
+    }
+
+    public List<ChannelChatDTO> getHistoryLastChannelChat(){
+        if(this.historyLastChannelChat == null){
+            this.historyLastChannelChat = new ArrayList<>();
+        }
+        return this.historyLastChannelChat;
+    }
 
     public void flush(SessaoRepository sessaoRepository){
         this.setComandoExecucao("");

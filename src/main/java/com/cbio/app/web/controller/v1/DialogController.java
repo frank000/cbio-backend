@@ -1,10 +1,9 @@
 package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.web.SecuredRestController;
-import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.chat.dto.ChatDTO;
 import com.cbio.core.service.DialogoService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,11 +19,14 @@ public class DialogController implements SecuredRestController {
 
     private final DialogoService dialogoService;
 
-    @GetMapping("/sender/{identificadorRementente}")
-    public ResponseEntity<List<DialogoDTO>> obtemGrid(@PathVariable String identificadorRementente) {
-        String value = ObjectUtils.requireNonEmpty(identificadorRementente);
-        List<DialogoDTO> allBySender = dialogoService.getAllBySender(value);
 
-        return ResponseEntity.ok(allBySender);
+    @GetMapping("/sender/{channelId}")
+    public ResponseEntity<  List<ChatDTO>> obtemGrid(@PathVariable String channelId) {
+        List<ChatDTO> collect = dialogoService.mountChatFromDioalogByChannelId(channelId);
+
+
+        return ResponseEntity.ok(collect);
     }
+
+
 }

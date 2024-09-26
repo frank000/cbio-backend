@@ -6,6 +6,6 @@ import com.cbio.core.v1.dto.EntradaMensagemDTO;
 
 public interface ChatbotForwardService {
 
-    void processaMensagem(EntradaMensagemDTO entradaMensagemDTO);
+    void processaMensagem(EntradaMensagemDTO entradaMensagemDTO) throws Exception;
     void enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta);
 }

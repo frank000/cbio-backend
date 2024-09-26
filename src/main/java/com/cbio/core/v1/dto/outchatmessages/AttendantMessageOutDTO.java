@@ -1,5 +1,6 @@
 package com.cbio.core.v1.dto.outchatmessages;
 
+import com.cbio.core.v1.dto.MediaDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,5 +24,9 @@ public class AttendantMessageOutDTO implements Serializable {
 
     @JsonProperty("time")
     private String time;
+
+    private String id;
+
+    private MediaDTO media;
 }
 

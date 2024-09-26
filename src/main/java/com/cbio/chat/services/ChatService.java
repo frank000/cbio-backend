@@ -1,6 +1,7 @@
 package com.cbio.chat.services;
 
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.app.service.enuns.AssistentEnum;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.ChatMessageDTO;
 import com.cbio.chat.dto.DialogoDTO;
@@ -135,24 +136,31 @@ public class ChatService implements IChatService {
     }
 
 
-    public void receiveMessageAttendant(EntradaMensagemDTO entradaMensagemDTO, String channelId, String attendantId) {
+    public void
+    receiveMessageAttendant(EntradaMensagemDTO entradaMensagemDTO, String channelId, String attendantId) throws Exception {
 
         //getIdentificadorRemetente retorna o ID da Sessão do Usuário setado no Cotroler
         SessaoEntity sessaoEntity = sessaoService.getSessionById(entradaMensagemDTO.getIdentificadorRemetente());
+        LocalDateTime now = LocalDateTime.now();
 
-                DialogoDTO dialogoDTO = DialogoDTO.builder()
+        sessaoService.verifyWindowToWhatsappChannel(sessaoEntity, now);
+
+        DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(formatAnswearToClient(entradaMensagemDTO, attendantId))
                 .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
-                        .toIdentifier(sessaoEntity.getId())
+                .toIdentifier(sessaoEntity.getId())
                 .canal(sessaoEntity.getCanal())
+                .from(AssistentEnum.ATTENDANT.name())
                 .channelUuid(channelId)
-                        .createdDateTime(LocalDateTime.now())
+                .createdDateTime(LocalDateTime.now())
                 .build();
 
         forwardService.enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), dialogoDTO);
 
 
     }
+
+
 
     private String formatAnswearToClient(EntradaMensagemDTO entradaMensagemDTO, String attendantId) {
         UsuarioDTO attendantDTO = attendantService.buscaPorId(attendantId);

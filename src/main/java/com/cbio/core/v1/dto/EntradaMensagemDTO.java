@@ -9,7 +9,10 @@ import lombok.Setter;
 @Builder
 public class EntradaMensagemDTO {
 
+    private String uuid;
     private String mensagem;
+    private MediaDTO media;
+    private String type;
     private CanalDTO canal;
     private String identificadorRemetente;
     private Object mensagemObject;

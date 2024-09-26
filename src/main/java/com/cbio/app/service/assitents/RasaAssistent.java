@@ -1,6 +1,7 @@
 package com.cbio.app.service.assitents;
 
 import com.cbio.app.client.RasaClient;
+import com.cbio.app.service.enuns.AssistentEnum;
 import com.cbio.core.service.AssistentBotService;
 import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
@@ -40,6 +41,7 @@ public class RasaAssistent implements AssistentBotService {
                                 return DialogoDTO.builder()
                                         .mensagem(o.getText())
                                         .buttons(getButtons(o))
+                                        .from(AssistentEnum.RASA.name())
                                         .identificadorRemetente(o.getIdentificadorId())
                                         .build();
                             }

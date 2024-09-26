@@ -1,8 +1,8 @@
 package com.cbio.chat.models;
 
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.MediaDTO;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,8 +23,12 @@ public class DialogoEntity {
 
   private String mensagem;
 
+  private MediaDTO media;
+
   @Indexed
   private String identificadorRemetente;
+
+  private String type;
 
   private String toIdentifier;
 
@@ -32,8 +36,12 @@ public class DialogoEntity {
 
   private String channelUuid;
 
+  private String from;
+
   private LocalDateTime createdDateTime;
 
+  @Indexed(unique = true)
+  private String uuid;
 
 
 }

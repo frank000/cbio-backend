@@ -12,7 +12,6 @@ import com.cbio.chat.services.UserChatService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.cbio.core.v1.dto.outchatmessages.AttendantMessageOutDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +44,7 @@ public class ChatChannelController implements IChatChannelController {
     @MessageMapping("/demo.{channelId}")
     @SendTo("/topic/demo.{channelId}")
     public void receiveFromAttedant(@DestinationVariable String channelId, String message)
-            throws BeansException, JsonProcessingException {
+            throws Exception {
 
         ChatChannelInitializationDTO chatChannelInitializationDTO = chatService.getChatChannelInitializationDTO(channelId);
         AttendantMessageOutDTO attendantMessageOutDTO = objectMapper.readValue(message, AttendantMessageOutDTO.class);

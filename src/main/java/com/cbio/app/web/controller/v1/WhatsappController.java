@@ -1,25 +1,18 @@
 package com.cbio.app.web.controller.v1;
 
-import com.cbio.app.entities.CanalEntity;
-import com.cbio.app.service.mapper.CanalMapper;
-import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
-import com.cbio.core.service.CanalService;
+import com.cbio.app.service.minio.MinioService;
+import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.core.service.DialogoService;
 import com.cbio.core.service.WhatsappService;
-import com.cbio.core.v1.dto.EntradaMensagemDTO;
-import com.cbio.core.v1.dto.WebhookEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.whatsapp.api.domain.webhook.Message;
 import com.whatsapp.api.domain.webhook.WebHook;
 import com.whatsapp.api.domain.webhook.WebHookEvent;
-import com.whatsapp.api.domain.webhook.type.MessageStatus;
-
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @RequestMapping("/v1/whatsapp")
@@ -27,10 +20,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WhatsappController {
 
 
-    //   public static final String token = "EAAO9LRq39UQBO3hQ1F6ALeAKA1R3NZBXiy3dKZB5XrUry807mdkZBZCnc3RBx8miH3IEdKLBHG100kTJ8gQhvxZCv3PQQp66y5jPQrO0Cn5ZCuMgrulgbdDlqwnlv2ZCjuDYmpxxee81qu7iykueBqZB52D5WZAcm3gDCC1PoeKwT16NHoOUTp55kBFnxqjHMCb3BKbH4Kbt1eOFIlEXu";
-    private final WhatsappService service;
-    private final CanalService canalService;
-    private final CanalMapper canalMapper;
+    private static final Logger log = LoggerFactory.getLogger(WhatsappController.class);
+    private final WhatsappService whatsappService;
+    private final DialogoService dialogoService;
+    private final MinioService minioService;
 
     @PostMapping(value = "/webhook/{token}")
     ResponseEntity<Void> webhook(
@@ -40,58 +33,25 @@ public class WhatsappController {
     ) throws Exception {
         WebHookEvent event = WebHook.constructEvent(payload);
 
-        AtomicReference<String> displayPhoneNumber = new AtomicReference<>();
-        AtomicReference<String> identificadorRementente = new AtomicReference<>();
-        AtomicReference<String> mensagem = new AtomicReference<>();
-
-        // WhatsappApiFactory factory = WhatsappApiFactory.newInstance(token);
-        boolean isNotEvent = event.entry().get(0).changes().get(0).value().statuses() == null;
-
-        if(!event.entry().isEmpty() && isNotEvent){
-            event.entry().get(0).changes().stream()
-                    .filter(change -> WebhookEvent.Change.hasMessageOrButtonAction(change.value()))
-                    .filter(change -> WebhookEvent.Contact.hasContact(change.value()))
-                    .findFirst()
-                    .ifPresent(change -> {
-                        displayPhoneNumber.set(change.value().metadata().displayPhoneNumber());
-                        change.value().contacts().forEach(contact -> identificadorRementente.set(contact.waId()));
-                        change.value().messages().forEach(message -> mensagem.set(getMessageBody(message)));
-                    });
-        }
-
-//        event.entry().getFirst().changes().getFirst().value().messages().getFirst().interactive().buttonReply().id()
-
-
-
-        // canal
-        // nome cliente.getEntry().getFirst().getChanges().getFirst().getValue().getContacts().getFirst().profile
-        // idUsuario = cliente.getEntry().getFirst().getChanges().getFirst().getValue().getContacts().getFirst().getWaId().toString()
-
-        if(StringUtils.hasText(mensagem.get()) && StringUtils.hasText(identificadorRementente.get())) {
-            CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, displayPhoneNumber.get())
-                    .orElseThrow(()->new RuntimeException("Canal não encontrado"));
-
-            EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
-                    .builder()
-                    .mensagem(ObjectUtils.defaultIfNull(mensagem.get(), null))
-                    .identificadorRemetente(identificadorRementente.get())
-                    .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
-                    .build();
-
-
-//
-            service.processaMensagem(entradaMensagemDTO, canalEntity);
-        }
+        whatsappService.processEvent(token, event);
         return ResponseEntity.ok().build();
     }
 
-    private static String getMessageBody(Message message) {
-        boolean notHasButton = message.interactive() == null;
-        if(notHasButton){
-            return message.text().body();
-        }else{
-            return message.interactive().buttonReply().id();
+
+    @GetMapping("media-by-dialog/{dialogId}")
+    public ResponseEntity<InputStreamResource>  getMedia(@PathVariable String dialogId) {
+        DialogoDTO dialogoDTO = dialogoService.getById(dialogId);
+        try {
+
+            ResponseEntity<InputStreamResource> file = minioService.getFile(dialogoDTO.getMedia().getId(), dialogoDTO.getCanal().getId());
+            // Retorna a imagem com o MIME type correto
+            return file;
+        } catch (Exception e) {
+            log.error("Erro ao baixar a mídia", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+
     }
 
 

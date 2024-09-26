@@ -16,6 +16,8 @@ public interface SessaoRepository extends MongoRepository<SessaoEntity, String> 
 
     Optional<SessaoEntity> findByCanalAndIdentificadorUsuario(String canal, Long identificadorUsuario);
 
+    Optional<SessaoEntity> findByLastChannelChatChannelUuid(String channelUuid);
+
 
 
 

@@ -3,15 +3,15 @@ package com.cbio.core.service;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface SessaoService {
 
     SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, CanalDTO canal, Long agora);
 
-    SessaoEntity buscaSessaoAtivaPorUsuarioCanal(Long usuarioId, String canal, String channelId);
 
     SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId);
 
@@ -19,13 +19,24 @@ public interface SessaoService {
 
     void atualizarSessao(SessaoEntity sessao, String ultimaAcao);
 
-    Optional<SessaoEntity> buscaSessaoUsuarioCanal(Long identificadorUsuario, String canal);
 
     void salva(SessaoEntity sessao);
 
-    Long alteraTemplatesDeCertificado();
+    Long closeAttendaceLastOneHour();
+
+    Long closeAttendaceWhatsappCloseWindow();
 
     List<WebsocketNotificationDTO> getChatSessions();
 
     SessaoEntity getSessionById(String id);
+
+    SessaoEntity getSessionByChannelId(String channelId);
+
+    void updateNameCpf(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO);
+
+    void disconnectAttendance(String channelId);
+
+    void connectAttendance(String channelId) throws Exception;
+
+    void verifyWindowToWhatsappChannel(SessaoEntity sessaoEntity, LocalDateTime now) throws Exception;
 }

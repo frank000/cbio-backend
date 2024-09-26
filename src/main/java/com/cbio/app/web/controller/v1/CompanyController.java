@@ -1,8 +1,8 @@
 package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
-import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.entities.CompanyEntity;
+import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.CompanyService;
 import com.cbio.core.v1.dto.CompanyDTO;
@@ -30,6 +30,8 @@ public class CompanyController implements SecuredRestController {
 
         return ResponseEntity.ok(save);
     }
+
+
     @GetMapping("{id}")
     public ResponseEntity<CompanyDTO> getById(@PathVariable String id) {
 

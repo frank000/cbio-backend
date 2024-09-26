@@ -9,4 +9,6 @@ public interface UserService {
     UsuarioDTO buscaPorId(String id);
 
     UsuarioDTO fetch();
+
+    void update(String id, UsuarioDTO.UsuarioFormDTO usuarioDTO);
 }

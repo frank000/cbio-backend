@@ -5,15 +5,10 @@ import com.cbio.app.repository.UsuarioRepository;
 import com.cbio.app.service.mapper.UsuarioMapper;
 import com.cbio.core.service.IAMService;
 import com.cbio.core.service.UserService;
-import com.cbio.core.service.UsuarioTelegramService;
 import com.cbio.core.v1.dto.UserKeycloak;
 import com.cbio.core.v1.dto.UsuarioDTO;
-import com.cbio.core.v1.enuns.PerfilEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -67,4 +62,14 @@ public class UserServiceImpl implements UserService {
         return usuarioMapper.toDto(usuarioEntity1);
     }
 
+    @Override
+    public void update(String id, UsuarioDTO.UsuarioFormDTO usuarioDTO) {
+        UsuarioEntity usuarioEntity = usuarioRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+
+        usuarioMapper.fromDto(usuarioDTO, usuarioEntity);
+
+
+    }
 }

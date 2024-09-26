@@ -1,9 +1,9 @@
 package com.cbio.core.v1.dto;
 
 import com.cbio.app.entities.CompanyEntity;
-import jakarta.persistence.Id;
-import lombok.*;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
@@ -38,6 +38,17 @@ public class UsuarioDTO implements Serializable {
         UsuarioFormDTO(String id, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyEntity company, String password) {
             super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, company);
             this.password = password;
+        }
+    }
+    @Getter
+    @Setter
+    public static class UsuarioSessionFormDTO extends UsuarioDTO {
+
+        private String cpf;
+
+        UsuarioSessionFormDTO(String id,String cpf, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyEntity company, String password) {
+            super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, company);
+            this.cpf = cpf;
         }
     }
 }

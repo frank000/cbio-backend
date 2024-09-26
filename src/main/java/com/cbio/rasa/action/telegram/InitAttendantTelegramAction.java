@@ -9,7 +9,6 @@ import com.cbio.chat.services.WebsocketPath;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.service.UserService;
-import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import io.github.jrasa.Action;
 import io.github.jrasa.CollectingDispatcher;
@@ -80,20 +79,26 @@ public class InitAttendantTelegramAction implements Action {
                 sessaoService.salva(sessaoEntity);
 
 
+                WebsocketNotificationDTO websocketDTO = WebsocketNotificationDTO.builder()
+                        .userId(sessaoEntity.getId())
+                        .channelId(channelUuid)
+                        .name(StringUtils.hasText(sessaoEntity.getNome()) ? sessaoEntity.getNome() : null)
+                        .active(true)
+                        .time(DateRocketUtils.getDateTimeFormated(now))
+                        .preview("ROCKETCHAT:Cliente solicita atendimento")
+                        .build();
                 simpMessagingTemplate
                         .convertAndSend(
                                 String.format(WebsocketPath.Constants.CHAT, attendantDTO.getId()),
-                                WebsocketNotificationDTO.builder()
-                                        .userId(sessaoEntity.getId())
-                                        .channelId(channelUuid)
-                                        .name(StringUtils.hasText(sessaoEntity.getNome())? sessaoEntity.getNome() : null)
-                                        .active(true)
-                                        .time(DateRocketUtils.getDateTimeFormated(now))
-                                        .preview("ROCKETCHAT:Cliente solicita atendimento")
-                                        .build());
+                                websocketDTO);
                 //TODO disparar websocket para lista do UserID
 
                 //TODO disparar websocket para lista do atendente
+                simpMessagingTemplate
+                        .convertAndSend(String.format(WebsocketPath.Constants.NOTIFICATION, attendantDTO.getId()),
+                                websocketDTO);
+                log.info("Notificação websokcet - " + String.format(WebsocketPath.Constants.NOTIFICATION, attendantDTO.getId()) + " - " + websocketDTO);
+
 
             } catch (Exception e) {
                 text = e.getMessage();

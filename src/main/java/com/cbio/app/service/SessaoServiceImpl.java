@@ -8,9 +8,14 @@ import com.cbio.app.service.enuns.CanalSenderEnum;
 import com.cbio.app.service.utils.PhoneNumberUtil;
 import com.cbio.chat.dto.SessionFiltroDTO;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
+import com.cbio.chat.interfaces.IChatService;
+import com.cbio.chat.services.ChatService;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.UsuarioDTO;
+import feign.FeignException;
+import jakarta.ws.rs.NotFoundException;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +45,6 @@ public class SessaoServiceImpl implements SessaoService {
                 .orElseThrow(() -> new RuntimeException("Erro ao iniciar atendimento extorno - Sessão não encontrada"));
     }
 
-    @Override
-    public Optional<SessaoEntity> buscaSessaoUsuarioCanal(Long identificadorUsuario, String canal) {
-        return sessaoRepository.findByCanalAndIdentificadorUsuario(canal, identificadorUsuario);
-    }
 
     @Override
     public void salva(SessaoEntity sessao) {
@@ -118,7 +119,7 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
 
-    public Long alteraTemplatesDeCertificado() {
+    public Long closeAttendaceLastOneHour() {
 
         Update update = new Update();
         update.set("atendimentoAberto", Boolean.FALSE);
@@ -129,6 +130,25 @@ public class SessaoServiceImpl implements SessaoService {
         Query query = new Query().addCriteria(
                 Criteria.where("atendimentoAberto").is(Boolean.TRUE)
                         .andOperator(Criteria.where("dataHoraAtendimentoAberto").lt(oneHourPast))
+        );
+
+        return mongoTemplate.updateMulti(query, update, SessaoEntity.class).getModifiedCount();
+
+    }
+
+    public Long closeAttendaceWhatsappCloseWindow() {
+
+        Update update = new Update();
+        update.set("atendimentoAberto", Boolean.FALSE);
+        update.set("dataHoraAtendimentoAberto", null);
+
+        LocalDateTime oneHourPast = LocalDateTime.now().minusHours(23L);
+
+        Query query = new Query().addCriteria(
+                Criteria.where("canal.nome").is(CanalSenderEnum.WHATSAPP.name())
+                        .andOperator(
+                                Criteria.where("atendimentoAberto").is(Boolean.TRUE),
+                                Criteria.where("dataHoraAtendimentoAberto").lt(oneHourPast))
         );
 
         return mongoTemplate.updateMulti(query, update, SessaoEntity.class).getModifiedCount();
@@ -157,7 +177,9 @@ public class SessaoServiceImpl implements SessaoService {
                                     .nameCanal(sessaoEntity.getCanal().getNome())
                                     .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
                                     .name(getNameOrNumber(sessaoEntity))
-                                    .active(true)
+                                    .name(getNameOrNumber(sessaoEntity))
+                                    .active(sessaoEntity.getAtendimentoAberto())
+                                    .cpf(sessaoEntity.getCpf())
                                     .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
                                     .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
                                     //.preview("ROCKETCHAT:Cliente solicita atendimento")
@@ -190,5 +212,48 @@ public class SessaoServiceImpl implements SessaoService {
     @Override
     public SessaoEntity getSessionById(String id) {
         return sessaoRepository.findById(id).orElseThrow(() -> new RuntimeException("Sessão não encontrada."));
+    }
+
+    @Override
+    public SessaoEntity getSessionByChannelId(String channelId) {
+        return sessaoRepository.findByLastChannelChatChannelUuid(channelId)
+                .orElseThrow(() -> new NotFoundException("Sessão não encontrada."));
+    }
+
+    @Override
+    public void updateNameCpf(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO) {
+        SessaoEntity sessionById = getSessionById(idSession);
+        sessionById.setCpf(usuarioDTO.getCpf());
+        sessionById.setNome(usuarioDTO.getName());
+        sessaoRepository.save(sessionById);
+    }
+
+    @Override
+    public void disconnectAttendance(String channelId) {
+        SessaoEntity sessionById = getSessionByChannelId(channelId);
+        sessionById.setAtendimentoAberto(Boolean.FALSE);
+        sessaoRepository.save(sessionById);
+    }
+
+    @Override
+    public void connectAttendance(String channelId) throws Exception {
+        SessaoEntity sessionById = getSessionByChannelId(channelId);
+        LocalDateTime now = LocalDateTime.now();
+        sessionById.setAtendimentoAberto(Boolean.TRUE);
+        verifyWindowToWhatsappChannel(sessionById, now);
+
+        sessaoRepository.save(sessionById);
+    }
+
+
+    public void verifyWindowToWhatsappChannel(SessaoEntity sessaoEntity, LocalDateTime now) throws Exception {
+        boolean isJanelaWhatsappClosed = sessaoEntity.getLastChannelChat() != null &&
+                sessaoEntity.getLastChannelChat().getDateTimeStart().plusHours(23).isBefore(now);
+
+        if (Boolean.TRUE.equals(sessaoEntity.getAtendimentoAberto()) &&
+                CanalSenderEnum.WHATSAPP.name().equals(sessaoEntity.getCanal().getNome())
+                && isJanelaWhatsappClosed) {
+            throw new IllegalArgumentException("Janela fechada para envios de mensagens.");
+        }
     }
 }

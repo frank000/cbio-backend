@@ -2,7 +2,7 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.service.IAMServiceImpl;
 import com.cbio.app.web.SecuredRestController;
-import com.cbio.core.service.AttendantService;
+import com.cbio.core.service.SessaoService;
 import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class UsuarioController implements SecuredRestController {
 
     private final UserService userService;
+    private final SessaoService sessaoService;
 
     @PostMapping
     public ResponseEntity<Void> save(@RequestBody UsuarioDTO.UsuarioFormDTO usuarioDTO) {
@@ -28,5 +29,12 @@ public class UsuarioController implements SecuredRestController {
 
         return ResponseEntity
                 .ok( userService.buscaPorId(id));
+    }
+
+    @PutMapping("session/{idSession}")
+    public ResponseEntity<Void> update(@PathVariable String idSession, @RequestBody UsuarioDTO.UsuarioSessionFormDTO usuarioDTO) {
+        sessaoService.updateNameCpf(idSession, usuarioDTO);
+        return ResponseEntity.ok().build();
+
     }
 }

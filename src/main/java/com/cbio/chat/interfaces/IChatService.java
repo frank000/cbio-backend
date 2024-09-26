@@ -19,4 +19,5 @@ public interface IChatService {
   List<ChatMessageDTO> getExistingChatMessages(String channelUuid);
 
   ChatChannelInitializationDTO getChatChannelInitializationDTO(String channelId);
+
 }

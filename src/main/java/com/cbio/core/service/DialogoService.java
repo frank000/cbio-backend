@@ -1,5 +1,6 @@
 package com.cbio.core.service;
 
+import com.cbio.chat.dto.ChatDTO;
 import com.cbio.chat.dto.DialogoDTO;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public interface DialogoService {
 
     List<DialogoDTO> getAllBySender(String identificadorRementente);
 
-
+    List<ChatDTO> mountChatFromDioalogByChannelId(String channelId);
 
 
 }

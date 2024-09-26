@@ -29,17 +29,17 @@ public class AttendantAssistent implements AssistentBotService {
         try {
             AttendantMessageOutDTO message = AttendantMessageOutDTO.builder()
                     .text(dialogo.getMensagem())
+                    .id(dialogo.getId())
                     .toUserId(dialogo.getSessionId())
                     .fromUserId(dialogo.getToIdentifier())
                     .time(DateRocketUtils.getDateTimeFormated(dialogo.getCreatedDateTime()))
+                    .media(dialogo.getMedia())
                     .build();
 
             ObjectMapper objectMapper = new ObjectMapper();
             String json = objectMapper.writeValueAsString(message);
-            simpMessagingTemplate
-                    .convertAndSend(String.format(WebsocketPath.Constants.CHAT, dialogo.getChannelUuid()),
-                            json);
-
+            enviarWebsocketParaChannelId(dialogo, json);
+            enviarWebsocketParaNoficacao(dialogo, json);
             return Optional.empty();
 
         } catch (Exception e) {
@@ -47,6 +47,20 @@ public class AttendantAssistent implements AssistentBotService {
             throw new RuntimeException(msg);
         }
 
+    }
+
+    private void enviarWebsocketParaChannelId(DialogoDTO dialogo, String json) {
+        simpMessagingTemplate
+                .convertAndSend(String.format(WebsocketPath.Constants.CHAT, dialogo.getChannelUuid()),
+                        json);
+        log.info("Enviado para websokcet - " + String.format(WebsocketPath.Constants.CHAT, dialogo.getChannelUuid()) + " - " + json);
+    }
+
+    private void enviarWebsocketParaNoficacao(DialogoDTO dialogo, String json) {
+        simpMessagingTemplate
+                .convertAndSend(String.format(WebsocketPath.Constants.NOTIFICATION, dialogo.getToIdentifier()),
+                        json);
+        log.info("Notificação websokcet - " + String.format(WebsocketPath.Constants.NOTIFICATION, dialogo.getToIdentifier()) + " - " + json);
     }
 
     @NotNull
