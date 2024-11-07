@@ -1,19 +1,23 @@
 package com.cbio.core.service;
 
+import com.cbio.app.base.interfaces.TriFunction;
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SessaoService {
 
     SessaoEntity validaOuCriaSessaoAtivaPorUsuarioCanal(Long usuarioId, CanalDTO canal, Long agora);
 
 
-    SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId);
+    SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId, String idCanal);
 
     Boolean isSessaoValidaTempo(Long agora, SessaoEntity sessao);
 
@@ -32,9 +36,11 @@ public interface SessaoService {
 
     SessaoEntity getSessionByChannelId(String channelId);
 
-    void updateNameCpf(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO);
+    void updateUserInfosIntoSession(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO);
 
-    void disconnectAttendance(String channelId);
+    void bindContactToSession(String idSession, ContactDTO dto);
+
+    void disconnectAttendance(String channelId, TriFunction<String, String, SessaoEntity, Optional<DialogoDTO>> notify);
 
     void connectAttendance(String channelId) throws Exception;
 

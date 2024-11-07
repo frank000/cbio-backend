@@ -4,9 +4,11 @@ import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.PhraseEntity;
 import com.cbio.app.repository.grid.PhraseGridRepository;
 import com.cbio.app.web.SecuredRestController;
+import com.cbio.core.service.AuthService;
 import com.cbio.core.service.PhraseService;
 import com.cbio.core.v1.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +24,7 @@ public class PhraseAutoController implements SecuredRestController {
 
     private final PhraseService phraseService;
     private final PhraseGridRepository phraseGridRepository;
+    private final AuthService authService;
 
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") String id) {
@@ -55,6 +58,7 @@ public class PhraseAutoController implements SecuredRestController {
 
     @GetMapping("grid")
     public ResponseEntity<PageableResponse<PhraseDTO>> obtemGrid(@RequestParam(required = false) final String filter,
+                                                                 @RequestParam(required = false) final String companyId,
                                                                   @RequestParam(defaultValue = "0") Integer pageIndex,
                                                                   @RequestParam(defaultValue = "10") Integer pageSize,
                                                                   @RequestParam(defaultValue = "id") String sortField,
@@ -63,6 +67,7 @@ public class PhraseAutoController implements SecuredRestController {
 
         PhraseFiltroGridDTO produtoGridFiltroDTO = PhraseFiltroGridDTO.builder()
                 .busca(filter)
+                .idCompany(ObjectUtils.isEmpty(companyId)?authService.getCompanyIdUserLogged() : companyId)
                 .build();
         PageableResponse<PhraseDTO> all = phraseGridRepository.obtemGrid(produtoGridFiltroDTO, pageable, PhraseEntity.class, PhraseDTO.class);
         return ResponseEntity.ok(all);

@@ -1,5 +1,6 @@
 package com.cbio.chat.dto;
 
+import com.cbio.core.v1.dto.ContactDTO;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,7 @@ public class WebsocketNotificationDTO implements Serializable {
 
     private String nameCanal;
 
-    private String  identificadorRemetente;
+    private String identificadorRemetente;
 
     private String path;
 
@@ -33,5 +34,7 @@ public class WebsocketNotificationDTO implements Serializable {
     private List<String> messages;
 
     private boolean active;
+
+    private ContactDTO contact;
 
 }

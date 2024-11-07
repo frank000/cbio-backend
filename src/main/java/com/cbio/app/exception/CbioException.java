@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class CbioException extends Exception {
 
     private String message;
-    private Integer status;
+    private int status;
 }

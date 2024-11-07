@@ -21,13 +21,9 @@ public class CloseSessionJobService {
 
         log.info(String.format("CLOSE SESSION - Closed : %s sessions", numberDocs));
 
-
         Long numberDocsClosedWindow = sessaoService.closeAttendaceWhatsappCloseWindow();
 
         log.info(String.format("CLOSE SESSION - Closed Window - Whatsapp : %s sessions", numberDocsClosedWindow));
-
-
-
     }
 
 }

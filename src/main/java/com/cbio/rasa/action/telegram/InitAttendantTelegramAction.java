@@ -1,14 +1,19 @@
 package com.cbio.rasa.action.telegram;
 
-import com.cbio.app.base.utils.DateRocketUtils;
+import com.cbio.app.base.utils.CbioDateUtils;
+import com.cbio.app.entities.CompanyConfigEntity;
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.app.repository.CompanyConfigRepository;
 import com.cbio.chat.dto.ChatChannelInitializationDTO;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
+import com.cbio.chat.exceptions.IsSameUserException;
+import com.cbio.chat.exceptions.UserNotFoundException;
+import com.cbio.chat.models.ChatChannelEntity;
+import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.chat.services.ChatService;
 import com.cbio.chat.services.WebsocketPath;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
-import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import io.github.jrasa.Action;
 import io.github.jrasa.CollectingDispatcher;
@@ -17,8 +22,10 @@ import io.github.jrasa.event.Event;
 import io.github.jrasa.exception.RejectExecuteException;
 import io.github.jrasa.message.Message;
 import io.github.jrasa.tracker.Tracker;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -34,8 +41,9 @@ public class InitAttendantTelegramAction implements Action {
     private final SessaoService sessaoService;
     private final AttendantService attendantService;
     private final ChatService chatService;
+    private final ChatChannelRepository chatChannelRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private final UserService userService;
+    private final CompanyConfigRepository companyConfigRepository;
 
     @Override
     public String name() {
@@ -51,53 +59,43 @@ public class InitAttendantTelegramAction implements Action {
 
         if (tracker.getCurrentState() != null && tracker.getCurrentState().getSenderId() != null) {
 
-            String senderId = tracker.getCurrentState().getSenderId();
+            String[] idUsuarioAndIdCanal = tracker.getCurrentState().getSenderId().split("_");
 
             SessaoEntity sessaoEntity = sessaoService
-                    .buscaSessaoAtivaPorIdentificadorUsuario(Long.valueOf(senderId));
+                    .buscaSessaoAtivaPorIdentificadorUsuario(Long.valueOf(idUsuarioAndIdCanal[0]), idUsuarioAndIdCanal[1]);
 
             try {
                 LocalDateTime now = LocalDateTime.now();
 
-                UsuarioDTO attendantDTO = attendantService.fetch();
-                ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
-                        .userIdOne(attendantDTO.getId())
-                        .userIdTwo(sessaoEntity.getId())
-                        .initCanal(sessaoEntity.getCanal().getNome())
-                        .build();
-
-                String channelUuid = chatService.establishChatSession(chatChannelInitialization, now);
+                ResultConnectedChannel result = connectChatChannel(sessaoEntity, now);
 
                 sessaoEntity.setLastChannelChat(
                         SessaoEntity.ChannelChatDTO.builder()
-                                .channelUuid(channelUuid)
+                                .channelUuid(result.channelUuid())
                                 .dateTimeStart(now)
                                 .build());
+
                 sessaoEntity.setAtendimentoAberto(Boolean.TRUE);
-                sessaoEntity.setUltimoAtendente(attendantDTO);
+                sessaoEntity.setUltimoAtendente(result.attendantDTO());
                 sessaoEntity.setDataHoraAtendimentoAberto(now);
                 sessaoService.salva(sessaoEntity);
 
 
                 WebsocketNotificationDTO websocketDTO = WebsocketNotificationDTO.builder()
                         .userId(sessaoEntity.getId())
-                        .channelId(channelUuid)
+                        .channelId(result.channelUuid())
+                        .cpf(sessaoEntity.getCpf())
+                        .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
                         .name(StringUtils.hasText(sessaoEntity.getNome()) ? sessaoEntity.getNome() : null)
+                        .nameCanal(sessaoEntity.getCanal().getNome())
                         .active(true)
-                        .time(DateRocketUtils.getDateTimeFormated(now))
-                        .preview("ROCKETCHAT:Cliente solicita atendimento")
+                        .time(CbioDateUtils.getDateTimeFormated(now))
+                        .preview("Cliente solicita atendimento")
                         .build();
-                simpMessagingTemplate
-                        .convertAndSend(
-                                String.format(WebsocketPath.Constants.CHAT, attendantDTO.getId()),
-                                websocketDTO);
-                //TODO disparar websocket para lista do UserID
 
-                //TODO disparar websocket para lista do atendente
-                simpMessagingTemplate
-                        .convertAndSend(String.format(WebsocketPath.Constants.NOTIFICATION, attendantDTO.getId()),
-                                websocketDTO);
-                log.info("Notificação websokcet - " + String.format(WebsocketPath.Constants.NOTIFICATION, attendantDTO.getId()) + " - " + websocketDTO);
+                notifyByWebsocket(WebsocketPath.Constants.CHAT, result, websocketDTO, "Notificação websocket CHAT - ");
+
+                notifyByWebsocket(WebsocketPath.Constants.NOTIFICATION, result, websocketDTO, "Notificação websocket NOTIFICATION - ");
 
 
             } catch (Exception e) {
@@ -113,5 +111,62 @@ public class InitAttendantTelegramAction implements Action {
         }
 
         return Action.empty();
+    }
+
+    private void notifyByWebsocket(String notification, ResultConnectedChannel result, WebsocketNotificationDTO websocketDTO, String x) {
+        simpMessagingTemplate
+                .convertAndSend(String.format(notification, result.attendantDTO().getId()),
+                        websocketDTO);
+        log.info(x + String.format(notification, result.attendantDTO().getId()) + " - " + websocketDTO);
+    }
+
+    @NotNull
+    private ResultConnectedChannel connectChatChannel(SessaoEntity sessaoEntity, LocalDateTime now) throws IsSameUserException, UserNotFoundException {
+        //observar se sessoã tem um i=ultimo attendant, se tiver, verifica se existe, se esta ativo, e seta para ele, se não entra aqui
+        String companyId = sessaoEntity.getCanal().getCompany().getId();
+        UsuarioDTO attendantDTO;
+        CompanyConfigEntity companyConfigEntity = companyConfigRepository.findByCompanyId(companyId)
+                .orElseThrow(() -> new NotFoundException("Configuração não encontrada."));
+
+        if(Boolean.TRUE.equals(companyConfigEntity.getKeepSameAttendant())){
+            attendantDTO = sessaoEntity.getUltimoAtendente();
+
+            if(attendantDTO == null ||
+                    !attendantService.isAttendantActive(attendantDTO.getId())){
+                attendantDTO = getAttendantByLessAttendance(companyId);
+            }
+        }else{
+            attendantDTO = getAttendantByLessAttendance(companyId);
+        }
+
+
+        ChatChannelInitializationDTO chatChannelInitialization = ChatChannelInitializationDTO.builder()
+                .userIdOne(attendantDTO.getId())
+                .userIdTwo(sessaoEntity.getId())
+                .initCanal(sessaoEntity.getCanal().getNome())
+                .build();
+
+        String channelUuid = chatService.establishChatSession(chatChannelInitialization, now);
+
+        addHistoryOnChannel(now, channelUuid);
+
+        attendantService.incrementTotalChatsReceived(attendantDTO);
+
+        ResultConnectedChannel result = new ResultConnectedChannel(attendantDTO, channelUuid);
+        return result;
+    }
+
+    private void addHistoryOnChannel(LocalDateTime now, String channelUuid) {
+        ChatChannelEntity chatChannelEntity = chatChannelRepository.findById(channelUuid)
+                .orElseThrow(() -> new NotFoundException("Channel não encontrado."));
+        chatChannelEntity.addHistory(now);
+        chatChannelRepository.save(chatChannelEntity);
+    }
+
+    private UsuarioDTO getAttendantByLessAttendance(String companyId) {
+        return attendantService.findTopByOrderByTotalChatsDistribuidosAsc(companyId);
+    }
+
+    private record ResultConnectedChannel(UsuarioDTO attendantDTO, String channelUuid) {
     }
 }

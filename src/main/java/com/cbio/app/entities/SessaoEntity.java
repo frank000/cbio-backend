@@ -2,6 +2,7 @@ package com.cbio.app.entities;
 
 import com.cbio.app.repository.SessaoRepository;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
@@ -32,6 +33,12 @@ public class SessaoEntity {
 
     private String cpf;
 
+    private String telefone1;
+
+    private String telefone2;
+
+    private String email;
+
     private CanalDTO canal;
 
     @Indexed
@@ -51,6 +58,8 @@ public class SessaoEntity {
 
     private String ultimaEtapa;
 
+    private ContactDTO contact;
+
     @Setter(AccessLevel.NONE)
     private ChannelChatDTO lastChannelChat;
 
@@ -60,6 +69,8 @@ public class SessaoEntity {
     private String comandoExecucao;
 
     private UsuarioDTO ultimoAtendente;
+
+
 
     private List<AtendimentoDTO> atendimentoDTOS;
 

@@ -20,12 +20,16 @@ public class AttendantMessageOutDTO implements Serializable {
     private String fromUserId;
 
     @JsonProperty("toUserId")
-    private String toUserId;
+    private String toUserId;// logica é invertida por conta do componete de tela -> toUser é o Atendente
 
     @JsonProperty("time")
     private String time;
 
     private String id;
+
+    private String channelId;
+
+    private String type;
 
     private MediaDTO media;
 }

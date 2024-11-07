@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,6 +28,15 @@ public class ChatChannelEntity {
 
   private LocalDateTime initTime;
 
+
+  private List<LocalDateTime> history;
+
+  public void addHistory(LocalDateTime history) {
+    if (this.history == null) {
+      this.history = new ArrayList<>();
+    }
+    this.history.add(history);
+  }
 
   public ChatChannelEntity(UserChatEntity userOne , UserChatEntity userTwo) {
     this.userOne = userOne;

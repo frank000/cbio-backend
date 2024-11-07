@@ -1,6 +1,5 @@
 package com.cbio.core.v1.dto;
 
-import com.cbio.app.entities.CompanyEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,8 +24,9 @@ public class UsuarioDTO implements Serializable {
 
     private String perfil;
 
+    private Boolean active;
 
-    private CompanyEntity company;
+    private CompanyDTO company;
 
 
     @Getter
@@ -35,20 +35,27 @@ public class UsuarioDTO implements Serializable {
 
         private String password;
 
-        UsuarioFormDTO(String id, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyEntity company, String password) {
-            super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, company);
+        UsuarioFormDTO(String id, Boolean active, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyDTO company, String password) {
+            super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, active, company);
             this.password = password;
         }
     }
+
     @Getter
     @Setter
     public static class UsuarioSessionFormDTO extends UsuarioDTO {
 
         private String cpf;
+        private String telefone1;
+        private String telefone2;
+        private String email;
 
-        UsuarioSessionFormDTO(String id,String cpf, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyEntity company, String password) {
-            super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, company);
+        UsuarioSessionFormDTO(String id, Boolean active, String telefone2, String telefone1, String cpf, Long identificadorUsuario, String email, String name, Long ultimaModificacao, String perfil, CompanyDTO company, String password) {
+            super(id, identificadorUsuario, email, name, ultimaModificacao, perfil, active, company);
             this.cpf = cpf;
+            this.telefone1 = telefone1;
+            this.telefone2 = telefone2;
+            this.email = email;
         }
     }
 }

@@ -10,6 +10,7 @@ public interface DialogoRepository extends MongoRepository<DialogoEntity, String
 
     List<DialogoEntity> findAllByIdentificadorRemetenteOrderByCreatedDateTime(String identificadorRementente);
 
+    List<DialogoEntity> findAllBySessionIdOrderByCreatedDateTime(String sessionId);
 
     Optional<DialogoEntity> getByMediaIsNullAndId(Long id);
 }

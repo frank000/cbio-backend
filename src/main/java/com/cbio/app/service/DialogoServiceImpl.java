@@ -1,6 +1,6 @@
 package com.cbio.app.service;
 
-import com.cbio.app.base.utils.DateRocketUtils;
+import com.cbio.app.base.utils.CbioDateUtils;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.repository.DialogoRepository;
 import com.cbio.app.service.enuns.AssistentEnum;
@@ -58,18 +58,18 @@ public class DialogoServiceImpl implements DialogoService {
     }
 
     @Override
-    public List<DialogoDTO> getAllBySender(String identificadorRementente) {
-        List<DialogoEntity> allByIdentificadorRemetente = dialogoRepository.findAllByIdentificadorRemetenteOrderByCreatedDateTime(identificadorRementente);
+    public List<DialogoDTO> getAllBySender(String sessionId) {
+        List<DialogoEntity> allsessionId = dialogoRepository.findAllBySessionIdOrderByCreatedDateTime(sessionId);
 
-        return dialogoMapper.toDto(allByIdentificadorRemetente);
+        return dialogoMapper.toDto(allsessionId);
     }
 
-    public List<ChatDTO> mountChatFromDioalogByChannelId(String channelId) {
+    public List<ChatDTO> mountChatFromDioalogBySessionIdAndChannelId(String sessionId, String channelId) {
         ChatChannelEntity chatChannelEntity = chatChannelRepository.findById(channelId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel não encontrado."));
 
-        SessaoEntity sessionByChannelId = sessaoService.getSessionByChannelId(channelId);
-        List<DialogoDTO> allBySender = getAllBySender(String.valueOf(sessionByChannelId.getIdentificadorUsuario()));
+        SessaoEntity sessionByChannelId = sessaoService.getSessionById(sessionId);
+        List<DialogoDTO> allBySender = getAllBySender(sessionId);
 
         List<ChatDTO> collect = allBySender.stream().map(dialogoDTO -> {
 
@@ -83,7 +83,7 @@ public class DialogoServiceImpl implements DialogoService {
                                 .media(dialogoDTO.getMedia())
                                 .fromUserId(chatChannelEntity.getUserTwo().getUuid())
                                 .toUserId(chatChannelEntity.getUserOne().getUuid())
-                                .time(DateRocketUtils.getDateTimeWithSecFormated(dialogoDTO.getCreatedDateTime()))
+                                .time(CbioDateUtils.getDateTimeWithSecFormated(dialogoDTO.getCreatedDateTime()))
                                 .build();
                     } else {
                         return ChatDTO.builder()
@@ -93,7 +93,7 @@ public class DialogoServiceImpl implements DialogoService {
                                 .media(dialogoDTO.getMedia())
                                 .toUserId(chatChannelEntity.getUserTwo().getUuid())
                                 .fromUserId(chatChannelEntity.getUserOne().getUuid())
-                                .time(DateRocketUtils.getDateTimeWithSecFormated(dialogoDTO.getCreatedDateTime()))
+                                .time(CbioDateUtils.getDateTimeWithSecFormated(dialogoDTO.getCreatedDateTime()))
                                 .build();
                     }
 

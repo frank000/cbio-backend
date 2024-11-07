@@ -10,6 +10,7 @@ import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.UsuarioDTO;
 import com.cbio.core.v1.enuns.PerfilEnum;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -37,5 +38,13 @@ public class AuthServiceImpl implements AuthService {
         }else{
             return Map.of();
         }
+    }
+
+
+    public String getCompanyIdUserLogged(){
+        Map<String, Object> claimsUserLogged = getClaimsUserLogged();
+
+        return ObjectUtils.defaultIfNull((String)claimsUserLogged.get("companyId"), null) ;
+
     }
 }

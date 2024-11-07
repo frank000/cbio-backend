@@ -9,11 +9,15 @@ import java.util.Map;
 public interface IAMService {
     List<UserRepresentation> getUser(UserKeycloak userVO);
 
-    String addUser(UserKeycloak userVO,  String roleUser);
+    List<UserRepresentation> getUser(String userName);
+
+    String addUser(UserKeycloak userVO, String roleUser);
 
     void updateUser(UserKeycloak userVO, String userID);
 
     void deleteUser(UserKeycloak userVO);
+
+    void deleteUserByUserName(String username);
 
     void updateUserAttributes(UserKeycloak userVO, Map<String, List<String>> attributes);
 }

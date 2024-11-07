@@ -1,22 +1,27 @@
 package com.cbio.app.service;
 
-import com.cbio.app.base.utils.DateRocketUtils;
+import com.cbio.app.base.interfaces.TriFunction;
+import com.cbio.app.base.utils.CbioDateUtils;
+import com.cbio.app.entities.ContactEntity;
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.app.repository.ContactRepository;
 import com.cbio.app.repository.SessaoCustomRepository;
 import com.cbio.app.repository.SessaoRepository;
 import com.cbio.app.service.enuns.CanalSenderEnum;
 import com.cbio.app.service.utils.PhoneNumberUtil;
+import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.chat.dto.SessionFiltroDTO;
 import com.cbio.chat.dto.WebsocketNotificationDTO;
-import com.cbio.chat.interfaces.IChatService;
-import com.cbio.chat.services.ChatService;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
+import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
-import feign.FeignException;
+import com.mongodb.client.result.UpdateResult;
 import jakarta.ws.rs.NotFoundException;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.BsonValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -31,17 +36,18 @@ import java.util.*;
 
 @Service
 @Data
+@Slf4j
 public class SessaoServiceImpl implements SessaoService {
 
     private final SessaoRepository sessaoRepository;
     private final SessaoCustomRepository sessaoCustomRepository;
     private final AuthService authService;
-
     private final MongoTemplate mongoTemplate;
+    private final ContactRepository contactRepository;
 
     @Override
-    public SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId) {
-        return sessaoRepository.findByAtivoAndIdentificadorUsuario(Boolean.TRUE, usuarioId)
+    public SessaoEntity buscaSessaoAtivaPorIdentificadorUsuario(Long usuarioId, String idCanal) {
+        return sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalIdCanal(Boolean.TRUE, usuarioId, idCanal)
                 .orElseThrow(() -> new RuntimeException("Erro ao iniciar atendimento extorno - Sessão não encontrada"));
     }
 
@@ -56,7 +62,7 @@ public class SessaoServiceImpl implements SessaoService {
 
         Long expiresValue = 120000L;
 
-        Optional<SessaoEntity> byAtivoAndIdentificadorUsuarioAndCanal = sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNome(Boolean.TRUE, usuarioId, canal.getNome());
+        Optional<SessaoEntity> byAtivoAndIdentificadorUsuarioAndCanal = sessaoRepository.findByAtivoAndIdentificadorUsuarioAndCanalNomeAndCanalIdCanal(Boolean.TRUE, usuarioId, canal.getNome(), canal.getIdCanal());
 
         return byAtivoAndIdentificadorUsuarioAndCanal
                 .orElseGet(() -> criaESalvaSessao(usuarioId, agora, expiresValue, canal));
@@ -132,7 +138,16 @@ public class SessaoServiceImpl implements SessaoService {
                         .andOperator(Criteria.where("dataHoraAtendimentoAberto").lt(oneHourPast))
         );
 
-        return mongoTemplate.updateMulti(query, update, SessaoEntity.class).getModifiedCount();
+        UpdateResult updateResult = mongoTemplate.updateMulti(query, update, SessaoEntity.class);
+        BsonValue upsertedId = updateResult.getUpsertedId();
+        if (upsertedId != null) {
+            upsertedId.asArray().forEach(bsonValue -> {
+                log.info("Cada: {}", bsonValue);
+            });
+
+        }
+        log.info("IDS para fechar", upsertedId);
+        return updateResult.getModifiedCount();
 
     }
 
@@ -162,7 +177,6 @@ public class SessaoServiceImpl implements SessaoService {
 
         Object userId = claimsUserLogged.get("userId");
 
-
         if (userId != null) {
 
             List<WebsocketNotificationDTO> websocketNotificationDTOS = new ArrayList<>();
@@ -179,9 +193,10 @@ public class SessaoServiceImpl implements SessaoService {
                                     .name(getNameOrNumber(sessaoEntity))
                                     .name(getNameOrNumber(sessaoEntity))
                                     .active(sessaoEntity.getAtendimentoAberto())
+                                    .contact(sessaoEntity.getContact())
                                     .cpf(sessaoEntity.getCpf())
                                     .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
-                                    .time(DateRocketUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
+                                    .time(CbioDateUtils.getDateTimeFormated(sessaoEntity.getLastChannelChat().getDateTimeStart()))
                                     //.preview("ROCKETCHAT:Cliente solicita atendimento")
                                     .build()));
 
@@ -221,19 +236,43 @@ public class SessaoServiceImpl implements SessaoService {
     }
 
     @Override
-    public void updateNameCpf(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO) {
+    public void updateUserInfosIntoSession(String idSession, UsuarioDTO.UsuarioSessionFormDTO usuarioDTO) {
         SessaoEntity sessionById = getSessionById(idSession);
         sessionById.setCpf(usuarioDTO.getCpf());
         sessionById.setNome(usuarioDTO.getName());
+        sessionById.setTelefone1(usuarioDTO.getTelefone1());
+        sessionById.setTelefone2(usuarioDTO.getTelefone2());
+        sessionById.setEmail(usuarioDTO.getEmail());
         sessaoRepository.save(sessionById);
     }
 
     @Override
-    public void disconnectAttendance(String channelId) {
-        SessaoEntity sessionById = getSessionByChannelId(channelId);
-        sessionById.setAtendimentoAberto(Boolean.FALSE);
+    public void bindContactToSession(String idSession, ContactDTO dto) {
+        SessaoEntity sessionById = getSessionById(idSession);
+        sessionById.setContact(dto);
+        sessionById.setNome(dto.getName());
+        sessionById.setEmail(dto.getEmail());
         sessaoRepository.save(sessionById);
+
+        ContactEntity contact = contactRepository.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Contato não encontrado."));
+        contact.getSessions().add(idSession);
+        contactRepository.save(contact);
     }
+
+    @Override
+    public void disconnectAttendance(String channelId, TriFunction<String, String, SessaoEntity, Optional<DialogoDTO>> notify) {
+        SessaoEntity sessaoEntity = getSessionByChannelId(channelId);
+        sessaoEntity.setAtendimentoAberto(Boolean.FALSE);
+        sessaoRepository.save(sessaoEntity);
+
+        notify.apply(
+                "Chat desconectado.",
+                sessaoEntity.getLastChannelChat().getChannelUuid(),
+                sessaoEntity
+        );
+    }
+
 
     @Override
     public void connectAttendance(String channelId) throws Exception {

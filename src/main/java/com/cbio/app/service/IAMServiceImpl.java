@@ -5,6 +5,7 @@ import com.cbio.app.configuration.keycloak.Credentials;
 import com.cbio.core.service.IAMService;
 import com.cbio.core.v1.dto.UserKeycloak;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -60,23 +61,28 @@ public class IAMServiceImpl implements IAMService {
     public final static String ROLE_ADMIN = "admin";
     public final static String ROLE_ATTENDANT = "attendant";
 
-    public List<UserRepresentation> getUser(UserKeycloak userVO) {
+    public List<UserRepresentation> getUser(String userName) {
         UsersResource usersResource = getInstance();
-        List<UserRepresentation> user = usersResource.searchByUsername(userVO.getUserName(), true);
-        return user;
 
+        List<UserRepresentation> user = usersResource.searchByUsername(userName, true);
+        return user;
+    }
+
+    @Override
+    public List<UserRepresentation> getUser(UserKeycloak userVO) {
+        return List.of();
     }
 
     private String getUserId(UserKeycloak userVO) {
         String id = "";
-        List<UserRepresentation> users = getUser(userVO);
+        List<UserRepresentation> users = getUser(userVO.getUserName());
         for (UserRepresentation ur : users) {
             id = ur.getId();
         }
         return id;
     }
 
-    public String addUser(UserKeycloak userVO,  String roleUser) {
+    public String addUser(UserKeycloak userVO, String roleUser) {
         logger.info("Iniciando Cadastro do usuário no keycloak: ");
 
         verifyIfUserExists(userVO, true);
@@ -124,22 +130,34 @@ public class IAMServiceImpl implements IAMService {
         user.setCredentials(Collections.singletonList(credential));
 
         UsersResource usersResource = getInstance();
-//	    if(StringUtils.isBlank(userID)) {
-//	    	userID = getUserId(userVO);
-//
-//	    }
-        //sempre buscar o id do keycloack
-        userID = getUserId(userVO);
-        usersResource.get(userID).update(user);
+        List<UserRepresentation> user1 = getUser(userVO.getOldUserName());
+        UserRepresentation userKeyclaok = user1.stream()
+                .filter(item -> item.getId().equals(userVO.getId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("User Keyclaok não encontrado"));
+
+        userKeyclaok.setEmail(userVO.getEmail());
+//        userKeyclaok.setUsername(userVO.getUserName()); //READ-ONLY
+        userKeyclaok.setCredentials(Collections.singletonList(credential));
+
+        usersResource.get(userID).update(userKeyclaok);
     }
 
     public void deleteUser(UserKeycloak userVO) {
         logger.info("Deletando usuário no Keycloak: " + userVO.getFirstname() + " - " + userVO.getUserName());
         getKeycloak().realm(realm).users().delete(getUserId(userVO));
     }
+    public void deleteUserByUserName(String username) {
+        logger.info(String.format("Deletando usuário no Keycloak: %s", username));
+
+        UserKeycloak userKeycloak = UserKeycloak.builder()
+                        .userName(username)
+                                .build();
+        getKeycloak().realm(realm).users().delete(getUserId(userKeycloak));
+    }
 
     public void updateUserAttributes(UserKeycloak userVO, Map<String, List<String>> attributes) {
-        var users = getUser(userVO);
+        var users = getUser(userVO.getUserName());
         if (users != null) {
             users.forEach(user -> {
                 var userAttr = user.getAttributes();

@@ -36,6 +36,8 @@ public class DialogoEntity {
 
   private String channelUuid;
 
+  private String sessionId;
+
   private String from;
 
   private LocalDateTime createdDateTime;

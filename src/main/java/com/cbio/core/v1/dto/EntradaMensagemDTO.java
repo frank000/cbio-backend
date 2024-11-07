@@ -3,6 +3,8 @@ package com.cbio.core.v1.dto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -16,5 +18,6 @@ public class EntradaMensagemDTO {
     private CanalDTO canal;
     private String identificadorRemetente;
     private Object mensagemObject;
+    private MultipartFile file;
 
 }

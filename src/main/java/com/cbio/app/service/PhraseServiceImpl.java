@@ -8,6 +8,7 @@ import com.cbio.core.service.PhraseService;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.PhraseDTO;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -66,14 +67,12 @@ public class PhraseServiceImpl implements PhraseService {
 
     @Override
     public List<PhraseDTO> fetch() {
-
-        if(authService.getClaimsUserLogged().get("companyId") != null){
-            String companyId = authService.getClaimsUserLogged().get("companyId").toString();
-
+        String companyId = authService.getClaimsUserLogged().get("companyId").toString();
+        if(ObjectUtils.isNotEmpty(companyId)){
             List<PhraseEntity> all = phraseRepository.findAllByCompanyId(companyId);
             return phraseMapper.toDto(all);
         }else{
-            throw new RuntimeException("Você não está logado");
+            return null;
         }
 
     }

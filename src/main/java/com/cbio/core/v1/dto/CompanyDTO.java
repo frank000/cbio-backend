@@ -27,4 +27,8 @@ public class CompanyDTO implements Serializable {
     private EstadosEnum estado;
 
     private String cep;
+
+    private String tier;
+
+    private Integer porta;
 }

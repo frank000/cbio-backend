@@ -44,7 +44,8 @@ public class TelegramSenderService implements Sender {
                         .map(item -> Collections.singletonList(
                                         InlineKeyboardButton.builder()
                                                 .text(item.getTitle())
-                                                .callbackData(item.getPayload().concat("_telegram"))
+//                                                .callbackData(item.getPayload().concat("_telegram"))
+                                                .callbackData(item.getPayload())
                                                 .build()
                                 )
                         )

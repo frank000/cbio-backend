@@ -16,10 +16,9 @@ public class RasaRestClient {
 
     private final RestTemplate restTemplate;
 
-    @Value("${assistent.rasa.url}")
-    private final String webhookUrl = "http://localhost:8080/webhooks/rest/webhook";
+    private final String webhookUrl = "http://localhost";
 
-    public List<RasaMessageDTO> sendMessage(RasaMessageOutDTO rasaMessageDTO) {
+    public  RasaMessageDTO[] sendMessage(RasaMessageOutDTO rasaMessageDTO, Integer port) {
         // Configurar cabeçalhos para indicar o tipo de conteúdo
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -28,18 +27,13 @@ public class RasaRestClient {
         HttpEntity<RasaMessageOutDTO> requestEntity = new HttpEntity<>(rasaMessageDTO, headers);
 
         // Enviar a requisição POST
-        ResponseEntity<List<RasaMessageDTO>> responseEntity = restTemplate.exchange(
-                webhookUrl + "/webhooks/rest/webhook",
-                HttpMethod.POST,
-                requestEntity,
-                (Class<List<RasaMessageDTO>>) (Class<?>) List.class
-        );
+        String endPoint = webhookUrl + ":" + port.toString() + "/webhooks/rest/webhook";
+        try{
+            return  restTemplate.postForObject(endPoint, rasaMessageDTO, RasaMessageDTO[].class);
 
-        // Verificar se a resposta é OK e retornar o corpo da resposta
-        if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            return responseEntity.getBody();
-        } else {
-            throw new RuntimeException("Failed to send message, status code: " + responseEntity.getStatusCode());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send message, status code.");
         }
+
     }
 }

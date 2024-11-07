@@ -14,10 +14,13 @@ import java.util.List;
 public class ChatChannelCustomRepository  {
   private final MongoTemplate mongoTemplate;
 
-  public List<ChatChannelEntity> findUsers(String userOneUuid, String userTwoUuid) {
+  public List<ChatChannelEntity> findUsers(String userOneUuid, String userTwoUuid, String initCanal) {
     Query query = new Query();
-    query.addCriteria(Criteria.where("userOne.uuid").is(userOneUuid)
-            .and("userTwo.uuid").is(userTwoUuid));
+    query.addCriteria(
+            Criteria.where("userOne.uuid").is(userOneUuid)
+            .and("userTwo.uuid").is(userTwoUuid)
+                    .and("initCanal").is(initCanal));
+
     query.fields().include("id").include("userOne").include("userTwo");
 
     return mongoTemplate.find(query, ChatChannelEntity.class);

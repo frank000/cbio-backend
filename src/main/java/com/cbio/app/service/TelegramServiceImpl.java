@@ -1,6 +1,5 @@
 package com.cbio.app.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.cbio.app.entities.CanalEntity;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.service.enuns.EtapaPadraoEnum;
@@ -12,6 +11,7 @@ import com.cbio.core.v1.dto.DecisaoResposta;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.cbio.core.v1.dto.GitlabEventDTO;
 import com.cbio.core.v1.dto.MensagemDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;

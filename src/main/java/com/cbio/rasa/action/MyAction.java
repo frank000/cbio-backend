@@ -20,8 +20,10 @@ public class MyAction implements Action {
     }
 
     @Override
-    public List<? extends Event> run(CollectingDispatcher dispatcher, Tracker tracker, Domain domain) throws RejectExecuteException {
-        dispatcher.utterMessage(Message.builder().text("Hello, World!").build());
+    public List<? extends Event> run(CollectingDispatcher dispatcher, Tracker tracker, Domain domain) {
+        dispatcher.utterMessage(Message.builder()
+                .text("Hello, World!")
+                .build());
         return Action.empty();
     }
 }

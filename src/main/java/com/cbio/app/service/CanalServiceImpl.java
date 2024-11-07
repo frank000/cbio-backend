@@ -1,12 +1,14 @@
 package com.cbio.app.service;
 
 import com.cbio.app.entities.CanalEntity;
+import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.CanalRepository;
 import com.cbio.app.service.mapper.CanalMapper;
 import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
 import com.cbio.core.service.CanalService;
 import com.cbio.core.v1.dto.CanalDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -49,6 +51,13 @@ public class CanalServiceImpl implements CanalService {
         } catch (Exception e) {
             throw new Exception("Erro ao consultar canal.");
         }
+    }
+
+    @Override
+    public CanalDTO getCanalByCompanyIdAndNome(String companyId, String nome) throws CbioException {
+        CanalEntity canalEntity = canalRepository.findByAtivoIsTrueAndCompanyIdAndNome(companyId, nome)
+                .orElseThrow(() -> new CbioException("Canal não encontrado para o envio do Modelo.", HttpStatus.NO_CONTENT.value()));
+        return mapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext());
     }
 
     @Override

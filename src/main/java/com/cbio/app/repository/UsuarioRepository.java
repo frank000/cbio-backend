@@ -13,4 +13,10 @@ public interface UsuarioRepository extends MongoRepository<UsuarioEntity, String
     Optional<UsuarioEntity> findByPerfilAndId(String perfil, String id);
 
     Optional<List<UsuarioEntity>> findAllByPerfil(String perfil);
+
+    Optional<UsuarioEntity> findTopByCompanyIdAndPerfilAndActiveIsTrueOrderByTotalChatsReceivedAsc(String companyId, String perfil);
+
+    Long countByIdAndActiveIsTrue(String id);
+
+    Optional<UsuarioEntity> findByCompanyIdAndPerfilContainingIgnoreCase(String companyId, String perfil);
 }

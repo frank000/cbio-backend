@@ -14,6 +14,7 @@ import com.cbio.core.service.DialogoService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
+import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
@@ -21,7 +22,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +58,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
                 .canal(entradaMensagemDTO.getCanal())
                 .type(entradaMensagemDTO.getType())
                 .createdDateTime(now)
+                .sessionId(sessaoEntity.getId())
                 .uuid(entradaMensagemDTO.getUuid())
                 .channelUuid((sessaoEntity.getLastChannelChat() != null) ? sessaoEntity.getLastChannelChat().getChannelUuid() : null);
 
@@ -74,9 +80,12 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
         DialogoDTO dialogoDTO = dialogoDTOBuilder.build();
         try {
+            putFile(entradaMensagemDTO, sessaoEntity);
+
             DialogoDTO dialogoSaved = dialogoService.saveDialogo(dialogoDTO);
 
-            assistentBotService.processaDialogoAssistent(dialogoSaved)
+            assistentBotService
+                    .processaDialogoAssistent(dialogoSaved)
                     .filter(dialogoDTO1 -> isNotCommand(dialogoDTO1))
                     .ifPresent(resposta -> {
 
@@ -85,26 +94,53 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
                     });
         } catch (Exception e) {
-            log.error("Salva Dialago - ", e.getMessage());
+            log.error("SAVE DIALOG - {}", e.getMessage());
             throw new RuntimeException(e);
         }
 
 
     }
 
+    private void putFile(EntradaMensagemDTO entradaMensagemDTO, SessaoEntity sessaoEntity) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        if(entradaMensagemDTO.getFile()!=null){
+            minioService.putFile(entradaMensagemDTO.getFile(), entradaMensagemDTO.getMedia().getId(), sessaoEntity.getLastChannelChat().getChannelUuid());
+        }
+    }
 
 
-    public void enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
+    public DialogoDTO enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
         CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
         Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
         dialogoResposta.setCreatedDateTime(LocalDateTime.now());
 
 
         DialogoDTO dialogoDTO = dialogoService.saveDialogo(dialogoResposta);
-        senderService.envia(dialogoDTO);
+        dialogoResposta.setId(dialogoDTO.getId());
+        senderService.envia(dialogoResposta);
+        return dialogoResposta;
     }
 
     private static boolean isNotCommand(DialogoDTO dialogoDTO1) {
         return !dialogoDTO1.getMensagem().startsWith("/");
     }
+
+    public Optional<DialogoDTO> notifyUserClosingAttendance(String mensagem, String channelId, SessaoEntity sessaoEntity) {
+
+        DialogoDTO dialogoDTO = DialogoDTO.builder()
+                .mensagem(mensagem)
+                .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
+                .toIdentifier(sessaoEntity.getId())
+                .canal(sessaoEntity.getCanal())
+                .type("TEXT")
+                .media(null)
+                .from(AssistentEnum.ATTENDANT.name())
+                .channelUuid(channelId)
+                .createdDateTime(LocalDateTime.now())
+                .build();
+
+        DialogoDTO dialogoDTO1 = enviaRespostaDialogoPorCanal(sessaoEntity.getCanal(), dialogoDTO);
+        AttendantAssistent bean = (AttendantAssistent) applicationContext.getBean(AssistentEnum.ATTENDANT.getBeanName());
+        return bean.processaDialogoAssistent(dialogoDTO1);
+    }
+
 }

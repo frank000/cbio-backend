@@ -5,4 +5,5 @@ import java.util.Map;
 public interface AuthService {
 
     Map<String, Object> getClaimsUserLogged();
+    String getCompanyIdUserLogged();
 }

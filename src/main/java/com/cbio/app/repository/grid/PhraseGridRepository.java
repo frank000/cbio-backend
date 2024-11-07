@@ -4,6 +4,7 @@ import com.cbio.app.base.repository.AbstractRepositoryGrid;
 import com.cbio.core.v1.dto.AttendantFiltroGridDTO;
 import com.cbio.core.v1.dto.PhraseFiltroGridDTO;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -36,6 +37,13 @@ public class PhraseGridRepository extends AbstractRepositoryGrid<PhraseFiltroGri
                     )
 
             );
+        }
+        if(filtroDTO != null && filtroDTO.getIdCompany() != null){
+
+            aggregations.add(
+                    Aggregation.match(
+                            Criteria.where("company._id")
+                                    .is(new ObjectId(filtroDTO.getIdCompany()) )));
         }
 
     }

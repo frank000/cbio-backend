@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface SessaoRepository extends MongoRepository<SessaoEntity, String> {
 
-    Optional<SessaoEntity> findByAtivoAndIdentificadorUsuarioAndCanalNome(Boolean ativo, Long IdentificadorUsuario, String canal);
+    Optional<SessaoEntity> findByAtivoAndIdentificadorUsuarioAndCanalNomeAndCanalIdCanal(Boolean ativo, Long IdentificadorUsuario, String canal, String idCanal);
 
-    Optional<SessaoEntity> findByAtivoAndIdentificadorUsuario(Boolean ativo, Long IdentificadorUsuario);
+    Optional<SessaoEntity> findByAtivoAndIdentificadorUsuarioAndCanalIdCanal(Boolean ativo, Long IdentificadorUsuario, String idCanal);
 
 
     Optional<SessaoEntity> findByAtivoAndIdentificadorUsuarioAndCanalNomeAndLastChannelChatChannelUuid(Boolean ativo, Long IdentificadorUsuario, String canal, String channelUuid);

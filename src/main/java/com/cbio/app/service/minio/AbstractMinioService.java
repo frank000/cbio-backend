@@ -6,10 +6,12 @@ import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
+@Getter
 public abstract class AbstractMinioService {
 
 
@@ -47,12 +50,19 @@ public abstract class AbstractMinioService {
             InputStream file = mini.getObject(GetObjectArgs.builder().bucket(bucket).object(chave).build());
             Map<String, String> metadata = getMetadata(chave);
 
+
+            ContentDisposition contentDisposition = ContentDisposition
+                    .builder("attachment")
+                    .filename(metadata.get("name"))
+                    .build();
+
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + metadata.get("name"));
-            return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_OCTET_STREAM).body(new InputStreamResource(file));
+            headers.setContentDisposition(contentDisposition);
+            headers.setContentType(MediaType.parseMediaType(metadata.get("content-type")));
+            return ResponseEntity.ok().headers(headers).body(new InputStreamResource(file));
 
         }catch (ErrorResponseException e){
-            throw new Exception("Arquivo não encontrado com a chave infomada.");
+            return ResponseEntity.ok() .body(null);
         }
 
 

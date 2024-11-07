@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/public/websocket/**").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
                 .requestMatchers("/v1/whatsapp/**").permitAll()
+                .requestMatchers("/v1/google-calendar/**").permitAll()
                 .anyRequest()
                 .authenticated());
 

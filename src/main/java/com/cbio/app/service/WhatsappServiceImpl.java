@@ -8,6 +8,7 @@ import com.cbio.core.service.*;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.cbio.core.v1.dto.MediaDTO;
 import com.cbio.core.v1.dto.WebhookEvent;
+import com.cbio.core.v1.dto.whatsapp.WhatsappMediaDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whatsapp.api.WhatsappApiFactory;
 import com.whatsapp.api.configuration.ApiVersion;
@@ -15,6 +16,7 @@ import com.whatsapp.api.domain.media.MediaFile;
 import com.whatsapp.api.domain.messages.ReadMessage;
 import com.whatsapp.api.domain.messages.type.MessageType;
 import com.whatsapp.api.domain.response.Response;
+import com.whatsapp.api.domain.webhook.Document;
 import com.whatsapp.api.domain.webhook.Image;
 import com.whatsapp.api.domain.webhook.Message;
 import com.whatsapp.api.domain.webhook.WebHookEvent;
@@ -23,9 +25,11 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.RequestBody;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.IOException;
@@ -114,6 +118,7 @@ public class WhatsappServiceImpl implements WhatsappService {
         AtomicReference<String> mensagemId = new AtomicReference<>();
         AtomicReference<String> typeMessage = new AtomicReference<>();
         AtomicReference<MediaDTO> media = new AtomicReference<>();
+        AtomicReference<MultipartFile> file = new AtomicReference<>();
 
         boolean isMessageEvent = !event.entry().isEmpty() && event.entry().get(0).changes().get(0).value().statuses() == null;
 
@@ -127,6 +132,7 @@ public class WhatsappServiceImpl implements WhatsappService {
                     .filter(change -> change.value().messages().stream().findFirst().isPresent())
                     .findFirst()
                     .ifPresent(change -> {
+                        WhatsappMediaDTO mediaDTO = new WhatsappMediaDTO();
 
                         typeMessage.set(change.value().messages().stream().findFirst().get().type().name());
                         change.value().contacts().forEach(contact -> identificadorRementente.set(contact.waId()));
@@ -135,29 +141,36 @@ public class WhatsappServiceImpl implements WhatsappService {
 
                         if(MessageType.INTERACTIVE.equals(change.value().messages().stream().findFirst().get().type()) ||
                                 MessageType.TEXT.equals(change.value().messages().stream().findFirst().get().type())){
-                            change.value().messages().forEach(message -> mensagem.set(getMessageBody(message)));
-                        }else if(MessageType.IMAGE.equals(change.value().messages().stream().findFirst().get().type())){
-                            Image image = change.value().messages().stream().findFirst().get().image();
 
+                            change.value().messages().forEach(message -> mensagem.set(getMessageBody(message)));
+
+                        }else if(MessageType.IMAGE.equals(change.value().messages().stream().findFirst().get().type())){
+
+                            Image image = change.value().messages().stream().findFirst().get().image();
+                            BeanUtils.copyProperties(image, mediaDTO);
+                            mediaDTO.setType(MessageType.IMAGE.name());
+
+                        }else if(MessageType.DOCUMENT.equals(change.value().messages().stream().findFirst().get().type())){
+                            Document document = change.value().messages().stream().findFirst().get().document();
+                            BeanUtils.copyProperties(document, mediaDTO);
+                            mediaDTO.setType(MessageType.DOCUMENT.name());
+                        }else if(MessageType.AUDIO.equals(change.value().messages().stream().findFirst().get().type()) ||
+                                MessageType.CONTACTS.equals(change.value().messages().stream().findFirst().get().type()) ||
+                                MessageType.LOCATION.equals(change.value().messages().stream().findFirst().get().type())){
+                            throw new RuntimeException("Tipo não aceito");
+                        }
+                        if(mediaDTO.getId() != null){
                             media.set(MediaDTO.builder()
-                                    .id(image.id())
-                                    .caption(image.caption())
-                                    .mimeType(image.mimeType())
-                                    .mediaType(MessageType.IMAGE.name())
+                                    .id(mediaDTO.getId())
+                                    .caption(mediaDTO.getCaption())
+                                    .mimeType(mediaDTO.getMimeType())
+                                    .mediaType(mediaDTO.getType())
                                     .build());
                         }
+
                     });
 
-            if(media.get() != null){
-                MediaFile mediaById = getMediaById(getUrlMediaById(media.get().getId(), canalEntity), canalEntity.getApiKey());
-
-                MockMultipartFile mockMultipartFile = new MockMultipartFile(
-                        mediaById.fileName(),
-                        mediaById.fileName(),
-                        media.get().getMimeType(),
-                        mediaById.content());
-                minioService.putFile(mockMultipartFile, media.get().getId(), canalEntity.getId() );
-            }
+            verifyAndSetFile(media, canalEntity, file);
 
 
             EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
@@ -165,6 +178,7 @@ public class WhatsappServiceImpl implements WhatsappService {
                     .mensagem(ObjectUtils.defaultIfNull(mensagem.get(), null))
                     .identificadorRemetente(identificadorRementente.get())
                     .media(ObjectUtils.defaultIfNull(media.get(), null))
+                    .file(ObjectUtils.defaultIfNull(file.get(), null))
                     .uuid(mensagemId.get())
                     .type(typeMessage.get())
                     .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
@@ -174,6 +188,20 @@ public class WhatsappServiceImpl implements WhatsappService {
             markMessageAsRead(mensagemId.get(), canalEntity);
         }
 
+    }
+
+    private void verifyAndSetFile(AtomicReference<MediaDTO> media, CanalEntity canalEntity, AtomicReference<MultipartFile> file) {
+        boolean temMedia = media.get() != null && media.get().getId() != null;
+        if(temMedia){
+
+            MediaFile mediaById = getMediaById(getUrlMediaById(media.get().getId(), canalEntity), canalEntity.getApiKey());
+
+            file.set(new MockMultipartFile(
+                    mediaById.fileName(),
+                    mediaById.fileName(),
+                    media.get().getMimeType(),
+                    mediaById.content()));
+        }
     }
 
     private CanalEntity recoveryCanalEntity(String token, WebHookEvent event, AtomicReference<String> displayPhoneNumber) throws Exception {

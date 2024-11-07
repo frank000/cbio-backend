@@ -7,8 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CanalSenderEnum {
 
-    TELEGRAM("telegramSenderService"),
-    WHATSAPP("whatsappSenderService"),;
+    TELEGRAM("telegram","telegramSenderService"),
+    WHATSAPP("whatsapp","whatsappSenderService"),;
 
+    private String title;
     private String canalSender;
 }

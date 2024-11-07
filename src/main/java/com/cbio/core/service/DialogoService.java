@@ -17,7 +17,7 @@ public interface DialogoService {
 
     List<DialogoDTO> getAllBySender(String identificadorRementente);
 
-    List<ChatDTO> mountChatFromDioalogByChannelId(String channelId);
+    List<ChatDTO> mountChatFromDioalogBySessionIdAndChannelId(String sessionId, String channelId);
 
 
 }

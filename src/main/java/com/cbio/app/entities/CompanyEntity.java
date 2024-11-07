@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
@@ -37,10 +38,14 @@ public class CompanyEntity {
 
     private String cidade;
 
+    private LocalDateTime dataCadastro;
+
     @Enumerated(EnumType.STRING)
     private EstadosEnum estado;
 
     private String cep;
 
+    private String tier;
 
+    private Integer porta;
 }

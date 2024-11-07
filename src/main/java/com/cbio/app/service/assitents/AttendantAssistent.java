@@ -1,6 +1,6 @@
 package com.cbio.app.service.assitents;
 
-import com.cbio.app.base.utils.DateRocketUtils;
+import com.cbio.app.base.utils.CbioDateUtils;
 import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.chat.services.WebsocketPath;
 import com.cbio.core.service.AssistentBotService;
@@ -27,17 +27,23 @@ public class AttendantAssistent implements AssistentBotService {
     public Optional<DialogoDTO> processaDialogoAssistent(DialogoDTO dialogo) {
 
         try {
-            AttendantMessageOutDTO message = AttendantMessageOutDTO.builder()
+            AttendantMessageOutDTO.AttendantMessageOutDTOBuilder builder = AttendantMessageOutDTO.builder();
+            builder
                     .text(dialogo.getMensagem())
                     .id(dialogo.getId())
                     .toUserId(dialogo.getSessionId())
+                    .channelId(dialogo.getChannelUuid())
                     .fromUserId(dialogo.getToIdentifier())
-                    .time(DateRocketUtils.getDateTimeFormated(dialogo.getCreatedDateTime()))
-                    .media(dialogo.getMedia())
-                    .build();
+                    .time(CbioDateUtils.getDateTimeFormated(dialogo.getCreatedDateTime()))
+                    .type(dialogo.getType())
+                    .media(dialogo.getMedia());
+
+            if(dialogo.getMedia() != null){
+                builder.type(dialogo.getMedia().getMediaType());
+            }
 
             ObjectMapper objectMapper = new ObjectMapper();
-            String json = objectMapper.writeValueAsString(message);
+            String json = objectMapper.writeValueAsString(builder.build());
             enviarWebsocketParaChannelId(dialogo, json);
             enviarWebsocketParaNoficacao(dialogo, json);
             return Optional.empty();
@@ -67,4 +73,7 @@ public class AttendantAssistent implements AssistentBotService {
     private static List<RasaMessageDTO.Button> getButtons(RasaMessageDTO o) {
         return o.getButtons() != null && !o.getButtons().isEmpty() ? o.getButtons() : Collections.emptyList();
     }
+
+
+
 }

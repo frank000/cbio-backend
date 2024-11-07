@@ -7,13 +7,15 @@ import lombok.Data;
 @Builder
 public class UserKeycloak {
 
-    private Long id;
+    private String id;
 
     private String idUser;
 
     private String idCompany;
 
     private String userName;
+
+    private String oldUserName;
 
     private String email;
 

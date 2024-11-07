@@ -4,6 +4,7 @@ import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.AttendantEntity;
 import com.cbio.app.entities.CompanyEntity;
 import com.cbio.app.entities.UsuarioEntity;
+import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.grid.AttendantGridRepository;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.AttendantService;
@@ -29,10 +30,11 @@ public class AttendantController implements SecuredRestController {
     private final AttendantService attendantService;
 
     @PostMapping
-    public ResponseEntity<UsuarioDTO> salva(@RequestBody UsuarioDTO.UsuarioFormDTO attendantDTO) {
+    public ResponseEntity<UsuarioDTO> salva(@RequestBody UsuarioDTO.UsuarioFormDTO attendantDTO) throws CbioException {
 
         return ResponseEntity.ok(attendantService.salva(attendantDTO));
     }
+
     @PutMapping
     public ResponseEntity<UsuarioDTO> update(@RequestBody UsuarioDTO.UsuarioFormDTO attendantDTO) {
 
@@ -40,7 +42,7 @@ public class AttendantController implements SecuredRestController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<UsuarioDTO> salva(@PathVariable String id) {
+    public ResponseEntity<UsuarioDTO> getAttendant(@PathVariable String id) {
 
         return ResponseEntity
                 .ok( attendantService.buscaPorId(id));
@@ -58,6 +60,7 @@ public class AttendantController implements SecuredRestController {
     @GetMapping("grid")
     public ResponseEntity<PageableResponse<UsuarioDTO>> obtemGrid(@RequestParam(required = false) final String filter,
                                                                       @RequestParam(required = false) final String perfil,
+                                                                      @RequestParam(required = false) final String companyId,
                                                                       @RequestParam(defaultValue = "0") Integer pageIndex,
                                                                       @RequestParam(defaultValue = "10") Integer pageSize,
                                                                       @RequestParam(defaultValue = "id") String sortField,
@@ -66,6 +69,7 @@ public class AttendantController implements SecuredRestController {
 
         AttendantFiltroGridDTO produtoGridFiltroDTO = AttendantFiltroGridDTO.builder()
                 .busca(filter)
+                .idCompany(companyId)
                 .perfil(List.of(perfil.split(",")))
                 .build();
         PageableResponse<UsuarioDTO> usuarioDTOPageableResponse = attendantGridRepository.obtemGrid(produtoGridFiltroDTO, pageable, UsuarioEntity.class, UsuarioDTO.class);

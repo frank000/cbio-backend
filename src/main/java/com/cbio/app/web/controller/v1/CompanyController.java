@@ -2,9 +2,12 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.CompanyEntity;
+import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.web.SecuredRestController;
+import com.cbio.core.service.AuthService;
 import com.cbio.core.service.CompanyService;
+import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.CompanyFiltroGridDTO;
 import com.cbio.core.v1.dto.CompanyGridDTO;
@@ -13,7 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import retrofit2.http.Path;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,11 +27,20 @@ public class CompanyController implements SecuredRestController {
 
     private final CompanyService companyService;
     private final CompanyGridRepository companyGridRepository;
+    private final AuthService authService;
 
     @PostMapping
-    public ResponseEntity<CompanyDTO> save(@RequestBody CompanyDTO companyDTO) {
+    public ResponseEntity<CompanyDTO> save(@RequestBody CompanyDTO companyDTO) throws CbioException {
 
         CompanyDTO save = companyService.save(companyDTO);
+
+        return ResponseEntity.ok(save);
+    }
+
+    @PutMapping
+    public ResponseEntity<CompanyDTO> edit(@RequestBody CompanyDTO companyDTO) {
+
+        CompanyDTO save = companyService.edit(companyDTO);
 
         return ResponseEntity.ok(save);
     }
@@ -63,5 +77,36 @@ public class CompanyController implements SecuredRestController {
         return ResponseEntity.ok(companyGridDTOPageableResponse);
     }
 
+    @GetMapping("/free-port")
+    public ResponseEntity<Integer> getFree() {
+
+        return ResponseEntity
+                .ok( companyService.getFreePort());
+    }
+
+    @PostMapping("/config")
+    public ResponseEntity<CompanyConfigDTO> saveConfig(@RequestBody CompanyConfigDTO dto) throws CbioException {
+
+        CompanyConfigDTO save = companyService.saveConfigCompany(dto);
+
+        return ResponseEntity.ok(save);
+    }
+
+    @GetMapping("/config")
+    public ResponseEntity<CompanyConfigDTO> getConfig() throws CbioException {
+
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+        if(StringUtils.hasText(companyIdUserLogged)){
+            CompanyConfigDTO save = companyService.getConfigCompany(companyIdUserLogged);
+
+            return ResponseEntity.ok(save);
+        }else{
+            return null;
+        }
+    }
+    @GetMapping("/credential/has")
+    public ResponseEntity<Boolean> hasCredential() {
+        return ResponseEntity.ok(companyService.hasGoogleCrendential());
+    }
 
 }

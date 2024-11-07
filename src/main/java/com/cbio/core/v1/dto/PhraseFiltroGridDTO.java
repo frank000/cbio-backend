@@ -14,6 +14,6 @@ import java.util.List;
 public class PhraseFiltroGridDTO implements Serializable, FiltroDTOInterface {
 
     private String busca;
-
+    private String idCompany;
 
 }

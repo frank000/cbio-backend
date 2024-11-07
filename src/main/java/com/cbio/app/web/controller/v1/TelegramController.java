@@ -18,6 +18,7 @@ import okhttp3.RequestBody;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -54,6 +55,7 @@ public class TelegramController implements SecuredRestController {
         if (temMensagemParaProcessar){
             EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
                     .builder()
+                    .type(update.getMessage() != null && StringUtils.hasText(update.getMessage().getText())? "TEXT": "TEXT")
                     .mensagem(update.getMessage() != null ? update.getMessage().getText() : update.getCallbackQuery().getData())
                     .mensagemObject(ObjectUtils.defaultIfNull(update, null))
                     .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
@@ -114,7 +116,7 @@ public class TelegramController implements SecuredRestController {
 
     @GetMapping("teste/{id}")
     public void teste(@PathVariable String id) throws GeneralSecurityException, IOException {
-        calendarService.executa(id);
+//        calendarService.executa(id);
     }
 
 }

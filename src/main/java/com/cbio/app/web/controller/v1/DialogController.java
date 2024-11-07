@@ -20,9 +20,9 @@ public class DialogController implements SecuredRestController {
     private final DialogoService dialogoService;
 
 
-    @GetMapping("/sender/{channelId}")
-    public ResponseEntity<  List<ChatDTO>> obtemGrid(@PathVariable String channelId) {
-        List<ChatDTO> collect = dialogoService.mountChatFromDioalogByChannelId(channelId);
+    @GetMapping("/sender/session/{sessionId}/channel/{channelId}")
+    public ResponseEntity<  List<ChatDTO>> obtemGrid(@PathVariable String sessionId, @PathVariable String channelId) {
+        List<ChatDTO> collect = dialogoService.mountChatFromDioalogBySessionIdAndChannelId(sessionId, channelId);
 
 
         return ResponseEntity.ok(collect);

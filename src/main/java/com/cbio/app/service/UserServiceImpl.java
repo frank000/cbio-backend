@@ -7,6 +7,8 @@ import com.cbio.core.service.IAMService;
 import com.cbio.core.service.UserService;
 import com.cbio.core.v1.dto.UserKeycloak;
 import com.cbio.core.v1.dto.UsuarioDTO;
+import com.cbio.core.v1.enuns.PerfilEnum;
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UsuarioDTO salva(UsuarioDTO usuarioDTO, String password, String role) {
+        usuarioDTO.setActive(Boolean.TRUE);
+
 
         UsuarioEntity entity = usuarioMapper.toEntity(usuarioDTO);
         entity = usuarioRepository.save(entity);
@@ -38,6 +42,39 @@ public class UserServiceImpl implements UserService {
 
         UsuarioEntity save = usuarioRepository.save(entity);
         return usuarioMapper.toDto(save);
+    }
+
+    @Override
+    public UsuarioDTO update(UsuarioDTO usuarioDTO, String password, String role) {
+
+        try{
+            UserKeycloak.UserKeycloakBuilder builder = UserKeycloak.builder();
+            usuarioDTO.setActive(Boolean.TRUE);
+            UsuarioEntity usuarioEntity = usuarioRepository.findById(usuarioDTO.getId())
+                    .orElseThrow(() -> new NotFoundException("Usuário não encontrado."));
+            builder.oldUserName(usuarioEntity.getEmail());
+
+            usuarioMapper.fromDto(usuarioDTO, usuarioEntity);
+
+            usuarioEntity = usuarioRepository.save(usuarioEntity);
+
+
+
+            builder.userName(usuarioEntity.getEmail())
+                    .firstname(usuarioEntity.getName())
+                    .idUser(usuarioEntity.getId())
+                    .idCompany(usuarioEntity.getCompany().getId())
+                    .password(password)
+                    .email(usuarioEntity.getEmail())
+                    .id(usuarioEntity.getIdKeycloak())
+                    .build();
+            iamService.updateUser(builder.build(), usuarioEntity.getIdKeycloak());
+
+            return usuarioMapper.toDto(usuarioEntity);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -71,5 +108,12 @@ public class UserServiceImpl implements UserService {
         usuarioMapper.fromDto(usuarioDTO, usuarioEntity);
 
 
+    }
+
+    @Override
+    public UsuarioDTO adminByCompany(String id) {
+        UsuarioEntity usuarioEntity = usuarioRepository.findByCompanyIdAndPerfilContainingIgnoreCase(id, PerfilEnum.ADMIN.name())
+                .orElseThrow(() -> new NotFoundException("Administrador não encontrado."));
+        return usuarioMapper.toDto(usuarioEntity);
     }
 }
