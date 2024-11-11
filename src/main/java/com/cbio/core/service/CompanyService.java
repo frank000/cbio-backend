@@ -27,4 +27,6 @@ public interface CompanyService {
     Boolean hasGoogleCrendential();
 
     Boolean hasGoogleCrendential(String id);
+
+    CompanyConfigDTO getConfigPreferencesCompany(String id) throws CbioException;
 }

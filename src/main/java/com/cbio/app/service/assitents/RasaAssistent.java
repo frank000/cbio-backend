@@ -65,7 +65,9 @@ public class RasaAssistent implements AssistentBotService {
 
         } catch (Exception e) {
             String msg = String.format("Envio para o Assistente Rasa com problema: %s", e.getMessage());
-            throw new RuntimeException(msg);
+            log.error(msg);
+//            throw new RuntimeException(msg);
+            return null;
         }
 
     }

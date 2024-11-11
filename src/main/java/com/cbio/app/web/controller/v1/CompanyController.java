@@ -92,6 +92,14 @@ public class CompanyController implements SecuredRestController {
         return ResponseEntity.ok(save);
     }
 
+    @PutMapping("/config")
+    public ResponseEntity<CompanyConfigDTO> updateConfig(@RequestBody CompanyConfigDTO dto) throws CbioException {
+
+        CompanyConfigDTO save = companyService.saveConfigCompany(dto);
+
+        return ResponseEntity.ok(save);
+    }
+
     @GetMapping("/config")
     public ResponseEntity<CompanyConfigDTO> getConfig() throws CbioException {
 
@@ -104,6 +112,18 @@ public class CompanyController implements SecuredRestController {
             return null;
         }
     }
+    @GetMapping("/config-preferences")
+    public ResponseEntity<CompanyConfigDTO> getPreferences() throws CbioException {
+
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+        if(StringUtils.hasText(companyIdUserLogged)){
+            CompanyConfigDTO save = companyService.getConfigPreferencesCompany(companyIdUserLogged);
+            return ResponseEntity.ok(save);
+        }else{
+            return null;
+        }
+    }
+
     @GetMapping("/credential/has")
     public ResponseEntity<Boolean> hasCredential() {
         return ResponseEntity.ok(companyService.hasGoogleCrendential());

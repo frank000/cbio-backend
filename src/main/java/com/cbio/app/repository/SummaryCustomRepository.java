@@ -28,7 +28,7 @@ public class SummaryCustomRepository {
         // Match Operation
         aggregations.add(
                 Aggregation.match(
-                        Criteria.where("company.$id").is(new ObjectId(companyId))
+                        Criteria.where("company._id").is(new ObjectId(companyId))
                                 .and("perfil").is("ATTENDANT")
                                 .and("active").is(true)
                 )
@@ -109,7 +109,7 @@ public class SummaryCustomRepository {
         // Match Operation
         aggregations.add(
                 Aggregation.match(
-                        Criteria.where("company.$id").is(new ObjectId(companyId))
+                        Criteria.where("company._id").is(new ObjectId(companyId))
                                 .and("perfil").is("ATTENDANT")
                                 .and("active").is(true)
                 )

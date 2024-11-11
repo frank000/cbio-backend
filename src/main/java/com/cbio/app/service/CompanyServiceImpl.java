@@ -114,6 +114,13 @@ public class CompanyServiceImpl implements CompanyService {
         return companyConfigMapper.toDto(companyConfigEntity);
     }
 
+
+    public CompanyConfigDTO getConfigPreferencesCompany(String id) throws CbioException {
+        CompanyConfigEntity companyConfigEntity = companyConfigRepository.getPreferencesByCompany(id)
+                .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
+        return companyConfigMapper.toDto(companyConfigEntity);
+    }
+
     public Boolean hasGoogleCrendential(String id){
         if(StringUtils.hasText(id)){
             Optional<GoogleCredentialEntity> byUserId = googleCredentialRepository.findByUserId(id);
