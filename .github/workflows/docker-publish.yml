@@ -38,6 +38,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: FIRST show  environment variables
+        run: |
+          echo "SHOW ]]  : ${GH_KEY_AUTH}"
+
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
@@ -83,9 +87,7 @@ jobs:
           CLIENT_ID: ${{ vars.CLIENT_ID }}
           MINIO_USER: ${{ vars.MINIO_USER }}
 
-      - name: show  environment variables
-        run: |
-          echo "SHOW ]]  : ${GH_KEY_AUTH}"
+
  
 
       - name: Set environment variables
