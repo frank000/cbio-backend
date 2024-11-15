@@ -125,6 +125,8 @@ jobs:
                 }
             ]
 
+
+      - name: show Settings
         run: cat /home/runner/.m2/settings.xml
 
       # Build and push Docker image with Buildx (don't push on PR)
