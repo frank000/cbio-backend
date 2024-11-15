@@ -110,17 +110,15 @@ jobs:
               {
                 "id": "github",
                 "username": "frank000",
-                "password": "${secrets.GH_KEY}"
+                "password": "${env.GH_KEY}"
               },
               {
                   "id": "github-repo",
-                  "username": "${env.USER}",
-                  "password": "${env.PASS}",
                   "configuration": {
                     "httpHeaders": {
                       "property": {
                         "name": "Authorization",
-                        "value": "${secrets.GH_KEY_AUTH}" 
+                        "value": "${env.GH_KEY_AUTH}" 
                       }
                     }
                   }
