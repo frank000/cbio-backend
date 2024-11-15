@@ -124,11 +124,10 @@
 			<version>v3-rev20240927-2.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>io.github</groupId>
-			<artifactId>jrasa</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<groupId>com.github.frank000</groupId>
+			<artifactId>cbio-jrasa</artifactId>
+			<version>master-49f55f35a8-1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots-spring-boot-starter</artifactId>
@@ -258,10 +257,10 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-			<repository>
-				<id>github-frank000</id>
-				<url>https://maven.pkg.github.com/frank000/cbio-jrasa</url>
-			</repository>
+<!--			<repository>-->
+<!--				<id>github-frank000</id>-->
+<!--				<url>https://maven.pkg.github.com/frank000/cbio-jrasa</url>-->
+<!--			</repository>-->
 			<repository>
 				<id>github-bindambc</id>
 				<url>https://maven.pkg.github.com/Bindambc/whatsapp-business-java-api</url>
