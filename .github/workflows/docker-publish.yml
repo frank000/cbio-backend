@@ -20,7 +20,6 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
   GH_KEY: ${{ secrets.GH_KEY }}
-  GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
 
 
 jobs:
@@ -40,9 +39,9 @@ jobs:
 
       - name: FIRST show  environment variables
         env:
-          GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
+          GH_KEY_AUTHS: ${{ secrets.GH_KEY_AUTH }}
         run: |
-          echo "SHOW ]]  : $GH_KEY_AUTH"
+          echo "SHOW ]]  : $GH_KEY_AUTHS"
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
@@ -93,7 +92,10 @@ jobs:
  
 
       - name: Set environment variables
-        run: echo "ENV_VARIABLE=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
+        run: |
+          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
+          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV
 
 
       # Build and push Docker image with Buildx (don't push on PR)
