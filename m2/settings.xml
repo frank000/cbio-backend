@@ -38,7 +38,7 @@
         <server>
             <id>github</id>
             <username>frank000</username>
-            <password>${GH_KEY}</password>
+            <password>${github.token}</password>
         </server>
 
 
@@ -48,7 +48,7 @@
                 <httpHeaders>
                     <property>
                         <name>Authorization</name>
-                        <value>${GH_KEY_AUTH}</value>
+                        <value>${github.token.auth}</value>
                     </property>
                 </httpHeaders>
             </configuration>

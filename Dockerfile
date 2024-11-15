@@ -7,7 +7,8 @@ WORKDIR /home/app
 
 COPY . .
 
-RUN mvn clean package  -X --settings ./m2/settings.xml -D skipTests=true
+RUN ["mvn",  "-s",  "./m2/settings.xml", "clean", "package", "-Dgithub.token=${GH_KEY}", "-Dgithub.token.auth=${GH_KEY_AUTH}"]
+
 
 # Fase final
 FROM openjdk:17-jdk-slim

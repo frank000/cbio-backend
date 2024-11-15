@@ -105,6 +105,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}
+            GH_KEY=${{ secrets.GH_KEY }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
