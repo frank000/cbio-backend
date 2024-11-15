@@ -19,8 +19,7 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  GH_KEY: ${{ vars.GH_KEY }}
-  GH_KEY_AUTH: ${{ vars.GH_KEY_AUTH }}
+
 
 
 jobs:
@@ -69,6 +68,13 @@ jobs:
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set ENV
+        env:
+          GH_KEY: ${{ vars.GH_KEY }}
+          GH_KEY_AUTH: ${{ vars.GH_KEY_AUTH }}
+
+      - name: SHOW environment variables
+        run: echo "vALOR =  ${{ vars.GH_KEY }}"
 
       - name: Update db url
         run: sed -i 's/<api_key_openia>/${{ secrets.API_KEY_OPENIA }}/' src/main/resources/application-prd.properties
@@ -83,7 +89,9 @@ jobs:
           CLIENT_ID: ${{ vars.CLIENT_ID }}
           MINIO_USER: ${{ vars.MINIO_USER }}
 
-      - name: Set environment variables 
+
+
+      - name: Set environment variables
         run: echo "ENV_VARIABLE=${{ secrets.YOUR_SECRET }}" >> $GITHUB_ENV
 
 
