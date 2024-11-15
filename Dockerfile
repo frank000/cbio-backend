@@ -1,7 +1,8 @@
 FROM maven:3-openjdk-17-slim AS build
 LABEL maintainer="your.email@example.com"
 VOLUME /tmp
-
+ENV GH_KEY=${GH_KEY}
+ENV GH_KEY_AUTH=${GH_KEY_AUTH}
 WORKDIR /home/app
 
 
