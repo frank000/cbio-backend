@@ -85,8 +85,7 @@ jobs:
 
       - name: show  environment variables
         run: |
-          echo "SHOW ]]  : $CLIENT_SECRET "
-          echo "variable from shell environment : $env_var"
+          echo "SHOW ]]  : $CLIENT_SECRET"
         env:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
