@@ -84,9 +84,11 @@ jobs:
           MINIO_USER: ${{ vars.MINIO_USER }}
 
       - name: show  environment variables
-        run: echo "SHOW ]]  $CLIENT_SECRET "
+        run: |
+          echo "SHOW ]]  : $CLIENT_SECRET "
+          echo "variable from shell environment : $env_var"
         env:
-          CLIENT_SECRET: ${{ vars.CLIENT_SECRET }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
       - name: Set environment variables
         run: echo "ENV_VARIABLE=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
