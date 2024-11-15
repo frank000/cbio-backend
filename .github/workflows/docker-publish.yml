@@ -39,6 +39,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: FIRST show  environment variables
+        env:
+          GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
         run: |
           echo "SHOW ]]  : $GH_KEY_AUTH"
 
