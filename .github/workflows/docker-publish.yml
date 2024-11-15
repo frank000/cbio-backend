@@ -19,8 +19,8 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  GH_KEY: ${{ vars.GH_KEY }}
-  GH_KEY_AUTH: ${{ vars.GH_KEY_AUTH }}
+  GH_KEY: ${{ secrets.GH_KEY }}
+  GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
 
 
 jobs:
@@ -85,9 +85,8 @@ jobs:
 
       - name: show  environment variables
         run: |
-          echo "SHOW ]]  : ${CLIENT_SECRETD}"
-        env:
-          CLIENT_SECRETD: ${{ secrets.CLIENT_SECRET }}
+          echo "SHOW ]]  : ${GH_KEY_AUTH}"
+ 
 
       - name: Set environment variables
         run: echo "ENV_VARIABLE=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
