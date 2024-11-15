@@ -1,14 +1,14 @@
 FROM maven:3-openjdk-17-slim AS build
 LABEL maintainer="your.email@example.com"
 VOLUME /tmp
-ENV GH_KEY=${GH_KEY}
-ENV GH_KEY_AUTH=${GH_KEY_AUTH}
+ARG GH_KEY
+ARG GH_KEY_AUTH
 WORKDIR /home/app
 
 
 COPY . .
 
-RUN ["mvn",  "-s",  "./m2/settings.xml", "clean", "package", "-Dgithub.token=${GH_KEY}", "-Dgithub.token.auth=${GH_KEY_AUTH}"]
+RUN ["mvn",  "-s",  "./m2/settings.xml", "clean", "package", "-Dgithub.token=$GH_KEY", "-Dgithub.token.auth=$GH_KEY_AUTH"]
 
 
 # Fase final

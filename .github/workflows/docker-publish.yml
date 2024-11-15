@@ -110,7 +110,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          secrets: |
+          build-args: |
             GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}
             GH_KEY=${{ secrets.GH_KEY }}
 
