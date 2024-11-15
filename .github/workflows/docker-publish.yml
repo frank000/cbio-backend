@@ -85,9 +85,9 @@ jobs:
 
       - name: show  environment variables
         run: |
-          echo "SHOW ]]  : $CLIENT_SECRET"
+          echo "SHOW ]]  : ${CLIENT_SECRETD}"
         env:
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          CLIENT_SECRETD: ${{ secrets.CLIENT_SECRET }}
 
       - name: Set environment variables
         run: echo "ENV_VARIABLE=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
