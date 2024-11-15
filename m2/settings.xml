@@ -38,7 +38,7 @@
         <server>
             <id>github</id>
             <username>frank000</username>
-            <password>${vars.GH_KEY}</password>
+            <password>${env.GH_KEY}</password>
         </server>
 
 
@@ -48,7 +48,7 @@
                 <httpHeaders>
                     <property>
                         <name>Authorization</name>
-                        <value>${vars.GH_KEY_AUTH}</value>
+                        <value>${env.GH_KEY_AUTH}</value>
                     </property>
                 </httpHeaders>
             </configuration>

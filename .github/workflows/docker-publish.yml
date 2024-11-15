@@ -19,6 +19,8 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
+  GH_KEY: ${{ vars.GH_KEY }}
+  GH_KEY_AUTH: ${{ vars.GH_KEY_AUTH }}
 
 
 jobs:
