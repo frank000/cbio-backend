@@ -97,6 +97,35 @@ jobs:
           echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
           echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV
 
+      - name: maven-settings-xml-action
+        uses: whelk-io/maven-settings-xml-action@v22
+        with:
+          repositories: '[{"id": "central", "url": "https://repo1.maven.org/maven2" }, {"id": "github", "url": "https://maven.pkg.github.com/frank000/cbio-jrasa", "snapshots":{"enabled":true } }]'
+          active_profiles: >
+            [
+              "github"
+            ]
+          servers: >
+            [
+              {
+                "id": "github",
+                "username": "frank000",
+                "password": "${secrets.GH_KEY}"
+              },
+              {
+                  "id": "github-repo",
+                  "username": "${env.USER}",
+                  "password": "${env.PASS}",
+                  "configuration": {
+                    "httpHeaders": {
+                      "property": {
+                        "name": "Authorization",
+                        "value": "${secrets.GH_KEY_AUTH}" 
+                      }
+                    }
+                  }
+                }
+            ]
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action

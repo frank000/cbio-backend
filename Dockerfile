@@ -8,7 +8,7 @@ WORKDIR /home/app
 
 COPY . .
 
-RUN ["mvn",      "clean", "package"]
+RUN ["mvn",  "-s",    "clean", "package", "-Dgithub.token=$GH_KEY", "-Dgithub.token.auth=$GH_KEY_AUTH"]
 
 
 # Fase final
