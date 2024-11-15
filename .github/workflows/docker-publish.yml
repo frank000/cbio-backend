@@ -125,6 +125,8 @@ jobs:
                 }
             ]
 
+        run: cat /home/runner/.m2/settings.xml
+
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
