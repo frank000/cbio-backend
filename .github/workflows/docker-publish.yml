@@ -9,11 +9,10 @@ on:
   schedule:
     - cron: '23 0 * * *'
   push:
-    branches: [ "main" ]
-    # Publish semver tags as releases.
+    branches: [ "main", "develop" ]
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -68,6 +67,23 @@ jobs:
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Update db url
+        run: sed -i 's/<api_key_openia>/${{ secrets.API_KEY_OPENIA }}/' src/main/resources/application-prd.properties
+
+
+      - name: Update MINIO_PASSWORD
+        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
+
+      - name: Update CLIENT_SECRET
+        run: sed -i 's/<client_secret>/${{ secrets.CLIENT_SECRET }}/' src/main/resources/application-prd.properties
+        env:
+          CLIENT_ID: ${{ vars.CLIENT_ID }}
+          MINIO_USER: ${{ vars.MINIO_USER }}
+
+      - name: Set environment variables 
+        run: echo "ENV_VARIABLE=${{ secrets.YOUR_SECRET }}" >> $GITHUB_ENV
+
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
