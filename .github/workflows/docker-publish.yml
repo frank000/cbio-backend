@@ -40,7 +40,7 @@ jobs:
 
       - name: FIRST show  environment variables
         run: |
-          echo "SHOW ]]  : ${GH_KEY_AUTH}"
+          echo "SHOW ]]  : $GH_KEY_AUTH"
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
