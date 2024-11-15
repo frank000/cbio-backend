@@ -110,7 +110,7 @@ jobs:
               {
                 "id": "github",
                 "username": "frank000",
-                "password": "${env.GH_KEY}"
+                "password": "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"
               },
               {
                   "id": "github-repo",
@@ -118,7 +118,7 @@ jobs:
                     "httpHeaders": {
                       "property": {
                         "name": "Authorization",
-                        "value": "${env.GH_KEY_AUTH}" 
+                        "value": "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" 
                       }
                     }
                   }
