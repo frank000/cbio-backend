@@ -244,6 +244,7 @@
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>
+
 		<repository>
 			<id>spring-milestones</id>
 			<url>https://repo.spring.io/milestone</url>
@@ -261,9 +262,9 @@
 <!--				<id>github-frank000</id>-->
 <!--				<url>https://maven.pkg.github.com/frank000/cbio-jrasa</url>-->
 <!--			</repository>-->
-			<repository>
-				<id>github-bindambc</id>
-				<url>https://maven.pkg.github.com/Bindambc/whatsapp-business-java-api</url>
-			</repository>
+<!--			<repository>-->
+<!--				<id>github-bindambc</id>-->
+<!--				<url>https://maven.pkg.github.com/Bindambc/whatsapp-business-java-api</url>-->
+<!--			</repository>-->
 	</repositories>
 </project>
