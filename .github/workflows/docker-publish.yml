@@ -84,7 +84,7 @@ jobs:
           MINIO_USER: ${{ vars.MINIO_USER }}
 
       - name: show  environment variables
-        run: echo "SHOW ]] ENV_VARIABLE=${{ env.GH_KEY }}" >> $GITHUB_ENV
+        run: echo "SHOW ]] ENV_VARIABLE=${{ vars.GH_KEY  }}" >> $GITHUB_ENV
 
       - name: Set environment variables
         run: echo "ENV_VARIABLE=${{ secrets.YOUR_SECRET }}" >> $GITHUB_ENV
