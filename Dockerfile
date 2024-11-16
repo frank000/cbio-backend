@@ -15,7 +15,6 @@ RUN ["mvn", "clean", "package", "-DskipTests=true"]
 FROM openjdk:17-jdk-slim
 VOLUME /tmp
 
-EXPOSE 8082
 
 RUN mkdir /app
 WORKDIR /app
