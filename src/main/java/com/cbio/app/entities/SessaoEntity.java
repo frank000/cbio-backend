@@ -70,8 +70,6 @@ public class SessaoEntity {
 
     private UsuarioDTO ultimoAtendente;
 
-
-
     private List<AtendimentoDTO> atendimentoDTOS;
 
     public void setLastChannelChat(ChannelChatDTO lastChannelChat){

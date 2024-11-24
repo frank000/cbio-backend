@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -43,6 +44,10 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
     @Override
     public void processaMensagem(EntradaMensagemDTO entradaMensagemDTO) throws Exception {
+
+        if(dialogoService.hasDialogByUuid(entradaMensagemDTO.getUuid())){
+            return;
+        }
 
         LocalDateTime now = LocalDateTime.now();
         SessaoEntity sessaoEntity = sessaoService.validaOuCriaSessaoAtivaPorUsuarioCanal(
@@ -108,16 +113,22 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
     }
 
 
+    @Transactional(rollbackFor = RuntimeException.class)
     public DialogoDTO enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
-        CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
-        Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
-        dialogoResposta.setCreatedDateTime(LocalDateTime.now());
+        try{
+            CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
+            Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
+            dialogoResposta.setCreatedDateTime(LocalDateTime.now());
 
 
-        DialogoDTO dialogoDTO = dialogoService.saveDialogo(dialogoResposta);
-        dialogoResposta.setId(dialogoDTO.getId());
-        senderService.envia(dialogoResposta);
-        return dialogoResposta;
+            DialogoDTO dialogoDTO = dialogoService.saveDialogo(dialogoResposta);
+            dialogoResposta.setId(dialogoDTO.getId());
+            senderService.envia(dialogoResposta);
+            return dialogoResposta;
+        }catch (Exception e){
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private static boolean isNotCommand(DialogoDTO dialogoDTO1) {

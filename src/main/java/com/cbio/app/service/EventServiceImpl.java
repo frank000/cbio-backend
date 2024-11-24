@@ -59,7 +59,7 @@ public class EventServiceImpl implements EventService {
     public void notify(String id) throws CbioException {
 
         EventEntity entity = eventRepository.findById(id)
-                .orElseThrow(() -> new CbioException("Evento não encontrado.", HttpStatus.NO_CONTENT.value()));
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado."));
 
         ResourceDTO resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyName(entity.getDairyName())
                 .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));
@@ -67,7 +67,7 @@ public class EventServiceImpl implements EventService {
 
         ResourceEntity.NotificationDTO notificationDTO = resourceByCompanyAndDairyName.getNotifications().stream()
                 .findFirst()
-                .orElseThrow(() -> new CbioException("Notificação não definida para o recurso do evento.", HttpStatus.NO_CONTENT.value()));
+                .orElseThrow(() -> new RuntimeException("Notificação não definida para o recurso do evento."));
 
         ModelDTO model = modelService.getByName(notificationDTO.getModel());
 

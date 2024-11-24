@@ -102,6 +102,8 @@ public class DialogoServiceImpl implements DialogoService {
         return collect;
     }
 
-
-
+    @Override
+    public Boolean hasDialogByUuid(String uuid) {
+        return dialogoRepository.countDialogoEntitiesByUuid(uuid) > 0 ? Boolean.TRUE : Boolean.FALSE;
+    }
 }

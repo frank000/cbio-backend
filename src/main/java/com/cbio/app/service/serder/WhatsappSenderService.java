@@ -14,6 +14,7 @@ import com.whatsapp.api.domain.messages.type.ButtonType;
 import com.whatsapp.api.domain.messages.type.HeaderType;
 import com.whatsapp.api.domain.messages.type.InteractiveMessageType;
 import com.whatsapp.api.domain.templates.type.LanguageType;
+import com.whatsapp.api.exception.WhatsappApiException;
 import com.whatsapp.api.impl.WhatsappBusinessCloudApi;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -64,9 +65,14 @@ public class WhatsappSenderService implements Sender {
 
             MessageResponse messageResponse = whatsappBusinessCloudApi.sendMessage(dialogoDTO.getCanal().getIdCanal(), message);
             log.info("WHATSAPP SENDER {}", messageResponse.toString());
+        }catch (WhatsappApiException e){
+            e.printStackTrace();
+            String msg = String.format("WHATSAPP PROBLEMA: %s", e.getMessage());
+            throw new RuntimeException(msg);
+            //TODO criar registro de erros por cliente
         } catch (Exception e) {
             e.printStackTrace();
-            String msg = String.format("Envio para o canal com problema: %s", e.getMessage());
+            String msg = String.format("PRBLEMA GENERICO: %s", e.getMessage());
             throw new RuntimeException(msg);
         }
 

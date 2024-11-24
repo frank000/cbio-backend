@@ -39,6 +39,7 @@ public class ContactServiceImpl implements ContactService {
                             .build()
             );
             contactDTO.setPhone(contactDTO.getPhone().replaceAll("\\D", ""));
+            contactDTO.setActive(Boolean.TRUE);
             ContactEntity entity = contactMapper.toEntity(contactDTO);
             return contactMapper.toDto(contactRepository.save(entity));
 
