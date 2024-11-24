@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Document("companyConfig")
 @Getter
@@ -24,12 +25,14 @@ public class CompanyConfigEntity {
 
     private String emailCalendar;
 
+    private String model;
 
     @Indexed
     private String companyId;
 
     private GoogleCredentialDTO googleCredential;
 
+    private List<String> rag;
 
     public boolean getKeepSameAttendant() {
         if (keepSameAttendant == null) {

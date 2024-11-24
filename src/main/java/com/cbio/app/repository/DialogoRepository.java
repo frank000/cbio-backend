@@ -13,4 +13,6 @@ public interface DialogoRepository extends MongoRepository<DialogoEntity, String
     List<DialogoEntity> findAllBySessionIdOrderByCreatedDateTime(String sessionId);
 
     Optional<DialogoEntity> getByMediaIsNullAndId(Long id);
+
+    Long countDialogoEntitiesByUuid(String uuid);
 }

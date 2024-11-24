@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Builder
 @Data
@@ -19,6 +20,10 @@ public class CompanyConfigDTO implements Serializable {
     private String emailCalendar;
 
     private String companyId;
+
+    private String model;
+
+    private List<String> rag;
 
     private CompanyConfigEntity.GoogleCredentialDTO googleCredential;
 }

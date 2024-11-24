@@ -26,6 +26,8 @@ public class ContactDTO  implements Serializable {
 
     private String obs;
 
+    private Boolean active;
+
     private CompanyDTO company;
 
     private List<String> sessions;

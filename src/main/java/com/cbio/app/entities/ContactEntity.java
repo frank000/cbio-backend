@@ -33,6 +33,8 @@ public class ContactEntity {
 
     private String obs;
 
+    private Boolean active;
+
     private CompanyDTO company;
 
     @Getter(AccessLevel.NONE)

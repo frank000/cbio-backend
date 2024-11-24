@@ -19,8 +19,10 @@ import com.cbio.chat.repositories.ChatChannelCustomRepository;
 import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.chat.repositories.ChatMessageRepository;
 import com.cbio.core.service.AttendantService;
+import com.cbio.core.service.CanalService;
 import com.cbio.core.service.ChatbotForwardService;
 import com.cbio.core.service.SessaoService;
+import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.cbio.core.v1.dto.MediaDTO;
 import com.cbio.core.v1.dto.UsuarioDTO;
@@ -68,6 +70,7 @@ public class ChatService implements IChatService {
     private final ChatbotForwardService forwardService;
 
     private final MinioService minioService;
+    private final CanalService canalService;
 
     private String getExistingChannel(ChatChannelInitializationDTO chatChannelInitializationDTO) {
         List<ChatChannelEntity> channel = chatChannelCustomRepository
@@ -167,6 +170,8 @@ public class ChatService implements IChatService {
 
         //getIdentificadorRemetente retorna o ID da Sessão do Usuário setado no Cotroler
         SessaoEntity sessaoEntity = sessaoService.getSessionById(entradaMensagemDTO.getIdentificadorRemetente());
+        CanalDTO canalDTO = canalService.obtemPorId(sessaoEntity.getCanal().getId());
+
         LocalDateTime now = LocalDateTime.now();
         try{
             sessaoService.verifyWindowToWhatsappChannel(sessaoEntity, now);
@@ -175,7 +180,7 @@ public class ChatService implements IChatService {
                     .mensagem(formatAnswearToClient(entradaMensagemDTO, attendantId))
                     .identificadorRemetente(String.valueOf(sessaoEntity.getIdentificadorUsuario()))
                     .toIdentifier(sessaoEntity.getId())
-                    .canal(sessaoEntity.getCanal())
+                    .canal(canalDTO)
                     .type(entradaMensagemDTO.getType())
                     .media(mountMediaSendFile(entradaMensagemDTO.getFile(), entradaMensagemDTO.getType(), channelId))
                     .from(AssistentEnum.ATTENDANT.name())

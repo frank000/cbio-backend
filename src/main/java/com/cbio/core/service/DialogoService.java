@@ -19,5 +19,5 @@ public interface DialogoService {
 
     List<ChatDTO> mountChatFromDioalogBySessionIdAndChannelId(String sessionId, String channelId);
 
-
+    Boolean hasDialogByUuid(String uuid);
 }

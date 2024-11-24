@@ -35,12 +35,12 @@ public class ContactsGridRepository extends AbstractRepositoryGrid<ContactFiltro
         aggregations.add(Aggregation.match(Criteria.where("active").is(Boolean.TRUE)));
 
         if (StringUtils.hasText(companyIdUserLogged)) {
-            Criteria criteria = Criteria.where("company.$id").is(new ObjectId(companyIdUserLogged));
+            Criteria criteria = Criteria.where("company._id").is(new ObjectId(companyIdUserLogged));
             aggregations.add(
                     Aggregation.match(criteria)
             );
         } else if (StringUtils.hasText(filtroDTO.getIdCompany())) {
-            Criteria criteria = Criteria.where("company.$id").is(new ObjectId(filtroDTO.getIdCompany()));
+            Criteria criteria = Criteria.where("company._id").is(new ObjectId(filtroDTO.getIdCompany()));
             aggregations.add(
                     Aggregation.match(criteria)
             );
@@ -50,7 +50,7 @@ public class ContactsGridRepository extends AbstractRepositoryGrid<ContactFiltro
 
             aggregations.add(
                     Aggregation.match(
-                            Criteria.where("nome")
+                            Criteria.where("name")
                                     .regex(filtroDTO.getBusca(),
                                             OPTIONS_CASE_INSENSITIVE)
                     )

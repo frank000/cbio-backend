@@ -12,6 +12,7 @@ import com.cbio.app.repository.GoogleCredentialRepository;
 import com.cbio.app.service.mapper.EventMapper;
 import com.cbio.core.service.*;
 import com.cbio.core.v1.dto.CompanyDTO;
+import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.ResourceDTO;
 import com.cbio.core.v1.dto.google.CredentialData;
 import com.cbio.core.v1.dto.google.EventDTO;
@@ -57,6 +58,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     private final ResourceService resourceService;
     private final EventRepository eventRepository;
     private final EventService eventService;
+    private final ContactService contactService;
 
     private final EventMapper eventMapper;
     /**
@@ -92,7 +94,6 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 //        DateTime now = new DateTime(System.currentTimeMillis());
         DateTime now = new DateTime("2024-08-01T00:00:00-03:00");
         Events events = service.events().list(id)
-                .setMaxResults(10)
                 .setTimeMin(now)
                 .setOrderBy("startTime")
                 .setSingleEvents(true)
@@ -257,11 +258,9 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             // Participantes do evento
             List<EventAttendee> attendees = new ArrayList<>();
             attendees.add(new EventAttendee().setEmail(resourceByCompanyAndDairyName.getEmail()));
-
             if (StringUtils.hasText(dto.getEmail())) {
                 attendees.add(new EventAttendee().setEmail(dto.getEmail()));
             }
-
             events.setAttendees(attendees);
 
             // Notificações via popup e e-mail
@@ -277,13 +276,16 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             ExtractedTimeZoneDateEvent result = getExtractedTimeZoneDateEvent(dto);
 
+            createContactIfDontExistIntoDTO(dto);
+
             EventEntity entity = EventEntity.builder()
                     .startDate(LocalDateTime.parse(result.startStr()))
                     .endDate(LocalDateTime.parse(result.endStr()))
                     .title(dto.getTitle())
-                    .phone(dto.getPhone().replaceAll("\\D", ""))
+                    .phone(normalizePhone(dto.getPhone()))
                     .email(dto.getEmail())
                     .name(dto.getName())
+                    .contactId(dto.getContactId())
                     .company(dto.getCompany())
                     .id(events.getId())
                     .className(dto.getClassName())
@@ -296,6 +298,23 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             System.out.printf("Evento criado: %s\n", events.getHtmlLink());
         }
+    }
+
+    private void createContactIfDontExistIntoDTO(EventDTO dto) throws CbioException {
+        if(!StringUtils.hasText(dto.getContactId())){
+            ContactDTO contactDTO = ContactDTO.builder()
+                    .email(dto.getEmail())
+                    .name(dto.getName())
+                    .phone(dto.getPhone())
+                    .build();
+            contactDTO = contactService.save(contactDTO);
+            dto.setContactId(contactDTO.getId());
+        }
+    }
+
+    @NotNull
+    private String normalizePhone(String phone) {
+        return phone.replaceAll("\\D", "");
     }
 
     @NotNull
@@ -412,7 +431,6 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             DateTime date = new DateTime(dateDTO.getStartStr());
             Events listEvents = service.events().list(calendar.getId())
-                    .setMaxResults(10)
                     .setTimeMin(date)
                     .setOrderBy("startTime")
                     .setSingleEvents(true)
@@ -439,6 +457,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
                                         .className(resourceById.getColor().getClassColor())
                                         .phone(entity.getPhone())
                                         .name(entity.getName())
+                                        .contactId(entity.getContactId())
                                         .email(entity.getEmail())
                                         .build();
                             }

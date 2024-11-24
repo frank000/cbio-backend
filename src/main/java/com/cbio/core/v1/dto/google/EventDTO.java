@@ -22,6 +22,7 @@ public class EventDTO implements Serializable {
     private String emailTo;
     private String description;
     private String dairyName;
+    private String contactId;
     private String name;
     private String phone;
     private String email;
