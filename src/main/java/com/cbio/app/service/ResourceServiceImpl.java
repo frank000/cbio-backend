@@ -10,7 +10,7 @@ import com.cbio.app.repository.ResourceRepository;
 import com.cbio.app.service.enuns.AssistentEnum;
 import com.cbio.app.service.enuns.CanalSenderEnum;
 import com.cbio.app.service.mapper.ResourceMapper;
-import com.cbio.app.service.utils.EventoUtil;
+import com.cbio.app.service.utils.VariablesUtil;
 import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.service.*;
 import com.cbio.core.v1.dto.CanalDTO;
@@ -48,7 +48,7 @@ public class ResourceServiceImpl implements ResourceService {
     private final CanalService canalService;
     private final ModelService modelService;
     private final ChatbotForwardService forwardService;
-    private final EventoUtil eventoUtil;
+    private final VariablesUtil variablesUtil;
     private final EventRepository eventRepository;
 
 
@@ -76,7 +76,7 @@ public class ResourceServiceImpl implements ResourceService {
                                     try {
                                         CanalDTO canal = canalService.getCanalByCompanyIdAndNome(notificationJobDTO.getCompany().getId(), CanalSenderEnum.WHATSAPP.name());
 
-                                        String phoneBrazilianPrefix = eventoUtil.handleAndGetPhoneNumber(eventDTO.getPhone());
+                                        String phoneBrazilianPrefix = variablesUtil.handleAndGetPhoneNumber(eventDTO.getPhone());
 
                                         SessaoEntity sessaoEntity = sessaoService.validaOuCriaSessaoAtivaPorUsuarioCanal(
                                                 Long.valueOf(phoneBrazilianPrefix),
@@ -95,7 +95,7 @@ public class ResourceServiceImpl implements ResourceService {
 //                                                .channelUuid(channelId) TODO por enquanto não precisa
                                                 .sessionId(sessaoEntity.getId())
                                                 .createdDateTime(LocalDateTime.now())
-                                                .variables(eventoUtil.populateVariablesToParametersEvent(eventDTO.getEmail(), notificationJobDTO.getCompany(), eventDTO, sessaoEntity))
+                                                .variables(VariablesUtil.Event.populateVariablesToParametersEvent(eventDTO.getEmail(), notificationJobDTO.getCompany(), eventDTO, sessaoEntity))
                                                 .build();
                                         log.info("WHATSAPP NOTIFY: {} - {}", eventDTO.getTitle(), eventDTO.getStartDate());
 

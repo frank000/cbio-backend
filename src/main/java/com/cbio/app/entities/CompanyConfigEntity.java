@@ -23,6 +23,9 @@ public class CompanyConfigEntity {
     @Getter(AccessLevel.NONE)
     private Boolean keepSameAttendant;
 
+    @Getter(AccessLevel.NONE)
+    private Boolean autoSend;
+
     private String emailCalendar;
 
     private String model;
@@ -39,6 +42,13 @@ public class CompanyConfigEntity {
             keepSameAttendant = Boolean.FALSE;
         }
         return keepSameAttendant;
+    }
+
+    public Boolean getAutoSend() {
+        if (autoSend == null) {
+            autoSend = Boolean.FALSE;
+        }
+        return autoSend;
     }
 
     @Getter

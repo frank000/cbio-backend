@@ -8,4 +8,5 @@ import java.util.List;
 public interface ContactRepository extends MongoRepository<ContactEntity, String> {
 
     List<ContactEntity> findByCompanyId(String companyId);
+
 }

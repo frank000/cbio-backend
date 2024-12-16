@@ -17,6 +17,8 @@ public class CompanyConfigDTO implements Serializable {
 
     private Boolean keepSameAttendant;
 
+    private Boolean autoSend;
+
     private String emailCalendar;
 
     private String companyId;

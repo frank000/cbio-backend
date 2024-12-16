@@ -10,7 +10,7 @@ public interface CompanyConfigRepository extends MongoRepository<CompanyConfigEn
 
     Optional<CompanyConfigEntity> findByCompanyId(String companyId);
 
-    @Query(value = "{'companyId': ?0}", fields = "{id : 1 , companyId : 1, keepSameAttendant:  1}")
+    @Query(value = "{'companyId': ?0}", fields = "{id : 1 , rag: 1,  companyId : 1, keepSameAttendant:  1, autoSend:  1, model:  1}")
     Optional<CompanyConfigEntity> getPreferencesByCompany(String companyId);
 
 

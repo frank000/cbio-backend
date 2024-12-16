@@ -84,19 +84,18 @@ public class RagQueryAction implements Action {
             try {
                 String idCompany = sessaoEntity.getCanal().getCompany().getId();
                 Optional<CompanyConfigEntity> byCompanyId = companyConfigRepository.findByCompanyId(idCompany);
-                AllMiniLmL6V2EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
-
-                InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 
 
                 if(byCompanyId.isPresent()) {
+                    AllMiniLmL6V2EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+                    InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+
                     int maxSegmentSizeInChars = 500; // Máximo de 500 caracteres por parágrafo.
                     int maxOverlapSizeInChars = 50;  // Sobreposição de até 50 caracteres.
 
                     List<Document> list = new ArrayList<>();
                     byCompanyId.get()
                             .getRag()
-                            .stream()
                             .forEach(s -> {
 
                                 DocumentByParagraphSplitter splitter = new DocumentByParagraphSplitter(maxSegmentSizeInChars, maxOverlapSizeInChars);
@@ -111,29 +110,20 @@ public class RagQueryAction implements Action {
                                             embeddingStore.add(embedding1, textSegment);
 
                                         });
-//                                list.addAll(
-//                                        Arrays.stream(splits).map(s1 ->
-//                                                Document.builder()
-//                                                        .withContent(s1)
-//                                                        .build()
-//                                        ).toList()
-//
-//                                );
-
-
-
                             });
-                    Embedding queryEmbedding = embeddingModel.embed(text).content();
+
+                    Embedding queryEmbedding = embeddingModel
+                            .embed(text)
+                            .content();
+
                     List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(queryEmbedding, 1);
                     String resposta;
                     if(CollectionUtils.isEmpty(relevant)){
-                        resposta = "Desculpe, não conseguir encontrar uma resposta.";
+                        resposta = "Desculpe, não consegui encontrar uma resposta.";
                     }else{
                         resposta = relevant.get(0).embedded().text();
                     }
                     EmbeddingMatch<TextSegment> embeddingMatch = relevant.get(0);
-
-
 
 
                     dispatcher
@@ -141,15 +131,6 @@ public class RagQueryAction implements Action {
                                     .builder()
                                     .text(resposta)
                                     .build());
-
-
-//                    SimpleVectorStore vectorStore = new SimpleVectorStore(this.embeddingModel);
-//
-//                    vectorStore.doAdd(list);
-//
-//
-//                    List<Document> similaritySearch = vectorStore.similaritySearch("Velo 99 XR1 AXS");
-
 
                 }
                 dispatcher
