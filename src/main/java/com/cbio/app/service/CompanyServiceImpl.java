@@ -1,19 +1,20 @@
 package com.cbio.app.service;
 
-import com.cbio.app.entities.CompanyConfigEntity;
-import com.cbio.app.entities.CompanyEntity;
-import com.cbio.app.entities.GoogleCredentialEntity;
-import com.cbio.app.entities.TierEntity;
+import com.cbio.app.base.utils.CbioDateUtils;
+import com.cbio.app.entities.*;
 import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.CompanyConfigRepository;
 import com.cbio.app.repository.CompanyRepository;
 import com.cbio.app.repository.GoogleCredentialRepository;
+import com.cbio.app.service.enuns.TicketsTypeEnum;
 import com.cbio.app.service.mapper.CompanyConfigMapper;
 import com.cbio.app.service.mapper.CompanyMapper;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.CompanyService;
+import com.cbio.core.service.TicketService;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
+import com.cbio.core.v1.dto.TicketDTO;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyConfigRepository companyConfigRepository;
     private final GoogleCredentialRepository googleCredentialRepository;
     private final AuthService authService;
+    private final TicketService ticketService;
 
     public CompanyDTO save(CompanyDTO companyDTO) throws CbioException {
         CompanyEntity entity = companyMapper.toEntity(companyDTO);
@@ -92,20 +95,48 @@ public class CompanyServiceImpl implements CompanyService {
 
     public CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException {
         CompanyConfigEntity entity;
-        if(StringUtils.hasText(dto.getId())){
+        boolean updateRagFields = false;
+        if (StringUtils.hasText(dto.getId())) {
             entity = companyConfigRepository.findById(dto.getId())
                     .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
+            updateRagFields = !entity.getRag().get(0).equals(dto.getRag().get(0));
+
 
             companyConfigMapper.fromDto(dto, entity);
             entity.setCompanyId(entity.getCompanyId());
-        }else{
+        } else {
             entity = companyConfigMapper.toEntity(dto);
+            updateRagFields = true;
+        }
 
+
+
+        if (updateRagFields) {
+
+            List<TicketEntity.TicketMessageDTO> list = new ArrayList<>();
+            list.add(
+                    TicketEntity.TicketMessageDTO.builder()
+                            .message(dto.getRag().get(0))
+                            .createdAt(CbioDateUtils.LocalDateTimes.now())
+                            .build()
+            );
+            TicketDTO ticketDTO = TicketDTO.builder()
+                    .title(TicketsTypeEnum.RAG.getTitle())
+                    .type(TicketsTypeEnum.RAG.name())
+                    .ticketMessages(list)
+                    .ativo(Boolean.TRUE)
+                    .company(CompanyDTO.builder()
+                            .id(dto.getCompanyId())
+                            .build())
+                    .createdAt(CbioDateUtils.LocalDateTimes.now())
+                    .build();
+            TicketDTO savedTicket = ticketService.save(ticketDTO);
         }
 
         entity = companyConfigRepository.save(entity);
         return companyConfigMapper.toDto(entity);
     }
+
 
     @Override
     public CompanyConfigDTO getConfigCompany(String id) throws CbioException {
@@ -121,21 +152,22 @@ public class CompanyServiceImpl implements CompanyService {
         return companyConfigMapper.toDto(companyConfigEntity);
     }
 
-    public Boolean hasGoogleCrendential(String id){
-        if(StringUtils.hasText(id)){
+    public Boolean hasGoogleCrendential(String id) {
+        if (StringUtils.hasText(id)) {
             Optional<GoogleCredentialEntity> byUserId = googleCredentialRepository.findByUserId(id);
             return byUserId.isEmpty() ? Boolean.FALSE : Boolean.TRUE;
-        }else{
+        } else {
             return Boolean.FALSE;
         }
     }
-    public Boolean hasGoogleCrendential(){
+
+    public Boolean hasGoogleCrendential() {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
-        if(StringUtils.hasText(companyIdUserLogged)){
+        if (StringUtils.hasText(companyIdUserLogged)) {
             Instant now = Instant.now();
             Optional<GoogleCredentialEntity> byUserId = googleCredentialRepository.findByUserId(companyIdUserLogged);
             return byUserId.isEmpty() || byUserId.get().getCredential().getExpirationTimeMillis() - now.toEpochMilli() < 0 ? Boolean.FALSE : Boolean.TRUE;
-        }else{
+        } else {
             return Boolean.FALSE;
         }
     }

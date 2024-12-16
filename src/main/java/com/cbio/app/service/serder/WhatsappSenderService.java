@@ -26,7 +26,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,9 +52,10 @@ public class WhatsappSenderService implements Sender {
             boolean isModel = DialogoDTO.TypeMessageEnum.MODEL.name().equals(dialogoDTO.getType());
 
             if (isDocument || isImage) {
-                message = getMessageToDocumentImage(dialogoDTO, whatsappBusinessCloudApi);
-            } else if (isModel) {
 
+                message = getMessageToDocumentImage(dialogoDTO, whatsappBusinessCloudApi);
+
+            } else if (isModel) {
 
                 message = getMessageModel(dialogoDTO);
 
