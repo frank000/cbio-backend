@@ -11,13 +11,9 @@ import com.cbio.app.repository.EventRepository;
 import com.cbio.app.repository.GoogleCredentialRepository;
 import com.cbio.app.service.mapper.EventMapper;
 import com.cbio.core.service.*;
-import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.ResourceDTO;
-import com.cbio.core.v1.dto.google.CredentialData;
-import com.cbio.core.v1.dto.google.EventDTO;
-import com.cbio.core.v1.dto.google.QueryFilterCalendarDTO;
-import com.cbio.core.v1.dto.google.StateDTO;
+import com.cbio.core.v1.dto.google.*;
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -200,7 +196,8 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             Credential credential = getCredentialByCompanyId(companyIdUserLogged);
 
             ResourceDTO resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyName(dto.getDairyName())
-                    .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));;
+                    .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));
+
 
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME)
@@ -238,7 +235,8 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             Credential credential = getCredentialByCompanyId(companyIdUserLogged);
 
             ResourceDTO resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyName(dto.getDairyName())
-                    .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));;
+                    .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));
+
 
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME)
@@ -301,7 +299,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     }
 
     private void createContactIfDontExistIntoDTO(EventDTO dto) throws CbioException {
-        if(!StringUtils.hasText(dto.getContactId())){
+        if (!StringUtils.hasText(dto.getContactId())) {
             ContactDTO contactDTO = ContactDTO.builder()
                     .email(dto.getEmail())
                     .name(dto.getName())
@@ -416,7 +414,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
             ResourceDTO resourceById = resourceService.getResourceById(id);
 
-            if(ResourceEntity.StatusEnum.DESYNC.equals(resourceById.getStatus())){
+            if (ResourceEntity.StatusEnum.DESYNC.equals(resourceById.getStatus())) {
                 throw new RuntimeException(String.format("Recurso '%s' está desconfigurado. Configure através do menu 'Recursos'.", resourceById.getDairyName()));
             }
 
@@ -469,6 +467,141 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         return List.of();
     }
 
+    @Override
+    public Map<String, List<ScheduleDTO>> listScheduleByResource(String id, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException {
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+        Map<String, List<ScheduleDTO>> resultMap = new HashMap<>();
+
+        if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
+            ResourceDTO resourceById = resourceService.getResourceById(id);
+
+            if (ResourceEntity.StatusEnum.DESYNC.equals(resourceById.getStatus())) {
+                throw new RuntimeException(String.format("Recurso '%s' está desconfigurado. Configure através do menu 'Recursos'.", resourceById.getDairyName()));
+            }
+
+
+            Credential credential = getCredentialByCompanyId(companyIdUserLogged);
+
+            Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+
+            CalendarListEntry calendar = getCalendar(resourceById.getDairyName(), service);
+
+            List<EventDTO> eventsDTO = recoveryEventsAndSaveFromGoogle(dateDTO, service, calendar, resourceById);
+
+            LocalDateTime start = CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(dateDTO.getStartStr().replace("-03:00", "")));
+            LocalDateTime end = CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(dateDTO.getEndStr().replace("-03:00", "")));
+
+
+            List<ScheduleDTO> schedulesList = mountListOfSchedule(resourceById, start, end, eventsDTO);
+
+            return schedulesList.stream()
+                    .collect(Collectors.groupingBy(ScheduleDTO::getStrDate));
+
+        }
+        return resultMap;
+    }
+
+    private List<ScheduleDTO> mountListOfSchedule(ResourceDTO resourceById, LocalDateTime start, LocalDateTime end, List<EventDTO> eventsDTO) {
+        List<ResourceEntity.PeriodoDTO> periods = getPeriods(resourceById);
+        List<ScheduleDTO> schedulesList = new ArrayList<>();
+
+        while (!start.isAfter(end)) {
+            LocalDateTime finalStart = start;
+            boolean notHasCreatedSchedule = eventsDTO.stream()
+                    .anyMatch(eventDTO -> {
+                        return !CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(eventDTO.getStart())).isEqual(finalStart);
+                    });
+
+            boolean isIntoPeriodValid = periods.stream().anyMatch(periodoDTO -> periodoDTO.isLocalDateTimeBetween(finalStart));
+
+            boolean isValidDayOfWeek = resourceById.getSelectedDays()
+                    .contains(finalStart.getDayOfWeek().getValue());
+
+            if (isValidDayOfWeek && notHasCreatedSchedule && isIntoPeriodValid ||
+                    isValidDayOfWeek && isIntoPeriodValid && CollectionUtils.isEmpty(eventsDTO)) {
+                String brazilianFormated = CbioDateUtils.getDateTimeWithSecFormated(finalStart, CbioDateUtils.FORMAT_BRL_DATE_TIME_FULL);
+                LocalDateTime dateTimePlusTimeAttendance = getDateTimePlusTimeAttendance(resourceById, start);
+
+                ScheduleDTO horarioDTO = ScheduleDTO.builder()
+                        .start(finalStart)
+                        .strStartDateTime(finalStart.toString())
+                        .strEndDateTime(dateTimePlusTimeAttendance.toString())
+                        .strDate(brazilianFormated.split("T")[0])
+                        .strHour(mountLabelHoursInitAndEnd(dateTimePlusTimeAttendance, brazilianFormated))
+                        .build();
+
+                schedulesList.add(horarioDTO);
+            }
+            start = start.plusMinutes(resourceById.getTimeAttendance());
+        }
+        return schedulesList;
+    }
+
+    @NotNull
+    private String mountLabelHoursInitAndEnd(LocalDateTime dateTimePlusTimeAttendance, String brazilianFormated) {
+
+        String hourAndMinute = dateTimePlusTimeAttendance.toString().split("T")[1];
+        return brazilianFormated.split("T")[1].concat(" - ").concat(hourAndMinute);
+    }
+
+    @NotNull
+    private LocalDateTime getDateTimePlusTimeAttendance(ResourceDTO resourceById, LocalDateTime start) {
+        return start.plusMinutes(resourceById.getTimeAttendance());
+    }
+
+    @NotNull
+    private List<EventDTO> recoveryEventsAndSaveFromGoogle(QueryFilterCalendarDTO dateDTO, Calendar service, CalendarListEntry calendar, ResourceDTO resourceById) throws IOException {
+        DateTime date = new DateTime(dateDTO.getStartStr());
+        Events listEvents = service.events().list(calendar.getId())
+                .setTimeMin(date)
+                .setSingleEvents(true)
+                .execute();
+
+
+        // Lista todos os cale
+        List<EventDTO> collect = listEvents.getItems()
+                .stream().map(
+                        event -> {
+                            Optional<EventEntity> byId = eventRepository.findById(event.getId());
+                            EventEntity entity;
+                            if (byId.isEmpty()) {
+                                entity = saveAndGetEvent(event, resourceById);
+                            } else {
+                                entity = byId.get();
+                            }
+                            return EventDTO.builder()
+
+                                    .end(getDateTimeFormated(event.getEnd()))
+                                    .start(getDateTimeFormated(event.getStart()))
+
+                                    .build();
+                        }
+
+                )
+                .collect(Collectors.toList());
+        return collect;
+    }
+
+    private List<ResourceEntity.PeriodoDTO> getPeriods(ResourceDTO resourceById) {
+        List<ResourceEntity.PeriodoDTO> periodsByResource = new ArrayList<>();
+
+        if (!ObjectUtils.isEmpty(resourceById.getMorning())) {
+            periodsByResource.add(resourceById.getMorning());
+        }
+        if (!ObjectUtils.isEmpty(resourceById.getAfternoon())) {
+            periodsByResource.add(resourceById.getAfternoon());
+        }
+        if (!ObjectUtils.isEmpty(resourceById.getNight())) {
+            periodsByResource.add(resourceById.getNight());
+        }
+        if (!ObjectUtils.isEmpty(resourceById.getDawn())) {
+            periodsByResource.add(resourceById.getDawn());
+        }
+        return periodsByResource;
+    }
+
     private EventEntity saveAndGetEvent(Event event, ResourceDTO resourceById) {
         String dateTimeFormatedStart = getDateTimeFormated(event.getStart());
         LocalDateTime startDate = LocalDateTime.parse(dateTimeFormatedStart);
@@ -499,10 +632,10 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             String dateWithoutOffset = dateTime.substring(0, lastDashIndex);
             return dateWithoutOffset.split("\\.")[0];
 
-        } else if(!ObjectUtils.isEmpty(event) && !ObjectUtils.isEmpty(event.get("date"))) {
+        } else if (!ObjectUtils.isEmpty(event) && !ObjectUtils.isEmpty(event.get("date"))) {
 
             return event.get("date").toString().concat("T00:00:00");
-        }else{
+        } else {
             return "";
         }
     }
@@ -534,7 +667,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
                 .forEach(calendarListEntry -> {
 
                     Optional<ResourceDTO> resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyNameAndCompanyId(calendarListEntry.getSummary(), companyId);
-                    if(resourceByCompanyAndDairyName.isEmpty()){
+                    if (resourceByCompanyAndDairyName.isEmpty()) {
                         resourceService.saveResourceByDairyName(calendarListEntry.getSummary(), companyId);
                     }
 

@@ -45,6 +45,21 @@ public class TicketGridRepository extends AbstractRepositoryGrid<TicketsFiltroGr
                                     .is(new ObjectId(filtroDTO.getIdCompany()) )));
         }
 
+        if(filtroDTO != null && filtroDTO.getStatus() != null){
+
+            aggregations.add(
+                    Aggregation.match(
+                            Criteria.where("status")
+                                    .is(filtroDTO.getStatus())));
+        }
+        if(filtroDTO != null && filtroDTO.getType() != null){
+
+            aggregations.add(
+                    Aggregation.match(
+                            Criteria.where("type")
+                                    .is(filtroDTO.getType())));
+        }
+
     }
 
     @Override

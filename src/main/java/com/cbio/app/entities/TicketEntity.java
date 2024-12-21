@@ -1,7 +1,10 @@
 package com.cbio.app.entities;
 
+import com.cbio.app.service.enuns.StatusTicketsEnum;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,6 +39,9 @@ public class TicketEntity {
 
     private CompanyDTO company;
 
+    @Enumerated(EnumType.STRING)
+    private StatusTicketsEnum status;
+
     private LocalDateTime createdAt;
 
     @Getter
@@ -45,6 +51,8 @@ public class TicketEntity {
         private String message;
 
         private String userId;
+
+        private Boolean fromCompany = false;
 
         @JsonFormat(locale = "pt-BR", shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
         private LocalDateTime createdAt;

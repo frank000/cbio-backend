@@ -34,6 +34,7 @@ public interface TicketMapper extends MapperBase<TicketEntity, TicketDTO> {
                 TicketEntity.TicketMessageDTO.builder()
                         .message(dto.getTicketMessage())
                         .createdAt(CbioDateUtils.LocalDateTimes.now())
+                        .fromCompany(dto.getFromCompany())
                         .userId(dto.getUserId())
                         .build()
         );
@@ -46,6 +47,7 @@ public interface TicketMapper extends MapperBase<TicketEntity, TicketDTO> {
         entity.getTicketMessages().add(
                 TicketEntity.TicketMessageDTO.builder()
                         .message(dto.getTicketMessage())
+                        .fromCompany(dto.getFromCompany())
                         .createdAt(CbioDateUtils.LocalDateTimes.now())
                         .userId(dto.getUserId())
                         .build()
