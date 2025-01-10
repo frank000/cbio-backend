@@ -173,6 +173,11 @@ jobs:
           host: '84.247.179.83'
           username: 'root'
           password: ${{ secrets.SERVER_PASSWORD }}
-          script: |
+          script: | 
             cd /root/applications/cbio/backend
+       
+            echo "Image backend: $IMAGE_BACKEND"
+       
+            sed -i "s|\${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
+       
             docker stack deploy -c docker-compose.yml backend-app
