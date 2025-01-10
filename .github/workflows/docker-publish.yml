@@ -162,11 +162,13 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
       - name: TesteTAG
+        if: ${{ github.event_name != 'pull_request' }}
         run: echo ${TAG}
 
 
       # Etapa para rodar o docker-compose no servidor remoto
       - name: Deploy with Docker Compose on remote server
+        if: ${{ github.event_name != 'pull_request' }}
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: '84.247.179.83'
