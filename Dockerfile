@@ -5,22 +5,29 @@ ARG GH_KEY
 ARG GH_KEY_AUTH
 WORKDIR /home/app
 
+# Copiar apenas o pom.xml primeiro
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+COPY mvnw.cmd .
 
-COPY . .
+# Baixar as dependências
+RUN mvn dependency:go-offline
 
+# Agora copiar o código fonte
+COPY src src
+
+# Fazer o build
 RUN ["mvn", "clean", "package", "-DskipTests=true"]
-
 
 # Fase final
 FROM openjdk:17-jdk-slim
 VOLUME /tmp
 
-
 RUN mkdir /app
 WORKDIR /app
 
 ARG JAR_FILE=app.jar
-COPY --from=build /home/app /app
 COPY --from=build /home/app/target/*.jar /app/app.jar
 
 ARG PROFILE
