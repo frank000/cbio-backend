@@ -178,7 +178,7 @@ jobs:
           script: |
             cd /root/applications/cbio/backend
             echo "Image backend: $IMAGE_BACKEND"  
-            
+            export IMAGE_BACKEND=${{ steps.meta.outputs.tags }}                
             if [ -z "$IMAGE_BACKEND" ]; then
               echo "ERROR: IMAGE_BACKEND is empty!"
               exit 1
