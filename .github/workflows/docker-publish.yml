@@ -163,7 +163,7 @@ jobs:
           build-args: |
             GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}
             GH_KEY=${{ secrets.GH_KEY }}
-            PROFILE=prod
+            PROFILE=prd
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
