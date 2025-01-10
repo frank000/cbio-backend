@@ -6,6 +6,7 @@ import com.cbio.core.service.AuthService;
 import com.cbio.core.service.CalendarGoogleService;
 import com.cbio.core.v1.dto.google.EventDTO;
 import com.cbio.core.v1.dto.google.QueryFilterCalendarDTO;
+import com.cbio.core.v1.dto.google.ScheduleDTO;
 import com.cbio.core.v1.dto.google.StateDTO;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.model.Event;
@@ -78,7 +79,12 @@ public class GoogleCalendarController implements SecuredRestController {
     public ResponseEntity<List<EventDTO>> eventsByResource(
             @RequestBody QueryFilterCalendarDTO queryDTO) throws CbioException, IOException {
         return ResponseEntity.ok(calendarGoogleService.listEventsByResource(queryDTO.getResourceId(), queryDTO));
+    }
 
+    @PostMapping("/schedule-by-resource")
+    public ResponseEntity<Map<String, List<ScheduleDTO>>> scheduleByResource(
+            @RequestBody QueryFilterCalendarDTO queryDTO) throws CbioException, IOException {
+        return ResponseEntity.ok(calendarGoogleService.listScheduleByResource(queryDTO.getResourceId(), queryDTO));
     }
 
     @PostMapping("/event")

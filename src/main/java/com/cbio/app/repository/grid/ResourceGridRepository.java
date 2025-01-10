@@ -35,14 +35,16 @@ public class ResourceGridRepository extends AbstractRepositoryGrid<ResourceFiltr
 
             aggregations.add(
                     Aggregation.match(
-                            Criteria.where("dairyName")
-                                    .regex(filtroDTO.getBusca(),
-                                            OPTIONS_CASE_INSENSITIVE)
-                                    .orOperator(Criteria.where("email").regex(filtroDTO.getBusca(),
-                                            OPTIONS_CASE_INSENSITIVE))
-                    )
+                            new Criteria().orOperator(
+                                    Criteria.where("dairyName")
+                                            .regex(filtroDTO.getBusca(),
+                                                    OPTIONS_CASE_INSENSITIVE),
 
+                                    Criteria.where("email").regex(filtroDTO.getBusca(),
+                                            OPTIONS_CASE_INSENSITIVE)
+                            ))
             );
+
         }
         if (filtroDTO != null && filtroDTO.getIdCompany() != null) {
 

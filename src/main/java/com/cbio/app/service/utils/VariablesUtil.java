@@ -28,8 +28,8 @@ public class VariablesUtil {
             map.put("title", getVariable(eventDTO.getTitle()));
             map.put("description", getVariable(eventDTO.getDescription()));
             map.put("dairyName", getVariable(eventDTO.getDairyName()));
-            map.put("start", CbioDateUtils.getDateTimeWithSecFormated(eventDTO.getStartDate(), CbioDateUtils.FORMAT_BRL_DATE_TIME));
-            map.put("end", CbioDateUtils.getDateTimeWithSecFormated(eventDTO.getEndDate(), CbioDateUtils.FORMAT_BRL_DATE_TIME));
+            map.put("start", CbioDateUtils.getDateTimeWithSecFormated(CbioDateUtils.LocalDateTimes.getFrom(eventDTO.getStart().replace(CbioDateUtils.MINUS_3,"")), CbioDateUtils.FORMAT_BRL_DATE_TIME));
+            map.put("end", CbioDateUtils.getDateTimeWithSecFormated(CbioDateUtils.LocalDateTimes.getFrom(eventDTO.getEnd().replace(CbioDateUtils.MINUS_3,"")), CbioDateUtils.FORMAT_BRL_DATE_TIME));
             map.put("company.name", ObjectUtils.isNotEmpty(company) ? getVariable(company.getNome()) : NO_INFORMED);
             return map;
         }

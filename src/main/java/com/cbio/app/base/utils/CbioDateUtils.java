@@ -11,6 +11,7 @@ public class CbioDateUtils {
     public static String FORMAT_BRL = "HH:mm dd/MM";
     public static String FORMAT_BRL_SEC = "HH:mm:ss dd/MM";
     public static String FORMAT_BRL_DATE_TIME = "dd/MM/yyyy HH:mm:ss";
+    public static String FORMAT_BRL_DATE_TIME_FULL = "dd/MM/yyyy'T'HH:mm";
 
     public static String getDateTimeFormated(LocalDateTime localDateTime) {
         return DateTimeFormatter.ofPattern(FORMAT_BRL).format(localDateTime);
@@ -64,6 +65,13 @@ public class CbioDateUtils {
 
         public static LocalDateTime now() {
             return getZonedDateTimeNow().toLocalDateTime();
+        }
+
+        public static LocalDateTime getFrom(LocalDateTime localDateTime) {
+            return ZonedDateTime.of(localDateTime, getZoneId()).toLocalDateTime();
+        }
+        public static LocalDateTime getFrom(String localDateTime) {
+            return ZonedDateTime.of(LocalDateTime.parse(localDateTime), getZoneId()).toLocalDateTime();
         }
     }
 }

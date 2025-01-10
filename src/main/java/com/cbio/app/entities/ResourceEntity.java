@@ -9,10 +9,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Singular;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Document("resource")
@@ -60,6 +62,18 @@ public class ResourceEntity {
     public static class PeriodoDTO{
         private String init;
         private String end;
+
+        public Boolean isLocalDateTimeBetween(LocalDateTime localDateTime){
+            LocalDateTime startUnzoned = LocalDateTime.parse(getDateTimeString(localDateTime, init));
+            LocalDateTime endUnzoned = LocalDateTime.parse(getDateTimeString(localDateTime, end));
+
+            return startUnzoned.isBefore(localDateTime) || startUnzoned.isEqual(localDateTime) && endUnzoned.isAfter(localDateTime);
+        }
+
+        @NotNull
+        private String getDateTimeString(LocalDateTime localDateTime, String hour) {
+            return localDateTime.toLocalDate().toString().concat("T").concat(hour);
+        }
     }
 
     @Getter

@@ -1,17 +1,16 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.entities.CanalEntity;
 import com.cbio.app.service.mapper.CanalMapper;
 import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
 import com.cbio.app.web.SecuredRestController;
-import com.cbio.core.v1.dto.EntradaMensagemDTO;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.cbio.app.entities.CanalEntity;
-import com.cbio.core.service.CalendarGoogleService;
 import com.cbio.core.service.CanalService;
 import com.cbio.core.service.TelegramService;
+import com.cbio.core.v1.dto.EntradaMensagemDTO;
 import com.cbio.core.v1.dto.GitlabEventDTO;
 import com.cbio.core.v1.dto.MensagemDto;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -36,11 +35,10 @@ public class TelegramController implements SecuredRestController {
     private final TelegramService service;
     private final CanalService canalService;
     private final ObjectMapper objectMapper;
-    private final CalendarGoogleService calendarService;
     private final CanalMapper canalMapper;
 
     @PostMapping(value = "/webhook")
-    @PreAuthorize("@validacaoCallbackService.validaToken('TELEGRAM', #token)")
+    @PreAuthorize("@validateCallbackService.validaToken('TELEGRAM', #token)")
     ResponseEntity<Void> webhook(
             @RequestParam("token") String token,
             @RequestParam("cliente") String cliente,
@@ -48,14 +46,14 @@ public class TelegramController implements SecuredRestController {
 
     ) throws Exception {
         CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente)
-                .orElseThrow(()->new RuntimeException("Canal não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Canal não encontrado"));
 
         boolean temMensagemParaProcessar = update.getMessage() != null || update.getCallbackQuery() != null;
 
-        if (temMensagemParaProcessar){
+        if (temMensagemParaProcessar) {
             EntradaMensagemDTO entradaMensagemDTO = EntradaMensagemDTO
                     .builder()
-                    .type(update.getMessage() != null && StringUtils.hasText(update.getMessage().getText())? "TEXT": "TEXT")
+                    .type(update.getMessage() != null && StringUtils.hasText(update.getMessage().getText()) ? "TEXT" : "TEXT")
                     .mensagem(update.getMessage() != null ? update.getMessage().getText() : update.getCallbackQuery().getData())
                     .mensagemObject(ObjectUtils.defaultIfNull(update, null))
                     .canal(canalMapper.canalEntityToCanalDTO(canalEntity, new CycleAvoidingMappingContext()))
@@ -63,13 +61,23 @@ public class TelegramController implements SecuredRestController {
 
             service.processaMensagem(entradaMensagemDTO, canalEntity);
         }
+        return ResponseEntity.ok().build();
+    }
 
+    @GetMapping(value = "/connect-bot")
+    ResponseEntity<Void> connectBot(
+            @RequestParam("canalId") String canalId
+
+    ){
+
+        Objects.requireNonNull(canalId);
+        service.connect(canalId);
 
         return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/connect")
-    @PreAuthorize("@validacaoCallbackService.validaToken('TELEGRAM', #token)")
+    @PreAuthorize("@validateCallbackService.validaToken('TELEGRAM', #token)")
     ResponseEntity<Void> connect(
             @RequestParam("token") String token,
             @RequestParam("cliente") String cliente,
@@ -77,7 +85,7 @@ public class TelegramController implements SecuredRestController {
 
     ) throws Exception {
         CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente)
-                .orElseThrow(()->new RuntimeException("Canal não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Canal não encontrado"));
 
         service.connectToBot(update, canalEntity);
         return ResponseEntity.ok().build();
@@ -95,7 +103,7 @@ public class TelegramController implements SecuredRestController {
 
 
     @PostMapping(value = "/gitlab-alert")
-    @PreAuthorize("@validacaoCallbackService.validaToken('TELEGRAM', #token)")
+    @PreAuthorize("@validateCallbackService.validaToken('TELEGRAM', #token)")
     public ResponseEntity<Void> receiveWebhhokGitlab(
             @RequestParam("token") String token,
             @RequestParam(value = "cliente", required = false) String cliente,

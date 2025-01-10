@@ -45,7 +45,8 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
     @Override
     public void processaMensagem(EntradaMensagemDTO entradaMensagemDTO) throws Exception {
 
-        if(dialogoService.hasDialogByUuid(entradaMensagemDTO.getUuid())){
+        boolean hasUuid = entradaMensagemDTO.getUuid() != null;//true if came from whatsapp
+        if(hasUuid && dialogoService.hasDialogByUuid(entradaMensagemDTO.getUuid())){
             return;
         }
 
@@ -91,7 +92,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
             assistentBotService
                     .processaDialogoAssistent(dialogoSaved)
-                    .filter(dialogoDTO1 -> isNotCommand(dialogoDTO1))
+                    .filter(ChatbotForwardServiceImpl::isNotCommand)
                     .ifPresent(resposta -> {
 
                         resposta.setCanal(entradaMensagemDTO.getCanal());

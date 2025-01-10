@@ -1,6 +1,7 @@
 package com.cbio.core.v1.dto;
 
 import com.cbio.app.entities.TicketEntity;
+import com.cbio.app.service.enuns.StatusTicketsEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,6 +32,8 @@ public class TicketDTO implements Serializable {
     private Boolean ativo;
 
     private Boolean fromCompany = false;
+
+    private StatusTicketsEnum status;
 
     private CompanyDTO company;
 

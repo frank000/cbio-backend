@@ -2,12 +2,13 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.TicketEntity;
-import com.cbio.app.repository.grid.PhraseGridRepository;
 import com.cbio.app.repository.grid.TicketGridRepository;
+import com.cbio.app.service.enuns.StatusTicketsEnum;
 import com.cbio.app.service.enuns.TicketsTypeEnum;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.TicketService;
+import com.cbio.core.v1.dto.ItemSelecaoDTO;
 import com.cbio.core.v1.dto.TicketDTO;
 import com.cbio.core.v1.dto.TicketsFiltroGridDTO;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,20 @@ public class TicketController implements SecuredRestController {
         return ResponseEntity.ok(Arrays.stream(TicketsTypeEnum.values()).toList());
     }
 
+    @GetMapping(value = "/status")
+    public ResponseEntity<List<ItemSelecaoDTO>> getStatus() {
+
+        List<ItemSelecaoDTO> list = Arrays.stream(StatusTicketsEnum.values())
+                .map(statusTicketsEnum ->
+                        ItemSelecaoDTO.builder()
+                                .id(statusTicketsEnum.name())
+                                .label(statusTicketsEnum.getLabel())
+                                .build()
+                )
+                .toList();
+        return ResponseEntity.ok(list);
+    }
+
 
     @PostMapping
     public ResponseEntity<TicketDTO> save(@RequestBody TicketDTO dto) {
@@ -64,6 +79,8 @@ public class TicketController implements SecuredRestController {
     @GetMapping("grid")
     public ResponseEntity<PageableResponse<TicketDTO>> obtemGrid(@RequestParam(required = false) final String filter,
                                                                  @RequestParam(required = false) final String companyId,
+                                                                 @RequestParam(required = false) final String status,
+                                                                 @RequestParam(required = false) final String type,
                                                                  @RequestParam(defaultValue = "0") Integer pageIndex,
                                                                  @RequestParam(defaultValue = "10") Integer pageSize,
                                                                  @RequestParam(defaultValue = "id") String sortField,
@@ -73,6 +90,8 @@ public class TicketController implements SecuredRestController {
 
         TicketsFiltroGridDTO produtoGridFiltroDTO = new TicketsFiltroGridDTO();
         produtoGridFiltroDTO.setBusca(filter);
+        produtoGridFiltroDTO.setStatus(status);
+        produtoGridFiltroDTO.setType(type);
         produtoGridFiltroDTO.setIdCompany(ObjectUtils.isEmpty(companyId)?authService.getCompanyIdUserLogged() : companyId);
 
 

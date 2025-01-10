@@ -17,6 +17,8 @@ public interface IAMService {
 
     void deleteUser(UserKeycloak userVO);
 
+    void updateUserPassword(UserKeycloak userVO, String userID);
+
     void deleteUserByUserName(String username);
 
     void updateUserAttributes(UserKeycloak userVO, Map<String, List<String>> attributes);

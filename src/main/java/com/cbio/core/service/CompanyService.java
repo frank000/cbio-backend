@@ -4,6 +4,9 @@ import com.cbio.app.exception.CbioException;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 
+import java.io.IOException;
+import java.util.List;
+
 public interface CompanyService {
 
     CompanyDTO save(CompanyDTO companyDTO) throws CbioException;
@@ -16,11 +19,13 @@ public interface CompanyService {
 
     Integer getNumAttendantsToCompany(String id);
 
+    List<CompanyDTO> findAll();
+
     Integer getFreePort();
 
     Integer getPortByIdCompany(String id);
 
-    CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException;
+    CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException;
 
     CompanyConfigDTO getConfigCompany(String id) throws CbioException;
 
@@ -28,5 +33,5 @@ public interface CompanyService {
 
     Boolean hasGoogleCrendential(String id);
 
-    CompanyConfigDTO getConfigPreferencesCompany(String id) throws CbioException;
+    CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id) throws CbioException;
 }

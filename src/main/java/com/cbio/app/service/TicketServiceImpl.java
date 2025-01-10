@@ -2,6 +2,7 @@ package com.cbio.app.service;
 
 import com.cbio.app.entities.TicketEntity;
 import com.cbio.app.repository.TicketRepository;
+import com.cbio.app.service.enuns.StatusTicketsEnum;
 import com.cbio.app.service.mapper.TicketMapper;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.TicketService;
@@ -30,6 +31,7 @@ public class TicketServiceImpl implements TicketService {
                     .id(companyId)
                     .build());
             dto.setUserId(authService.getClaimsUserLogged().get("preferred_username").toString());
+            dto.setStatus(StatusTicketsEnum.NOVO);
             TicketEntity entity = ticketMapper.toEntity(dto);
             return ticketMapper.toDto(ticketRepository.save(entity));
 
