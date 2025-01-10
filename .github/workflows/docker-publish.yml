@@ -94,7 +94,9 @@ jobs:
         run: |
           echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
-          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV
+          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
+          echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
+          echo "TAG=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
 
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v22
@@ -161,21 +163,14 @@ jobs:
 
 
 
-
-          # Etapa para executar o contêiner no servidor via SSH
       - name: Deploy Docker container to remote server
-        if: github.event_name != 'pull_request'
+      # Etapa para rodar o docker-compose no servidor remoto
+      - name: Deploy with Docker Compose on remote server
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: '84.247.179.83'
-          username: 'root'  # Usuário SSH no seu servidor
-          password: ${{ secrets.SERVER_PASSWORD }}  # A chave privada SSH armazenada no GitHub Secrets
+          username: 'root'
+          password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            docker pull ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
-            docker run -d \
-              -p 8081:80 \
-              -e GH_KEY=${{ secrets.GH_KEY }} \
-              -e CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
-              -e MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }} \
-              --name cbio-backend \
-              ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
+            cd /root/applications/cbio/backend
+            docker stack deploy -c docker-compose.yml backend-app
