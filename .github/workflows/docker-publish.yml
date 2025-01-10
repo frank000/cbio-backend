@@ -161,9 +161,14 @@ jobs:
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
-      - name: TesteTAG
+      - name: Teste TAG
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ steps.meta.outputs.tags }}
         if: ${{ github.event_name != 'pull_request' }}
-        run: echo ${TAG}
+        run: |
+          echo ${TAG}
+          echo 1 ${TAGS}
 
 
       # Etapa para rodar o docker-compose no servidor remoto
