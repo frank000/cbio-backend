@@ -173,6 +173,8 @@ jobs:
           host: '84.247.179.83'
           username: 'root'
           password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22  # Porta SSH, adicione explicitamente
+          timeout: 600  # Tempo de espera maior, 600 segundos (10 minutos)
           script: |
             cd /root/applications/cbio/backend
             echo "Image backend: $IMAGE_BACKEND"  
