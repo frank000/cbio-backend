@@ -14,7 +14,7 @@ public class IaController {
 
     @PostMapping("/query")
     public String index(@RequestBody String chat) {
-        return openAIService.chat(chat);
+        return openAIService.getHintToChat(chat);
     }
 
 

@@ -2,6 +2,7 @@ package com.cbio.ia.service;
 
 public interface OpenAIService {
 
-    String chat(String prompt);
+    String getHintToChat(String prompt);
 
+    String getOnlyQuestionFromRag(String prompt);
 }

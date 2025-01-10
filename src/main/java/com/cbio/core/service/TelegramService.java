@@ -13,6 +13,8 @@ public interface TelegramService extends ProcessableService{
 
     Object sendMessage(RequestBody body, CanalEntity canal) throws IOException;
 
+    void connect(String canalId);
+
     RequestBody createResponseBodyPorChatId(String chatId, String msg);
 
     void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception;

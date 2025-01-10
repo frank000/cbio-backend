@@ -40,8 +40,7 @@ public class IAMServiceImpl implements IAMService {
     @Value("${api-key.rocketchat.auth-server-url}")
     private String serverUrlCidadao;
 
-    @Value("${api-key.rocketchat.realm}")
-    private String realmCidadao;
+
 
     @Value("${api-key.rocketchat.resource}")
     private String clientIdCidadao;
@@ -117,6 +116,24 @@ public class IAMServiceImpl implements IAMService {
 
         assignRoles(userId, roleUser);
         return userId;
+    }
+
+    public void updateUserPassword(UserKeycloak userVO, String userID) {
+
+        CredentialRepresentation credential = Credentials.createPasswordCredentials(userVO.getPassword());
+
+        UsersResource usersResource = getInstance();
+
+        // Busca o usuário no Keycloak usando o nome de usuário antigo (ou outro critério)
+        List<UserRepresentation> user1 = getUser(userVO.getOldUserName());
+        UserRepresentation userKeycloak = user1.stream()
+                .filter(item -> item.getId().equals(userVO.getId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Usuário Keycloak não encontrado"));
+
+        userKeycloak.setCredentials(Collections.singletonList(credential));
+
+        usersResource.get(userID).update(userKeycloak);
     }
 
     public void updateUser(UserKeycloak userVO, String userID) {
@@ -204,32 +221,17 @@ public class IAMServiceImpl implements IAMService {
         }
     }
 
-//    public ExcluirContaApp getCidadao(String cpf) {
-//        UsersResource usersResource = getInstanceCidadaoService();
-//        List<UserRepresentation> users = usersResource.search(cpf, true);
-//        for (UserRepresentation user : users) {
-//            ExcluirContaApp conta = ExcluirContaApp.builder()
-//                    .idKeycloak(user.getId())
-//                    .nomeUsuario(user.getFirstName())
-//                    .email(user.getEmail())
-//                    .build();
-//
-//            return conta;
-//        }
-//        return null;
-//    }
-
     public void excluirCidadaoService(String id) {
         KeyCloakConfig keyCloakConfig = new KeyCloakConfig();
-        Keycloak keycloak = keyCloakConfig.getInstanceCidadaoService(serverUrlCidadao, realmCidadao, userNameCidadao, passwordCidadao, clientIdCidadao, clientSecretCidadao);
-        keycloak.realm(realmCidadao).users().delete(id);
+        Keycloak keycloak = keyCloakConfig.getInstanceCidadaoService(serverUrlCidadao, realm, userNameCidadao, passwordCidadao, clientIdCidadao, clientSecretCidadao);
+        keycloak.realm(realm).users().delete(id);
     }
 
     private UsersResource getInstanceCidadaoService() {
         KeyCloakConfig keyCloakConfig = new KeyCloakConfig();
         return keyCloakConfig
-                .getInstanceCidadaoService(serverUrlCidadao, realmCidadao, userNameCidadao, passwordCidadao, clientIdCidadao, clientSecretCidadao)
-                .realm(realmCidadao)
+                .getInstanceCidadaoService(serverUrlCidadao, realm, userNameCidadao, passwordCidadao, clientIdCidadao, clientSecretCidadao)
+                .realm(realm)
                 .users();
     }
 }

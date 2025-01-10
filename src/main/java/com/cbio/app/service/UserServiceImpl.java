@@ -1,6 +1,7 @@
 package com.cbio.app.service;
 
 import com.cbio.app.entities.UsuarioEntity;
+import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.UsuarioRepository;
 import com.cbio.app.service.mapper.UsuarioMapper;
 import com.cbio.core.service.IAMService;
@@ -10,6 +11,7 @@ import com.cbio.core.v1.dto.UsuarioDTO;
 import com.cbio.core.v1.enuns.PerfilEnum;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -47,7 +49,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UsuarioDTO update(UsuarioDTO usuarioDTO, String password, String role) {
 
-        try{
+        try {
             UserKeycloak.UserKeycloakBuilder builder = UserKeycloak.builder();
             usuarioDTO.setActive(Boolean.TRUE);
             UsuarioEntity usuarioEntity = usuarioRepository.findById(usuarioDTO.getId())
@@ -57,7 +59,6 @@ public class UserServiceImpl implements UserService {
             usuarioMapper.fromDto(usuarioDTO, usuarioEntity);
 
             usuarioEntity = usuarioRepository.save(usuarioEntity);
-
 
 
             builder.userName(usuarioEntity.getEmail())
@@ -74,7 +75,27 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public void updatePassword(UsuarioDTO usuarioDTO, String password) throws CbioException {
+
+        try {
+            UsuarioDTO usuarioDTO1 = this.buscaPorId(usuarioDTO.getId());
+            UsuarioEntity usuarioEntity = usuarioRepository.findById(usuarioDTO.getId())
+                    .orElseThrow(() -> new NotFoundException("Usuário não encontrado."));
+
+            UserKeycloak userKeycloak = UserKeycloak.builder()
+                    .userName(usuarioEntity.getEmail())
+                    .password(password)
+                    .id(usuarioEntity.getIdKeycloak())
+                    .build();
+
+            iamService.updateUserPassword(userKeycloak, usuarioEntity.getIdKeycloak());
+
+        } catch (Exception e) {
+            String message = String.format("Erro na alteração de senha: %s", e.getMessage());
+            throw new CbioException(message, HttpStatus.BAD_REQUEST.value());
+        }
     }
 
     @Override

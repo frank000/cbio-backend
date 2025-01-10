@@ -15,15 +15,20 @@ import com.cbio.core.service.TicketService;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.TicketDTO;
+import com.cbio.ia.service.OpenAIService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +36,7 @@ import java.util.Optional;
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
+    public static final String INTENT_NAME_FAQ = "faq";
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
     private final CompanyConfigMapper companyConfigMapper;
@@ -38,19 +44,37 @@ public class CompanyServiceImpl implements CompanyService {
     private final GoogleCredentialRepository googleCredentialRepository;
     private final AuthService authService;
     private final TicketService ticketService;
+    private final DockerServiceImpl dockerService;
+
+    private final DirectoryRasaServiceImpl directoryRasaService;
+    private final OpenAIService openAIService;
+    private final NluYamlManagerServiceImpl nluYamlManagerServiceImpl;
+    private final DockerServiceImpl dockerServiceImpl;
 
     public CompanyDTO save(CompanyDTO companyDTO) throws CbioException {
-        CompanyEntity entity = companyMapper.toEntity(companyDTO);
-        CompanyEntity save = companyRepository.save(entity);
+        try {
+            CompanyEntity entity = companyMapper.toEntity(companyDTO);
+            CompanyEntity save = companyRepository.save(entity);
 
-        CompanyConfigDTO configDTO = CompanyConfigDTO.builder()
-                .companyId(save.getId())
-                .emailCalendar(save.getEmail())
-                .build();
+            CompanyConfigDTO configDTO = CompanyConfigDTO.builder()
+                    .companyId(save.getId())
+                    .emailCalendar(save.getEmail())
+                    .build();
 
-        saveConfigCompany(configDTO);
+            saveConfigCompany(configDTO);
 
-        return companyMapper.toDto(save);
+            directoryRasaService.copyRasaProject(save.getId());
+
+            dockerService.executeCompleteDockerFlow(save.getId(), String.valueOf(save.getPorta()));
+
+
+            return companyMapper.toDto(save);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Problema na geração da pasta default do chatbot");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public CompanyDTO findById(String id) {
@@ -59,9 +83,22 @@ public class CompanyServiceImpl implements CompanyService {
         return companyMapper.toDto(entity);
     }
 
+    public List<CompanyDTO> findAll() {
+        return companyMapper.toDto(companyRepository.findAll());
+    }
+
+
     @Override
     public void delete(String id) {
-        companyRepository.findById(id).ifPresent(companyRepository::delete);
+        companyRepository.findById(id)
+                .ifPresent(companyEntity -> {
+                    try {
+                        directoryRasaService.deleteRasaProject(companyEntity.getId());
+                        companyRepository.delete(companyEntity);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     @Override
@@ -93,13 +130,16 @@ public class CompanyServiceImpl implements CompanyService {
         return findById(id).getPorta();
     }
 
-    public CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException {
+    public CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException {
         CompanyConfigEntity entity;
         boolean updateRagFields = false;
+
         if (StringUtils.hasText(dto.getId())) {
             entity = companyConfigRepository.findById(dto.getId())
                     .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
-            updateRagFields = !entity.getRag().get(0).equals(dto.getRag().get(0));
+
+            boolean isNewConfigAndHasRag = entity.getRag() == null && dto.getRag() != null;
+            updateRagFields = isNewConfigAndHasRag || !entity.getRag().get(0).equals(dto.getRag().get(0));
 
 
             companyConfigMapper.fromDto(dto, entity);
@@ -110,31 +150,99 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
 
+        if (updateRagFields && dto.getRag() != null) {
+            String collectRag = String.join(" ", dto.getRag());
 
-        if (updateRagFields) {
 
-            List<TicketEntity.TicketMessageDTO> list = new ArrayList<>();
-            list.add(
-                    TicketEntity.TicketMessageDTO.builder()
-                            .message(dto.getRag().get(0))
-                            .createdAt(CbioDateUtils.LocalDateTimes.now())
-                            .build()
-            );
-            TicketDTO ticketDTO = TicketDTO.builder()
-                    .title(TicketsTypeEnum.RAG.getTitle())
-                    .type(TicketsTypeEnum.RAG.name())
-                    .ticketMessages(list)
-                    .ativo(Boolean.TRUE)
-                    .company(CompanyDTO.builder()
-                            .id(dto.getCompanyId())
-                            .build())
-                    .createdAt(CbioDateUtils.LocalDateTimes.now())
-                    .build();
-            TicketDTO savedTicket = ticketService.save(ticketDTO);
+
+            if(StringUtils.hasText(collectRag)){
+                String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
+                fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
+            }else{
+                String nluFilePath = DirectoryRasaServiceImpl.BASE_TARGET_DIR
+                        .concat(File.separator)
+                        .concat(dto.getCompanyId())
+                        .concat(File.separator)
+                        .concat("data/nlu.yml");
+
+                NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
+
+                nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
+                nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
+                runDocker(dto.getCompanyId());
+            }
         }
 
         entity = companyConfigRepository.save(entity);
+
         return companyConfigMapper.toDto(entity);
+    }
+
+    private void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
+        try {
+
+            String nluFilePath = DirectoryRasaServiceImpl.BASE_TARGET_DIR
+                    .concat(File.separator)
+                    .concat(dto.getCompanyId())
+                    .concat(File.separator)
+                    .concat("data/nlu.yml");
+
+            NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
+
+            nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
+            nluYamlManagerServiceImpl.addIntent(nluConfig, INTENT_NAME_FAQ, getExempleList(onlyQuestionFromRag));
+            nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
+
+            runDocker(dto.getCompanyId());
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        geraTicket(dto);
+    }
+
+    private void runDocker( String companyId) throws IOException, InterruptedException {
+
+        Integer portByIdCompany = getPortByIdCompany(companyId);
+
+        String imageName = DockerServiceImpl.getImageName(companyId);
+        String containerName = DockerServiceImpl.getContainerName(imageName);
+
+        if(dockerServiceImpl.isContainerRunning(containerName)){
+            dockerServiceImpl.executeCompleteDockerFlow(companyId, String.valueOf(portByIdCompany));
+        }else{
+            dockerServiceImpl.buildDockerImageAndRunContainer(companyId, String.valueOf(portByIdCompany));
+        }
+    }
+
+    @NotNull
+    private static List<String> getExempleList(String onlyQuestionFromRag) {
+        return Arrays.stream(onlyQuestionFromRag.replace("\n", "").split("\\?")).toList();
+    }
+
+    private void geraTicket(CompanyConfigDTO dto) {
+        List<TicketEntity.TicketMessageDTO> list = new ArrayList<>();
+
+        list.add(
+                TicketEntity.TicketMessageDTO.builder()
+                        .message(dto.getRag().get(0))
+                        .createdAt(CbioDateUtils.LocalDateTimes.now())
+                        .build()
+        );
+
+        TicketDTO ticketDTO = TicketDTO.builder()
+                .title(TicketsTypeEnum.RAG.getTitle())
+                .type(TicketsTypeEnum.RAG.name())
+                .ticketMessages(list)
+                .ativo(Boolean.TRUE)
+                .company(CompanyDTO.builder()
+                        .id(dto.getCompanyId())
+                        .build())
+                .createdAt(CbioDateUtils.LocalDateTimes.now())
+                .build();
+
+        TicketDTO savedTicket = ticketService.save(ticketDTO);
     }
 
 
@@ -146,10 +254,16 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
 
-    public CompanyConfigDTO getConfigPreferencesCompany(String id) throws CbioException {
-        CompanyConfigEntity companyConfigEntity = companyConfigRepository.getPreferencesByCompany(id)
-                .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
-        return companyConfigMapper.toDto(companyConfigEntity);
+    public CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id){
+        Optional<CompanyConfigEntity> byCompany = companyConfigRepository.getPreferencesByCompany(id);
+
+        CompanyConfigEntity entity = byCompany
+                .orElseGet(() -> companyConfigRepository.save(
+                        CompanyConfigEntity.builder()
+                                .companyId(id)
+                                .build()));
+
+        return companyConfigMapper.toDto(entity);
     }
 
     public Boolean hasGoogleCrendential(String id) {

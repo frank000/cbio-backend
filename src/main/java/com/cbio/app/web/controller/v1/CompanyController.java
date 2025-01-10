@@ -18,7 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import retrofit2.http.Path;
+
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -85,7 +86,7 @@ public class CompanyController implements SecuredRestController {
     }
 
     @PostMapping("/config")
-    public ResponseEntity<CompanyConfigDTO> saveConfig(@RequestBody CompanyConfigDTO dto) throws CbioException {
+    public ResponseEntity<CompanyConfigDTO> saveConfig(@RequestBody CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException {
 
         CompanyConfigDTO save = companyService.saveConfigCompany(dto);
 
@@ -93,7 +94,7 @@ public class CompanyController implements SecuredRestController {
     }
 
     @PutMapping("/config")
-    public ResponseEntity<CompanyConfigDTO> updateConfig(@RequestBody CompanyConfigDTO dto) throws CbioException {
+    public ResponseEntity<CompanyConfigDTO> updateConfig(@RequestBody CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException {
 
         CompanyConfigDTO save = companyService.saveConfigCompany(dto);
 
@@ -117,7 +118,7 @@ public class CompanyController implements SecuredRestController {
 
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
         if(StringUtils.hasText(companyIdUserLogged)){
-            CompanyConfigDTO save = companyService.getConfigPreferencesCompany(companyIdUserLogged);
+            CompanyConfigDTO save = companyService.fetchOrCreateConfigPreferencesCompany(companyIdUserLogged);
             return ResponseEntity.ok(save);
         }else{
             return null;

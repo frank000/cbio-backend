@@ -65,7 +65,9 @@ public class ResourceController implements SecuredRestController {
                 .busca(filter)
                 .idCompany(ObjectUtils.isEmpty(companyId) ? authService.getCompanyIdUserLogged() : companyId)
                 .build();
+
         PageableResponse<ResourceDTO> all = resourceGridRepository.obtemGrid(produtoGridFiltroDTO, pageable, ResourceEntity.class, ResourceDTO.class);
+
         return ResponseEntity.ok(all);
     }
 

@@ -12,10 +12,12 @@ import lombok.Getter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.Serializable;
+
 @Document("user")
 @Data
 @Builder
-public class UsuarioEntity {
+public class UsuarioEntity implements Serializable {
 
     @Id
     private String id;

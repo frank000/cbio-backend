@@ -1,6 +1,5 @@
 package com.cbio.rasa.action;
 
-import com.cbio.app.base.utils.CbioDateUtils;
 import com.cbio.app.entities.CompanyConfigEntity;
 import com.cbio.app.entities.SessaoEntity;
 import com.cbio.app.repository.CompanyConfigRepository;
@@ -11,11 +10,9 @@ import com.cbio.chat.exceptions.UserNotFoundException;
 import com.cbio.chat.models.ChatChannelEntity;
 import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.chat.services.ChatService;
-import com.cbio.chat.services.WebsocketPath;
 import com.cbio.core.service.AttendantService;
 import com.cbio.core.service.SessaoService;
 import com.cbio.core.v1.dto.UsuarioDTO;
-import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.data.embedding.Embedding;
@@ -35,13 +32,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,9 +53,7 @@ public class RagQueryAction implements Action {
     private final ChatChannelRepository chatChannelRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final CompanyConfigRepository companyConfigRepository;
-//    private final SimpleVectorStore vectorStore;
 
-    private final EmbeddingModel embeddingModel;
 
     @Override
     public String name() {
@@ -86,7 +77,7 @@ public class RagQueryAction implements Action {
                 Optional<CompanyConfigEntity> byCompanyId = companyConfigRepository.findByCompanyId(idCompany);
 
 
-                if(byCompanyId.isPresent()) {
+                if (byCompanyId.isPresent()) {
                     AllMiniLmL6V2EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
                     InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 
@@ -118,13 +109,11 @@ public class RagQueryAction implements Action {
 
                     List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(queryEmbedding, 1);
                     String resposta;
-                    if(CollectionUtils.isEmpty(relevant)){
+                    if (CollectionUtils.isEmpty(relevant)) {
                         resposta = "Desculpe, não consegui encontrar uma resposta.";
-                    }else{
+                    } else {
                         resposta = relevant.get(0).embedded().text();
                     }
-                    EmbeddingMatch<TextSegment> embeddingMatch = relevant.get(0);
-
 
                     dispatcher
                             .utterMessage(Message
@@ -164,14 +153,14 @@ public class RagQueryAction implements Action {
         CompanyConfigEntity companyConfigEntity = companyConfigRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new NotFoundException("Configuração não encontrada."));
 
-        if(Boolean.TRUE.equals(companyConfigEntity.getKeepSameAttendant())){
+        if (Boolean.TRUE.equals(companyConfigEntity.getKeepSameAttendant())) {
             attendantDTO = sessaoEntity.getUltimoAtendente();
 
-            if(attendantDTO == null ||
-                    !attendantService.isAttendantActive(attendantDTO.getId())){
+            if (attendantDTO == null ||
+                    !attendantService.isAttendantActive(attendantDTO.getId())) {
                 attendantDTO = getAttendantByLessAttendance(companyId);
             }
-        }else{
+        } else {
             attendantDTO = getAttendantByLessAttendance(companyId);
         }
 

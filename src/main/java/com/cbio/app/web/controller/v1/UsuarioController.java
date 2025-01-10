@@ -1,5 +1,6 @@
 package com.cbio.app.web.controller.v1;
 
+import com.cbio.app.exception.CbioException;
 import com.cbio.app.service.IAMServiceImpl;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.SessaoService;
@@ -33,6 +34,14 @@ public class UsuarioController implements SecuredRestController {
 
         usuarioDTO.setPerfil(PerfilEnum.ADMIN.name());
         userService.update(usuarioDTO, usuarioDTO.getPassword(), IAMServiceImpl.ROLE_ADMIN);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Void> updatePassword(@RequestBody UsuarioDTO.UsuarioFormDTO usuarioDTO) throws CbioException {
+
+        userService.updatePassword(usuarioDTO, usuarioDTO.getPassword());
 
         return ResponseEntity.ok().build();
     }

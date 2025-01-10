@@ -13,7 +13,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     private final OpenAiClient aiClient;
 
     @Override
-    public String chat(String term) {
+    public String getHintToChat(String term) {
 
         String prompt = String.format(
                 "De acordo com essa conversa entre A e B: %s Dê somente a sugestão de resposta para a útlima mensagem entre aspas duplas.",
@@ -21,5 +21,17 @@ public class OpenAIServiceImpl implements OpenAIService {
 
         return aiClient.getCompletion(prompt);
     }
+
+    @Override
+    public String getOnlyQuestionFromRag(String term) {
+
+        String prompt = String.format(
+                "Retire somente as perguntas do questionário seguinte: %s",
+                term);
+
+        return aiClient.getCompletion(prompt);
+    }
+
+
 
 }

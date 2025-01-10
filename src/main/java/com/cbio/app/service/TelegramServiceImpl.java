@@ -7,17 +7,16 @@ import com.cbio.app.service.mapper.CanalMapper;
 import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
 import com.cbio.app.service.utils.TelegramUtils;
 import com.cbio.core.service.*;
-import com.cbio.core.v1.dto.DecisaoResposta;
-import com.cbio.core.v1.dto.EntradaMensagemDTO;
-import com.cbio.core.v1.dto.GitlabEventDTO;
-import com.cbio.core.v1.dto.MensagemDto;
+import com.cbio.core.v1.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.IOException;
@@ -28,6 +27,11 @@ import java.util.logging.Logger;
 @Slf4j
 @Data
 public class TelegramServiceImpl implements TelegramService {
+
+
+    private static final String URL_BOT = "https://pleasing-elf-instantly.ngrok-free.app/v1/bot/webhook";
+
+    private static final String URL_API_CONNECT = "https://api.telegram.org/bot%s/setWebhook";
 
     private final UsuarioTelegramService usuarioService;
 
@@ -40,6 +44,8 @@ public class TelegramServiceImpl implements TelegramService {
     private final CanalService canalService;
 
     private final CanalMapper canalMapper;
+
+    private final RestTemplate restTemplate;
 
     private final ChatbotForwardService forwardService;
 
@@ -136,7 +142,7 @@ public class TelegramServiceImpl implements TelegramService {
     @Override
     public void enviaMenssagemParaGrupo(String token, String cliente, GitlabEventDTO obj) throws Exception {
         CanalEntity canalEntity = canalService.findCanalByTokenAndCliente(token, cliente)
-                .orElseThrow(()->new RuntimeException("Canal não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Canal não encontrado"));
         String msg = "";
 
         if (obj != null && obj.getEvent(GitlabEventDTO.Chaves.OBJECTATTRIBUTES) != null) {
@@ -206,4 +212,32 @@ public class TelegramServiceImpl implements TelegramService {
 
         return String.valueOf(isMsgEnviadaDiretamentePeloUsuario ? update.getMessage().getChatId() : update.getCallbackQuery().getMessage().getChatId());
     }
+
+
+    @Async
+    public void connect(String canalId) {
+
+        CanalDTO canalDTO = canalService.obtemPorId(canalId);
+        String scriptPath = "./webhook.sh %s %s %s";
+
+        String command = String.format(scriptPath, canalDTO.getApiKey(), canalDTO.getToken(), canalDTO.getCliente());
+
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", command);
+
+        try {
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                System.out.println("Script executado com sucesso.");
+            } else {
+                System.out.println("Erro ao executar o script. Código de saída: " + exitCode);
+            }
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

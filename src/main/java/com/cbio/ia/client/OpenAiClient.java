@@ -31,7 +31,7 @@ public class OpenAiClient {
                 new Prompt(
                         prompt,
                         OpenAiChatOptions.builder()
-                                .withModel(OpenAiApi.ChatModel.GPT_4_O_MINI.getName())
+                                .withModel(OpenAiApi.ChatModel.GPT_3_5_TURBO.getName())
                                 .withTemperature(0.4)
                                 .build()
                 ));
