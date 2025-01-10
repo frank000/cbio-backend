@@ -168,7 +168,7 @@ jobs:
         with:
           host: '84.247.179.83'
           username: 'root'  # Usuário SSH no seu servidor
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # A chave privada SSH armazenada no GitHub Secrets
+          password: ${{ secrets.SERVER_PASSWORD }}  # A chave privada SSH armazenada no GitHub Secrets
           script: |
             docker pull ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
             docker run -d \
