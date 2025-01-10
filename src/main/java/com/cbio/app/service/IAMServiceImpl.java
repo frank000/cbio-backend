@@ -34,9 +34,6 @@ public class IAMServiceImpl implements IAMService {
     public String realm;
 
 
-    @Value("${api-key.password}")
-    public String password;
-
     @Value("${api-key.rocketchat.auth-server-url}")
     private String serverUrlCidadao;
 

@@ -75,11 +75,11 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Update db url
-        run: sed -i 's/<api_key_openia>/${{ secrets.API_KEY_OPENIA }}/' src/main/resources/application-prd.properties
+        run: sed -i 's/<api_key_openia>/${{ secrets.IA_KEY }}/' src/main/resources/application-prd.properties
 
 
-      - name: Update MINIO_PASSWORD
-        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
+#      - name: Update MINIO_PASSWORD
+#        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
 
       - name: Update CLIENT_SECRET
         run: sed -i 's/<client_secret>/${{ secrets.CLIENT_SECRET }}/' src/main/resources/application-prd.properties
