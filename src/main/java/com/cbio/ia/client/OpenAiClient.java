@@ -26,14 +26,14 @@ public class OpenAiClient {
 
 
     public String getCompletion(String prompt) {
+        OpenAiChatOptions openAiChatOptions = new OpenAiChatOptions();
+        openAiChatOptions.setModel(OpenAiApi.ChatModel.GPT_3_5_TURBO.getName());
+        openAiChatOptions.setTemperature(0.4);
 
         ChatResponse response = chatModel.call(
                 new Prompt(
                         prompt,
-                        OpenAiChatOptions.builder()
-                                .withModel(OpenAiApi.ChatModel.GPT_3_5_TURBO.getName())
-                                .withTemperature(0.4)
-                                .build()
+                        openAiChatOptions
                 ));
         return response
                 .getResults()
