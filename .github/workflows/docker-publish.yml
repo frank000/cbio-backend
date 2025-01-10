@@ -161,7 +161,8 @@ jobs:
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
-
+      - name: TesteTAG
+        run: echo ${TAG}
 
       # Etapa para rodar o docker-compose no servidor remoto
       - name: Deploy with Docker Compose on remote server
