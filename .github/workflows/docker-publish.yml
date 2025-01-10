@@ -183,9 +183,9 @@ jobs:
               echo "ERROR: IMAGE_BACKEND is empty!"
               exit 1
             fi
-      
-      
-            sed -i "s|${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
+            
+            
+            sed -i "s|\${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
        
             echo "Updated docker-compose.yml:"
             cat docker-compose.yml
