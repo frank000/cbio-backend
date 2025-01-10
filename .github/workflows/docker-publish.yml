@@ -157,3 +157,24 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+
+
+
+          # Etapa para executar o contêiner no servidor via SSH
+      - name: Deploy Docker container to remote server
+        if: github.event_name != 'pull_request'
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: '84.247.179.83'
+          username: 'root'  # Usuário SSH no seu servidor
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # A chave privada SSH armazenada no GitHub Secrets
+          script: |
+            docker pull ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
+            docker run -d \
+              -p 8081:80 \
+              -e GH_KEY=${{ secrets.GH_KEY }} \
+              -e CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+              -e MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }} \
+              --name cbio-backend \
+              ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
