@@ -175,9 +175,10 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: | 
             cd /root/applications/cbio/backend
-       
+            export IMAGE_BACKEND=${{ steps.meta.outputs.tags }}
             echo "Image backend: $IMAGE_BACKEND"
-       
+            echo "Image backend:" ${IMAGE_BACKEND}"
+            
             sed -i "s|\${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
        
             docker stack deploy -c docker-compose.yml backend-app
