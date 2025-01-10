@@ -96,7 +96,7 @@ jobs:
           echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
           echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
           echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
-          echo "TAG=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
+          echo "TAG=${{ github.ref }}" | sed 's|refs/heads/||' >> $GITHUB_ENV
 
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v22
