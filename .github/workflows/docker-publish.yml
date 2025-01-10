@@ -163,7 +163,6 @@ jobs:
 
 
 
-      - name: Deploy Docker container to remote server
       # Etapa para rodar o docker-compose no servidor remoto
       - name: Deploy with Docker Compose on remote server
         uses: appleboy/ssh-action@v0.1.6
