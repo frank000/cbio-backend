@@ -95,6 +95,7 @@ jobs:
           echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
           echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
+          echo "IA_KEY=${{ secrets.IA_KEY }}" >> $GITHUB_ENV 
           echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
           echo "TAG=${{ github.ref }}" | sed 's|refs/heads/||' >> $GITHUB_ENV
 
