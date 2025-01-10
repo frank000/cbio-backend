@@ -161,10 +161,19 @@ jobs:
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
+      - name: Teste TAG
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ steps.meta.outputs.tags }}
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo ${TAG}
+          echo 1 ${TAGS}
 
 
       # Etapa para rodar o docker-compose no servidor remoto
       - name: Deploy with Docker Compose on remote server
+        if: ${{ github.event_name != 'pull_request' }}
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: '84.247.179.83'
