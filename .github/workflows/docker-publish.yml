@@ -174,7 +174,18 @@ jobs:
           username: 'root'
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /root/applications/cbio/backend 
-            echo "Image backend: $IMAGE_BACKEND"
-            sed -i "s|\${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
+            cd /root/applications/cbio/backend
+            echo "Image backend: $IMAGE_BACKEND"  
+            
+            if [ -z "$IMAGE_BACKEND" ]; then
+              echo "ERROR: IMAGE_BACKEND is empty!"
+              exit 1
+            fi
+      
+      
+            sed -i "s|${IMAGE_BACKEND}|$IMAGE_BACKEND|" docker-compose.yml
+       
+            echo "Updated docker-compose.yml:"
+            cat docker-compose.yml
+       
             docker stack deploy -c docker-compose.yml backend-app
