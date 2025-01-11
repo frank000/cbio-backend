@@ -210,4 +210,4 @@ jobs:
             echo "Updated docker-compose.yml:"
             cat docker-compose.yml
        
-            docker stack deploy -c docker-compose.yml --detach=false backend-app
+            docker stack deploy -c docker-compose-swarm.yml --detach=false backend-app
