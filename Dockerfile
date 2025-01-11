@@ -36,6 +36,6 @@ ENV PROFILE=$PROFILE
 ADD entrypoint.sh entrypoint.sh
 RUN chmod 755 entrypoint.sh
 
-EXPOSE 8082
+EXPOSE 80
 
 ENTRYPOINT ["./entrypoint.sh"]
