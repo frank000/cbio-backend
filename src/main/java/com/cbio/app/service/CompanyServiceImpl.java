@@ -20,6 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -50,6 +51,11 @@ public class CompanyServiceImpl implements CompanyService {
     private final OpenAIService openAIService;
     private final NluYamlManagerServiceImpl nluYamlManagerServiceImpl;
     private final DockerServiceImpl dockerServiceImpl;
+
+
+    @Value("${app.rasa.targe-path}")
+    public String BASE_TARGET_DIR;
+
 
     public CompanyDTO save(CompanyDTO companyDTO) throws CbioException {
         try {
@@ -159,7 +165,7 @@ public class CompanyServiceImpl implements CompanyService {
                 String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
                 fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
             }else{
-                String nluFilePath = DirectoryRasaServiceImpl.BASE_TARGET_DIR
+                String nluFilePath = BASE_TARGET_DIR
                         .concat(File.separator)
                         .concat(dto.getCompanyId())
                         .concat(File.separator)
@@ -181,7 +187,7 @@ public class CompanyServiceImpl implements CompanyService {
     private void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
         try {
 
-            String nluFilePath = DirectoryRasaServiceImpl.BASE_TARGET_DIR
+            String nluFilePath = BASE_TARGET_DIR
                     .concat(File.separator)
                     .concat(dto.getCompanyId())
                     .concat(File.separator)
