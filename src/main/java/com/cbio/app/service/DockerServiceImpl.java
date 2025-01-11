@@ -3,6 +3,7 @@ package com.cbio.app.service;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +17,13 @@ public class DockerServiceImpl {
     public static final String IMAGE_INIT_NAME = "rasa-%s";
     private static final Logger log = LoggerFactory.getLogger(DockerServiceImpl.class);
 
+    @Value("${app.rasa.targe-path}")
+    public String BASE_TARGET_DIR;
+
     @Async
     public void buildDockerImageAndRunContainer(String companyId, String externalPort) throws IOException, InterruptedException {
 
-        String baseTargetDir = DirectoryRasaServiceImpl.BASE_TARGET_DIR.concat(File.separator).concat(companyId);
+        String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
         String imageName = getImageName(companyId);
 
         String command = "docker build -t " + imageName + " " + baseTargetDir;
@@ -71,7 +75,7 @@ public class DockerServiceImpl {
 
         String imageName = getImageName(companyId);
         String containerName = getContainerName(imageName);
-        String baseTargetDir = DirectoryRasaServiceImpl.BASE_TARGET_DIR.concat(File.separator).concat(companyId);
+        String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
 
         String scriptPath = "./dockerFlow.sh";
         StringBuilder stringBuilder = new StringBuilder();

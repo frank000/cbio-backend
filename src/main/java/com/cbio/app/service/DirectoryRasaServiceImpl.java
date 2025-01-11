@@ -1,5 +1,6 @@
 package com.cbio.app.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.*;
@@ -9,8 +10,11 @@ import java.util.EnumSet;
 @Service
 public class DirectoryRasaServiceImpl {
 
-    private static final String SOURCE_DIR = "/home/frank/workspace/cbio-rasa-default";
-    public static final String BASE_TARGET_DIR = "/home/frank/rasas";
+    @Value("${app.rasa.default-path}")
+    private String SOURCE_DIR;
+
+    @Value("${app.rasa.targe-path}")
+    public String BASE_TARGET_DIR;
 
 
     public void copyRasaProject(String newProjectName) throws IOException {
