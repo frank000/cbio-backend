@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
-@FeignClient(name="keycloakClient", url = "http://localhost:8080/realms", configuration = KeycloakClient.Configuration.class)
+@FeignClient(name="keycloakClient", url = "${spring.security.oauth2.resourceserver.jwt.issuer-uri}", configuration = KeycloakClient.Configuration.class)
 public interface KeycloakClient {
 
-    @PostMapping(value = "rocketchat/protocol/openid-connect/token", consumes = MediaType.APPLICATION_FORM_URLENCODED)
+    @PostMapping(value = "protocol/openid-connect/token", consumes = MediaType.APPLICATION_FORM_URLENCODED)
     LoginResultDTO login(@RequestBody CredentialsDTO credentialsDTO);
 
-    @PostMapping(value = "rocketchat/protocol/openid-connect/logout", consumes = MediaType.APPLICATION_FORM_URLENCODED)
+    @PostMapping(value = "protocol/openid-connect/logout", consumes = MediaType.APPLICATION_FORM_URLENCODED)
     Void logout(@RequestParam("client_id") String clientId,             // Client ID
                 @RequestParam("refresh_token") String refreshToken );
 
