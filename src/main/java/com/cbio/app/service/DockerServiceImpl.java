@@ -91,6 +91,8 @@ public class DockerServiceImpl {
                 .append(space)
                 .append(externalPort);
 
+        log.info(String.format("CONTAINER INIT: %s", stringBuilder.toString()));
+
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", stringBuilder.toString());
 
         try {
