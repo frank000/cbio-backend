@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Service
 public class DockerServiceImpl {
@@ -112,7 +113,12 @@ public class DockerServiceImpl {
 
     public boolean isContainerRunning(String containerName) {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("docker", "ps", "--filter", "name=" + containerName, "--format", "{{.Names}}");
+
+            String[] strings = {"docker", "ps", "--filter", "name=" + containerName, "--format", "{{.Names}}"};
+
+            log.info("LOG IS RUNNING: {}", String.join(" ", Arrays.stream(strings).toList()));
+
+            ProcessBuilder processBuilder = new ProcessBuilder(strings);
             Process process = processBuilder.start();
 
             String output = new String(process.getInputStream().readAllBytes()).trim();

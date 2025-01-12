@@ -1,9 +1,4 @@
-name: Docker
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+name: Build and Deploy JAR
 
 on:
   push:
@@ -19,10 +14,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   GH_KEY: ${{ secrets.GH_KEY }}
 
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: prod
     permissions:
@@ -36,68 +29,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: FIRST show  environment variables
+      - name: Show environment variables
         env:
           GH_KEY_AUTHS: ${{ secrets.GH_KEY_AUTH }}
         run: |
           echo "SHOW ]]  : $GH_KEY_AUTHS"
 
-      # Install the cosign tool except on PR
-      # https://github.com/sigstore/cosign-installer
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
+      # Set up JDK 17 to build the JAR
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          cosign-release: 'v2.2.4'
-
-      # Set up BuildKit Docker container builder to be able to build
-      # multi-platform images and export cache
-      # https://github.com/docker/setup-buildx-action
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
-
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Update db url
-        run: sed -i 's/<api_key_openia>/${{ secrets.IA_KEY }}/' src/main/resources/application-prd.properties
-
-
-#      - name: Update MINIO_PASSWORD
-#        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
-
-      - name: Update CLIENT_SECRET
-        run: sed -i 's/<client_secret>/${{ secrets.CLIENT_SECRET }}/' src/main/resources/application-prd.properties
-        env:
-          CLIENT_ID: ${{ vars.CLIENT_ID }}
-          MINIO_USER: ${{ vars.MINIO_USER }}
-
-
- 
-
-      - name: Set environment variables
-        run: |
-          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
-          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
-          echo "IA_KEY=${{ secrets.IA_KEY }}" >> $GITHUB_ENV 
-          echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
-          echo "TAG=${{ github.ref }}" | sed 's|refs/heads/||' >> $GITHUB_ENV
+          java-version: '17'
+          distribution: 'temurin'
 
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v22
@@ -120,7 +63,7 @@ jobs:
                     "httpHeaders": {
                       "property": {
                         "name": "Authorization",
-                        "value": "${env.GH_KEY_AUTH}" 
+                        "value": "${env.GH_KEY_AUTH}"
                       }
                     }
                   }
@@ -131,13 +74,7 @@ jobs:
       - name: show Settings
         run: cat /home/runner/.m2/settings.xml
 
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
+      # Cache Maven packages to speed up builds
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -148,47 +85,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}
-            GH_KEY=${{ secrets.GH_KEY }}
-            PROFILE=prd
+      # Build the JAR file with Maven
+      - name: Build JAR file
+        run: mvn clean package -DskipTests
 
-      # Sign the resulting Docker image digest except on PRs.
-      # This will only write to the public Rekor transparency log when the Docker
-      # repository is public to avoid leaking data.  If you would like to publish
-      # transparency data even for private images, pass --force to cosign below.
-      # https://github.com/sigstore/cosign
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        # This step uses the identity token to provision an ephemeral certificate
-        # against the sigstore community Fulcio instance.
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+      # Set environment variables (for the deploy stage)
+      - name: Set environment variables
+        run: |
+          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
+          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
+          echo "IA_KEY=${{ secrets.IA_KEY }}" >> $GITHUB_ENV 
+          echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
+          echo "TAG=${{ github.ref }}" | sed 's|refs/heads/||' >> $GITHUB_ENV
 
-
-      # Etapa para rodar o docker-compose no servidor remoto
-      - name: Deploy with Docker Compose on remote server
-        if: ${{ github.event_name != 'pull_request' }}
+      # Deploy to remote server: Copy JAR and run it
+      - name: Copy JAR and Run on remote server
         uses: appleboy/ssh-action@v0.1.6
-        env:
-          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-          IMAGE_BACKEND: ${{ steps.meta.outputs.tags }}
-          IA_KEY: ${{ secrets.IA_KEY }}
         with:
           host: '84.247.179.83'
           username: 'root'
@@ -196,18 +109,35 @@ jobs:
           port: 22  # Porta SSH, adicione explicitamente
           timeout: 600s  # Tempo de espera maior, 600 segundos (10 minutos)
           script: |
-            cd /root/applications/cbio/backend
-            echo "Image backend: $IMAGE_BACKEND"  
-            export IMAGE_BACKEND=${{ steps.meta.outputs.tags }}                
-            if [ -z "$IMAGE_BACKEND" ]; then
-              echo "ERROR: IMAGE_BACKEND is empty!"
+            # Caminho do arquivo JAR gerado
+            JAR_FILE_PATH=target/bot-0.0.1-SNAPSHOT.jar
+
+            # Verificar se o arquivo JAR existe
+            if [ ! -f "$JAR_FILE_PATH" ]; then
+              echo "ERROR: JAR file not found!"
               exit 1
             fi
+
+            # Copiar o JAR para o servidor remoto
+            echo "Copying JAR file to remote server..."
+            scp $JAR_FILE_PATH root@84.247.179.83:/root/applications/cbio/backend/bot-0.0.1-SNAPSHOT.jar
             
+            # Verificar se a cópia foi bem-sucedida
+            if [ $? -eq 0 ]; then
+              echo "JAR file copied successfully."
+            else
+              echo "ERROR: Failed to copy the JAR file."
+              exit 1
+            fi
+
+            # Executar o JAR no servidor remoto
+            echo "Running JAR on the remote server..."
+            nohup java -Xms512m -Xmx2g -Dspring.profiles.active=prd -jar /root/applications/cbio/backend/bot-0.0.1-SNAPSHOT.jar > /root/applications/cbio/backend/app.log 2>&1 &            
             
-            sed -i "s|image: .*|image: $IMAGE_BACKEND|" docker-compose.yml
-       
-            echo "Updated docker-compose.yml:"
-            cat docker-compose.yml
-       
-            docker stack deploy -c docker-compose-swarm.yml --detach=false backend-app
+            # Verificar se o JAR foi iniciado corretamente
+            if [ $? -eq 0 ]; then
+              echo "JAR is running successfully."
+            else
+              echo "ERROR: Failed to start the JAR."
+              exit 1
+            fi
