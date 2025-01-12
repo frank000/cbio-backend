@@ -8,41 +8,28 @@ on:
     branches: [ "main"]
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
   GH_KEY: ${{ secrets.GH_KEY }}
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     environment: prod
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show environment variables
-        env:
-          GH_KEY_AUTHS: ${{ secrets.GH_KEY_AUTH }}
-        run: |
-          echo "SHOW ]]  : $GH_KEY_AUTHS"
-
-      # Set up JDK 17 to build the JAR
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: maven-settings-xml-action
+      - name: Configure Maven Settings
         uses: whelk-io/maven-settings-xml-action@v22
         with:
           repositories: '[{"id": "central", "url": "https://repo1.maven.org/maven2" }, {"id": "github", "url": "https://maven.pkg.github.com/frank000/cbio-jrasa", "snapshots":{"enabled":true } }]'
@@ -70,11 +57,6 @@ jobs:
                 }
             ]
 
-
-      - name: show Settings
-        run: cat /home/runner/.m2/settings.xml
-
-      # Cache Maven packages to speed up builds
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
@@ -85,59 +67,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Build the JAR file with Maven
-      - name: Build JAR file
-        run: mvn clean package -DskipTests
-
-      # Set environment variables (for the deploy stage)
-      - name: Set environment variables
+      - name: Build JAR and Deploy to Remote Server
+        env:
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
+          IA_KEY: ${{ secrets.IA_KEY }}
+          MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
         run: |
-          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "GH_KEY_AUTH=${{ secrets.GH_KEY_AUTH }}" >> $GITHUB_ENV
-          echo "GH_KEY=${{ secrets.GH_KEY }}" >> $GITHUB_ENV 
-          echo "IA_KEY=${{ secrets.IA_KEY }}" >> $GITHUB_ENV 
-          echo "MINIO_PASSWORD=${{ secrets.MINIO_PASSWORD }}" >> $GITHUB_ENV
-          echo "TAG=${{ github.ref }}" | sed 's|refs/heads/||' >> $GITHUB_ENV
-
-      # Deploy to remote server: Copy JAR and run it
-      - name: Copy JAR and Run on remote server
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: '84.247.179.83'
-          username: 'root'
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22  # Porta SSH, adicione explicitamente
-          timeout: 600s  # Tempo de espera maior, 600 segundos (10 minutos)
-          script: |
-            # Caminho do arquivo JAR gerado
-            JAR_FILE_PATH=target/bot-0.0.1-SNAPSHOT.jar
-
-            # Verificar se o arquivo JAR existe
-            if [ ! -f "$JAR_FILE_PATH" ]; then
-              echo "ERROR: JAR file not found!"
-              exit 1
-            fi
-
-            # Copiar o JAR para o servidor remoto
-            echo "Copying JAR file to remote server..."
-            scp $JAR_FILE_PATH root@84.247.179.83:/root/applications/cbio/backend/bot-0.0.1-SNAPSHOT.jar
-            
-            # Verificar se a cópia foi bem-sucedida
-            if [ $? -eq 0 ]; then
-              echo "JAR file copied successfully."
-            else
-              echo "ERROR: Failed to copy the JAR file."
-              exit 1
-            fi
-
-            # Executar o JAR no servidor remoto
-            echo "Running JAR on the remote server..."
-            nohup java -Xms512m -Xmx2g -Dspring.profiles.active=prd -jar /root/applications/cbio/backend/bot-0.0.1-SNAPSHOT.jar > /root/applications/cbio/backend/app.log 2>&1 &            
-            
-            # Verificar se o JAR foi iniciado corretamente
-            if [ $? -eq 0 ]; then
-              echo "JAR is running successfully."
-            else
-              echo "ERROR: Failed to start the JAR."
-              exit 1
-            fi
+          # Build JAR
+          mvn clean package -DskipTests
+          
+          # Create SSH config to avoid host checking
+          mkdir -p ~/.ssh
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          
+          # Copy JAR to remote server
+          sshpass -p "$SERVER_PASSWORD" scp target/bot-0.0.1-SNAPSHOT.jar root@84.247.179.83:/root/applications/cbio/backend/
+          
+          # Restart application on remote server
+          sshpass -p "$SERVER_PASSWORD" ssh root@84.247.179.83 '
+            cd /root/applications/cbio/backend
+            pkill -f "bot-0.0.1-SNAPSHOT.jar" || true
+            nohup java -Xms512m -Xmx2g -Dspring.profiles.active=prd -jar bot-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+            echo "Application restarted"
+          '
