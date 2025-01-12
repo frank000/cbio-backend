@@ -67,28 +67,35 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Build JAR and Deploy to Remote Server
+      - name: Build JAR
         env:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           GH_KEY_AUTH: ${{ secrets.GH_KEY_AUTH }}
           IA_KEY: ${{ secrets.IA_KEY }}
           MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
-          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-        run: |
-          # Build JAR
-          mvn clean package -DskipTests
-          
-          # Create SSH config to avoid host checking
-          mkdir -p ~/.ssh
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
-          
-          # Copy JAR to remote server
-          sshpass -p "$SERVER_PASSWORD" scp target/bot-0.0.1-SNAPSHOT.jar root@84.247.179.83:/root/applications/cbio/backend/
-          
-          # Restart application on remote server
-          sshpass -p "$SERVER_PASSWORD" ssh root@84.247.179.83 '
+        run: mvn clean package -DskipTests
+
+      - name: Deploy to Remote Server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: '84.247.179.83'
+          username: 'root'
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          source: "target/bot-0.0.1-SNAPSHOT.jar"
+          target: "/root/applications/cbio/backend/"
+          strip_components: 1
+
+      - name: Restart Application
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: '84.247.179.83'
+          username: 'root'
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
             cd /root/applications/cbio/backend
             pkill -f "bot-0.0.1-SNAPSHOT.jar" || true
+            sleep 5
             nohup java -Xms512m -Xmx2g -Dspring.profiles.active=prd -jar bot-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
             echo "Application restarted"
-          '
