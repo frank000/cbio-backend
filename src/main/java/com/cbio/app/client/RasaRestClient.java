@@ -8,15 +8,14 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @Service
 public class RasaRestClient {
 
     private final RestTemplate restTemplate;
 
-    private final String webhookUrl = "http://localhost";
+    @Value("${app.rasa.url}")
+    private String rasaUrl ;
 
     public  RasaMessageDTO[] sendMessage(RasaMessageOutDTO rasaMessageDTO, Integer port) {
         // Configurar cabeçalhos para indicar o tipo de conteúdo
@@ -27,7 +26,7 @@ public class RasaRestClient {
         HttpEntity<RasaMessageOutDTO> requestEntity = new HttpEntity<>(rasaMessageDTO, headers);
 
         // Enviar a requisição POST
-        String endPoint = webhookUrl + ":" + port.toString() + "/webhooks/rest/webhook";
+        String endPoint = rasaUrl + ":" + port.toString() + "/webhooks/rest/webhook";
         try{
             return  restTemplate.postForObject(endPoint, rasaMessageDTO, RasaMessageDTO[].class);
 
