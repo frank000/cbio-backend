@@ -151,23 +151,27 @@ public class DockerServiceImpl {
         String imageName = getImageName(companyId);
         String containerName = getContainerName(imageName);
 
-        try {
-            client.stopContainerCmd(containerName).exec();
-            log.info("Container parado: {}", containerName);
-        } catch (Exception e) {
-            log.warn("O container não estava rodando ou não existe: {}", containerName);
+        if (imageExists(imageName)) {
+            try {
+                client.stopContainerCmd(containerName).exec();
+                log.info("Container parado: {}", containerName);
+            } catch (Exception e) {
+                log.warn("O container não estava rodando ou não existe: {}", containerName);
+            }
+
+            try {
+                client.removeContainerCmd(containerName).exec();
+                log.info("Container removido: {}", containerName);
+            } catch (Exception e) {
+                log.warn("O container não existia:{}", containerName);
+            }
+
+            runDockerContainer(imageName, externalPort, client);
+
+        } else {
+
+            buildDockerImageAndRunContainer(companyId, externalPort);
         }
-
-        try {
-            client.removeContainerCmd(containerName).exec();
-            log.info("Container removido: {}", containerName);
-        } catch (Exception e) {
-            log.warn("O container não existia:{}", containerName);
-        }
-        buildDockerImageAndRunContainer();
-
-        runDockerContainer(imageName, externalPort, client);
-
     }
 
     public boolean isContainerRunning(String containerName) {
@@ -178,14 +182,12 @@ public class DockerServiceImpl {
         try {
 
 
-            List<Container> containers = client.listContainersCmd()
-                    .withShowAll(false) // Mostrar todos os containers (em execução ou não)
+            List<Container> containers = client.listContainersCmd().withShowAll(false) // Mostrar todos os containers (em execução ou não)
                     .exec();
 
-            return containers
-                    .stream().anyMatch(container -> {
-                        return String.join(", ", container.getNames()).contains(containerName);
-                    });
+            return containers.stream().anyMatch(container -> {
+                return String.join(", ", container.getNames()).contains(containerName);
+            });
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao verificar status do container: " + e.getMessage(), e);
