@@ -1,15 +1,29 @@
 package com.cbio.app.service;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.BuildImageResultCallback;
+import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.transport.DockerHttpClient;
+import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class DockerServiceImpl {
@@ -21,21 +35,51 @@ public class DockerServiceImpl {
     @Value("${app.rasa.targe-path}")
     public String BASE_TARGET_DIR;
 
+
+    public DockerClient getClient() {
+        Path dockerSock = Paths.get("/var/run/docker.sock");
+
+        if (!Files.exists(dockerSock)) {
+            throw new RuntimeException("Docker socket não encontrado em: " + dockerSock);
+        }
+
+        if (!Files.isReadable(dockerSock)) {
+            throw new RuntimeException("Docker socket não está acessível para leitura");
+        }
+
+        if (!Files.isWritable(dockerSock)) {
+            throw new RuntimeException("Docker socket não está acessível para escrita");
+        }
+        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                .withDockerHost("unix:///var/run/docker.sock")  // ou seu host Docker
+                .build();
+
+        DockerHttpClient httpClient = new ZerodepDockerHttpClient.Builder()
+                .dockerHost(config.getDockerHost())
+                .maxConnections(100)
+                .connectionTimeout(Duration.ofSeconds(30))
+                .responseTimeout(Duration.ofSeconds(45))
+                .build();
+
+        return DockerClientImpl.getInstance(config, httpClient);
+    }
+
+
     @Async
     public void buildDockerImageAndRunContainer(String companyId, String externalPort) throws IOException, InterruptedException {
 
         String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
         String imageName = getImageName(companyId);
+        DockerClient client = getClient();
 
-        String command = "docker build -t " + imageName + " " + baseTargetDir;
 
-        ProcessBuilder processBuilder = new ProcessBuilder(command.split(" "));
-        processBuilder.inheritIO();
-        Process process = processBuilder.start();
-        int exitCode = process.waitFor();
+        String imageId = client.buildImageCmd(new File(baseTargetDir))
+                .withTags(Set.of(imageName)) // Nome e tag da imagem
+                .exec(new BuildImageResultCallback())
+                .awaitImageId();// Retorna o ID da imagem criada
 
-        if (exitCode != 0) {
-            throw new IOException("Erro ao executar docker build. Código de saída: " + exitCode);
+        if (!StringUtils.hasText(imageId)) {
+            throw new IOException(String.format("Erro ao executar docker build. Código de saída: %s", imageName));
         } else {
             runDockerContainer(imageName, externalPort);
         }
@@ -46,22 +90,30 @@ public class DockerServiceImpl {
         return String.format(IMAGE_INIT_NAME, companyId);
     }
 
-    // Executa o docker run
     public void runDockerContainer(String dockerImage, String externalPort) throws IOException, InterruptedException {
+        runDockerContainer(dockerImage, externalPort, getClient());
+    }
+
+    public void runDockerContainer(String dockerImage, String externalPort, DockerClient client) throws IOException, InterruptedException {
 
         String containerName = getContainerName(dockerImage);
-        String command = String.format("docker run -d -p %s:5005 --name %s %s run", externalPort, containerName, dockerImage);
 
-        ProcessBuilder processBuilder = new ProcessBuilder(command.split(" "));
-        processBuilder.inheritIO();  // Para ver a saída no console
-        Process process = processBuilder.start();
+        String containerId = client.createContainerCmd(dockerImage)
+                .withName(containerName) // Nome do container
+                .withCmd("run")
+                .withExposedPorts(ExposedPort.tcp(Integer.parseInt(externalPort))) // Expor a porta (se necessário)
+                .withHostConfig(HostConfig.newHostConfig()
+                        .withPortBindings(new PortBinding(Ports.Binding.bindPort(5005), ExposedPort.tcp(Integer.parseInt(externalPort)))) // Mapear portas
+                )
+                .exec()
+                .getId();
 
-        int exitCode = process.waitFor();  // Espera o processo terminar
+        client.startContainerCmd(containerId).exec();
 
-        if (exitCode != 0) {
-            throw new IOException("Erro ao executar docker run. Código de saída: " + exitCode);
-        }else{
-            log.info("Docker run cointainer {} completed successfully", containerName);
+        if (!StringUtils.hasText(containerId)) {
+            throw new IOException(String.format("Erro ao executar docker run. Código de saída: %s", containerName));
+        } else {
+            log.info("Docker run cointainer {} completed successfully, id {}", containerName, containerId);
         }
     }
 
@@ -70,61 +122,52 @@ public class DockerServiceImpl {
         return String.format(CONTAINER_INIT_NAME, dockerImage);
     }
 
+    public void executeCompleteDockerFlow(String companyId, String externalPort) throws IOException, InterruptedException {
+        executeCompleteDockerFlow(companyId, externalPort, getClient());
+    }
 
     @Async
-    public void executeCompleteDockerFlow(String companyId, String externalPort) throws IOException, InterruptedException {
+    public void executeCompleteDockerFlow(String companyId, String externalPort, DockerClient client) throws IOException, InterruptedException {
 
         String imageName = getImageName(companyId);
         String containerName = getContainerName(imageName);
-        String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
-
-        String scriptPath = "./dockerFlow.sh";
-        StringBuilder stringBuilder = new StringBuilder();
-        String space = " ";
-
-        stringBuilder.append(scriptPath)
-                .append(space)
-                .append(imageName)
-                .append(space)
-                .append(containerName)
-                .append(space)
-                .append(baseTargetDir)
-                .append(space)
-                .append(externalPort);
-
-        log.info(String.format("CONTAINER INIT: %s", stringBuilder.toString()));
-
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", stringBuilder.toString());
 
         try {
-            processBuilder.inheritIO();
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                System.out.println("Script executado com sucesso.");
-            } else {
-                System.out.println("Erro ao executar o script. Código de saída: " + exitCode);
-            }
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
+            client.stopContainerCmd(containerName).exec();
+            log.info("Container parado: {}", containerName);
+        } catch (Exception e) {
+            log.warn("O container não estava rodando ou não existe: {}", containerName);
         }
+
+        try {
+            client.removeContainerCmd(containerName).exec();
+            log.info("Container removido: {}", containerName);
+        } catch (Exception e) {
+            log.warn("O container não existia:{}", containerName);
+        }
+
+        runDockerContainer(imageName, externalPort, client);
+
     }
 
     public boolean isContainerRunning(String containerName) {
+        return isContainerRunning(containerName, getClient());
+    }
+
+    public boolean isContainerRunning(String containerName, DockerClient client) {
         try {
 
-            String[] strings = {"docker", "ps", "--filter", "name=" + containerName, "--format", "{{.Names}}"};
 
-            log.info("LOG IS RUNNING: {}", String.join(" ", Arrays.stream(strings).toList()));
+            List<Container> containers = client.listContainersCmd()
+                    .withShowAll(false) // Mostrar todos os containers (em execução ou não)
+                    .exec();
 
-            ProcessBuilder processBuilder = new ProcessBuilder(strings);
-            Process process = processBuilder.start();
+            return containers
+                    .stream().anyMatch(container -> {
+                        return String.join(", ", container.getNames()).contains(containerName);
+                    });
 
-            String output = new String(process.getInputStream().readAllBytes()).trim();
-            return output.contains(containerName);
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Erro ao verificar status do container: " + e.getMessage(), e);
         }
     }

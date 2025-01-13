@@ -1,41 +1,28 @@
+# Fase de Build
 FROM maven:3-openjdk-17-slim AS build
-LABEL maintainer="your.email@example.com"
-VOLUME /tmp
-ARG GH_KEY
-ARG GH_KEY_AUTH
+LABEL maintainer="fraklim.ti@gmail.com"
+
 WORKDIR /home/app
 
-# Copiar apenas o pom.xml primeiro
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-COPY mvnw.cmd .
 
-# Baixar as dependências
-RUN mvn dependency:go-offline
+COPY . .
 
-# Agora copiar o código fonte
-COPY src src
-
-# Fazer o build
 RUN ["mvn", "clean", "package", "-DskipTests=true"]
 
-# Fase final
+# Fase Final
 FROM openjdk:17-jdk-slim
-VOLUME /tmp
+LABEL maintainer="fraklim.ti@gmail.com"
 
-RUN mkdir /app
 WORKDIR /app
+COPY --from=build /home/app/target/*.jar app.jar
 
-ARG JAR_FILE=app.jar
-COPY --from=build /home/app/target/*.jar /app/app.jar
-
+# Configuração do ambiente
 ARG PROFILE
-ENV PROFILE=$PROFILE
+ENV PROFILE=${PROFILE}
 
-ADD entrypoint.sh entrypoint.sh
-RUN chmod 755 entrypoint.sh
+# Configurar o entrypoint
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 EXPOSE 80
-
 ENTRYPOINT ["./entrypoint.sh"]
