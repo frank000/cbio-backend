@@ -204,10 +204,7 @@ jobs:
               exit 1
             fi
             
-            
-            sed -i "s|image: .*|image: $IMAGE_BACKEND|" docker-compose-swarm.yml
-            
-            echo "Updated docker-compose.yml:"
-            cat docker-compose-swarm.yml
+            sed -i "0,/image: .*/s|image: .*|image: $IMAGE_BACKEND|" docker-compose-swarm.yml
+
             
             docker stack deploy -c docker-compose-swarm.yml --detach=false backend-app
