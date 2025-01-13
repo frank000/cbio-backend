@@ -100,12 +100,22 @@ public class CompanyServiceImpl implements CompanyService {
                 .ifPresent(companyEntity -> {
                     try {
                         directoryRasaService.deleteRasaProject(companyEntity.getId());
+
+                        revokeContainerFromCompany(companyEntity.getId());
+
                         companyConfigRepository.deleteByCompanyId(companyEntity.getId());
                         companyRepository.delete(companyEntity);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    private void revokeContainerFromCompany(String id) {
+
+        String imageName = DockerServiceImpl.getImageName(id);
+        String containerName = DockerServiceImpl.getContainerName(imageName);
+        dockerServiceImpl.stopAndRemoveContainer(containerName);
     }
 
     @Override

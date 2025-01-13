@@ -152,25 +152,33 @@ public class DockerServiceImpl {
         String containerName = getContainerName(imageName);
 
         if (imageExists(imageName)) {
-            try {
-                client.stopContainerCmd(containerName).exec();
-                log.info("Container parado: {}", containerName);
-            } catch (Exception e) {
-                log.warn("O container não estava rodando ou não existe: {}", containerName);
-            }
-
-            try {
-                client.removeContainerCmd(containerName).exec();
-                log.info("Container removido: {}", containerName);
-            } catch (Exception e) {
-                log.warn("O container não existia:{}", containerName);
-            }
+            stopAndRemoveContainer(client, containerName);
 
             runDockerContainer(imageName, externalPort, client);
 
         } else {
 
             buildDockerImageAndRunContainer(companyId, externalPort);
+        }
+    }
+
+    public void stopAndRemoveContainer(String containerName) {
+        stopAndRemoveContainer(getClient(),containerName);
+    }
+
+    public void stopAndRemoveContainer(DockerClient client, String containerName) {
+        try {
+            client.stopContainerCmd(containerName).exec();
+            log.info("Container parado: {}", containerName);
+        } catch (Exception e) {
+            log.warn("O container não estava rodando ou não existe: {}", containerName);
+        }
+
+        try {
+            client.removeContainerCmd(containerName).exec();
+            log.info("Container removido: {}", containerName);
+        } catch (Exception e) {
+            log.warn("O container não existia:{}", containerName);
         }
     }
 
