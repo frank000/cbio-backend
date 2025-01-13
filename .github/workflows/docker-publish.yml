@@ -78,8 +78,8 @@ jobs:
         run: sed -i 's/<api_key_openia>/${{ secrets.IA_KEY }}/' src/main/resources/application-prd.properties
 
 
-#      - name: Update MINIO_PASSWORD
-#        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
+      #      - name: Update MINIO_PASSWORD
+      #        run: sed -i 's/<minio_password>/${{ secrets.MINIO_PASSWORD }}/' src/main/resources/application-prd.properties
 
       - name: Update CLIENT_SECRET
         run: sed -i 's/<client_secret>/${{ secrets.CLIENT_SECRET }}/' src/main/resources/application-prd.properties
@@ -88,7 +88,7 @@ jobs:
           MINIO_USER: ${{ vars.MINIO_USER }}
 
 
- 
+
 
       - name: Set environment variables
         run: |
@@ -205,9 +205,9 @@ jobs:
             fi
             
             
-            sed -i "s|image: .*|image: $IMAGE_BACKEND|" docker-compose.yml
-       
+            sed -i "s|image: .*|image: $IMAGE_BACKEND|" docker-compose-swarm.yml
+            
             echo "Updated docker-compose.yml:"
-            cat docker-compose.yml
-       
+            cat docker-compose-swarm.yml
+            
             docker stack deploy -c docker-compose-swarm.yml --detach=false backend-app
