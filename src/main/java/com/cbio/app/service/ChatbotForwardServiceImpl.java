@@ -117,7 +117,8 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
     @Transactional(rollbackFor = RuntimeException.class)
     public DialogoDTO enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
         try{
-            CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome());
+
+            CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome().toUpperCase().trim());
             Sender senderService = (Sender) applicationContext.getBean(canalSenderEnum.getCanalSender());
             dialogoResposta.setCreatedDateTime(LocalDateTime.now());
 
