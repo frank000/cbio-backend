@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -98,6 +99,7 @@ public class DockerServiceImpl {
 
         String containerName = getContainerName(dockerImage);
 
+
         String containerId = client.createContainerCmd(dockerImage)
                 .withName(containerName) // Nome do container
                 .withCmd("run")
@@ -117,6 +119,23 @@ public class DockerServiceImpl {
         }
     }
 
+    public boolean imageExists(String imageName) {
+        try {
+            DockerClient client = getClient();
+            List<Image> images = client.listImagesCmd()
+                    .withShowAll(true)
+                    .exec();
+
+            return images.stream()
+                    .anyMatch(image -> image.getRepoTags() != null &&
+                            Arrays.asList(image.getRepoTags()).contains(imageName));
+
+        } catch (Exception e) {
+            log.error("Erro ao verificar existência da imagem: " + imageName, e);
+            throw new RuntimeException("Erro ao verificar existência da imagem: " + e.getMessage(), e);
+        }
+    }
+
     @NotNull
     public static String getContainerName(String dockerImage) {
         return String.format(CONTAINER_INIT_NAME, dockerImage);
@@ -132,22 +151,27 @@ public class DockerServiceImpl {
         String imageName = getImageName(companyId);
         String containerName = getContainerName(imageName);
 
-        try {
-            client.stopContainerCmd(containerName).exec();
-            log.info("Container parado: {}", containerName);
-        } catch (Exception e) {
-            log.warn("O container não estava rodando ou não existe: {}", containerName);
+        if (imageExists(imageName)) {
+            try {
+                client.stopContainerCmd(containerName).exec();
+                log.info("Container parado: {}", containerName);
+            } catch (Exception e) {
+                log.warn("O container não estava rodando ou não existe: {}", containerName);
+            }
+
+            try {
+                client.removeContainerCmd(containerName).exec();
+                log.info("Container removido: {}", containerName);
+            } catch (Exception e) {
+                log.warn("O container não existia:{}", containerName);
+            }
+
+            runDockerContainer(imageName, externalPort, client);
+
+        } else {
+
+            buildDockerImageAndRunContainer(companyId, externalPort);
         }
-
-        try {
-            client.removeContainerCmd(containerName).exec();
-            log.info("Container removido: {}", containerName);
-        } catch (Exception e) {
-            log.warn("O container não existia:{}", containerName);
-        }
-
-        runDockerContainer(imageName, externalPort, client);
-
     }
 
     public boolean isContainerRunning(String containerName) {
@@ -158,14 +182,12 @@ public class DockerServiceImpl {
         try {
 
 
-            List<Container> containers = client.listContainersCmd()
-                    .withShowAll(false) // Mostrar todos os containers (em execução ou não)
+            List<Container> containers = client.listContainersCmd().withShowAll(false) // Mostrar todos os containers (em execução ou não)
                     .exec();
 
-            return containers
-                    .stream().anyMatch(container -> {
-                        return String.join(", ", container.getNames()).contains(containerName);
-                    });
+            return containers.stream().anyMatch(container -> {
+                return String.join(", ", container.getNames()).contains(containerName);
+            });
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao verificar status do container: " + e.getMessage(), e);
