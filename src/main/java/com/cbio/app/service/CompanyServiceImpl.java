@@ -71,7 +71,7 @@ public class CompanyServiceImpl implements CompanyService {
 
             directoryRasaService.copyRasaProject(save.getId());
 
-            dockerService.executeCompleteDockerFlow(save.getId(), String.valueOf(save.getPorta()));
+            dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
 
 
             return companyMapper.toDto(save);

@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -98,6 +99,7 @@ public class DockerServiceImpl {
 
         String containerName = getContainerName(dockerImage);
 
+
         String containerId = client.createContainerCmd(dockerImage)
                 .withName(containerName) // Nome do container
                 .withCmd("run")
@@ -114,6 +116,23 @@ public class DockerServiceImpl {
             throw new IOException(String.format("Erro ao executar docker run. Código de saída: %s", containerName));
         } else {
             log.info("Docker run cointainer {} completed successfully, id {}", containerName, containerId);
+        }
+    }
+
+    public boolean imageExists(String imageName) {
+        try {
+            DockerClient client = getClient();
+            List<Image> images = client.listImagesCmd()
+                    .withShowAll(true)
+                    .exec();
+
+            return images.stream()
+                    .anyMatch(image -> image.getRepoTags() != null &&
+                            Arrays.asList(image.getRepoTags()).contains(imageName));
+
+        } catch (Exception e) {
+            log.error("Erro ao verificar existência da imagem: " + imageName, e);
+            throw new RuntimeException("Erro ao verificar existência da imagem: " + e.getMessage(), e);
         }
     }
 
@@ -145,6 +164,7 @@ public class DockerServiceImpl {
         } catch (Exception e) {
             log.warn("O container não existia:{}", containerName);
         }
+        buildDockerImageAndRunContainer();
 
         runDockerContainer(imageName, externalPort, client);
 
