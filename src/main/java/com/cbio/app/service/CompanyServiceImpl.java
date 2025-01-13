@@ -100,6 +100,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .ifPresent(companyEntity -> {
                     try {
                         directoryRasaService.deleteRasaProject(companyEntity.getId());
+                        companyConfigRepository.deleteByCompanyId(companyEntity.getId());
                         companyRepository.delete(companyEntity);
                     } catch (IOException e) {
                         throw new RuntimeException(e);

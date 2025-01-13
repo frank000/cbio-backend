@@ -14,4 +14,5 @@ public interface CompanyConfigRepository extends MongoRepository<CompanyConfigEn
     Optional<CompanyConfigEntity> getPreferencesByCompany(String companyId);
 
 
+    void deleteByCompanyId(String companyId);
 }
