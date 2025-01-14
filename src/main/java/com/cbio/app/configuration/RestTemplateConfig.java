@@ -20,8 +20,8 @@ public class RestTemplateConfig {
     @Bean
     public RestTemplate restTemplate() throws NoSuchAlgorithmException, KeyStoreException {
         // Configuração de timeout
-        int connectTimeout = 5000;  // 5 segundos
-        int readTimeout = 10000;    // 10 segundos
+        int connectTimeout = 30000;  // 5 segundos
+        int readTimeout = 45000;    // 10 segundos
 
 
 
