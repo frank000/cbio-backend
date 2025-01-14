@@ -76,7 +76,7 @@ public class OpenAiClient {
         Prompt prompts = new Prompt(prompt,
                 OpenAiChatOptions.builder()
                         .model(OpenAiApi.ChatModel.GPT_3_5_TURBO)
-                        .responseFormat(new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, jsonSchema))
+//                        .responseFormat(new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, jsonSchema))
                         .build());
         ChatResponse response = chatModel.call(
                 prompts);

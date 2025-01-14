@@ -99,16 +99,21 @@ public class DockerServiceImpl {
         runDockerContainer(dockerImage, externalPort, getClient());
     }
 
+    @Async
     public void runDockerContainer(String dockerImage, String externalPort, DockerClient client) throws IOException, InterruptedException {
 
         String containerName = getContainerName(dockerImage);
         Optional<Container> container = findContainer(containerName, client);
-
-        if(container.isEmpty()){
-            geraContainerERoda(dockerImage, externalPort, client, containerName);
-        }else{
-            client.startContainerCmd(container.get().getId()).exec();
+        try{
+            if(container.isEmpty()){
+                geraContainerERoda(dockerImage, externalPort, client, containerName);
+            }else{
+                client.startContainerCmd(container.get().getId()).exec();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
     private static void geraContainerERoda(String dockerImage, String externalPort, DockerClient client, String containerName) throws IOException {
