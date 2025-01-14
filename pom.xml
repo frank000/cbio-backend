@@ -33,8 +33,6 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
         <keycloak-version>24.0.4</keycloak-version>
-        <langchain-version>0.36.2</langchain-version>
-        <docker-java-version>3.3.3</docker-java-version>
     </properties>
     <dependencies>
         <dependency>
@@ -94,7 +92,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>2.2</version>
+            <version>2.3</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
@@ -128,13 +126,11 @@
 
         <!--dependecias google calendar-->
         <!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
-        <!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client -->
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>2.7.0</version>
+            <version>2.6.0</version>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty -->
         <dependency>
             <groupId>com.google.oauth-client</groupId>
@@ -150,7 +146,7 @@
         <dependency>
             <groupId>com.github.frank000</groupId>
             <artifactId>cbio-jrasa</artifactId>
-            <version>master-49f55f35a8-1</version>
+            <version>49f55f35a8</version>
         </dependency>
         <dependency>
             <groupId>org.telegram</groupId>
@@ -177,7 +173,7 @@
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
-            <version>8.5.14</version>
+            <version>8.5.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -191,64 +187,58 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
-            <version>${langchain-version}</version>
+            <version>0.33.0</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
-            <version>${langchain-version}</version>
+            <version>0.33.0</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-easy-rag</artifactId>
-            <version>${langchain-version}</version>
+            <version>0.33.0</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-chroma</artifactId>
-            <version>${langchain-version}</version>
+            <version>0.33.0</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-            <version>${langchain-version}</version>
+            <version>0.33.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
-            <version>${docker-java-version}</version>
+            <version>3.3.3</version>
         </dependency>
 
         <!-- Docker Java Dependencies -->
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java-core</artifactId>
-            <version>${docker-java-version}</version>
+            <version>3.3.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.github.docker-java/docker-java-transport-zerodep -->
         <dependency>
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java-transport-zerodep</artifactId>
-            <version>${docker-java-version}</version>
+            <version>3.3.3</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.12</version>
+            <version>4.5.14</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5 -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.core5</groupId>
-            <artifactId>httpcore5</artifactId>
-            <version>5.3.2</version>
-        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.18.0</version>
+            <version>2.11.0</version>
         </dependency>
     </dependencies>
 

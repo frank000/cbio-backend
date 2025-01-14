@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -66,7 +67,6 @@ public class DockerServiceImpl {
     }
 
 
-    @Async
     public void buildDockerImageAndRunContainer(String companyId, String externalPort) throws IOException, InterruptedException {
 
         String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
@@ -79,8 +79,12 @@ public class DockerServiceImpl {
                 .exec(new BuildImageResultCallback())
                 .awaitImageId();// Retorna o ID da imagem criada
 
+        log.info("IMAGEM CREATED: Imagem {}", imageId);
+
         if (!StringUtils.hasText(imageId)) {
-            throw new IOException(String.format("Erro ao executar docker build. Código de saída: %s", imageName));
+            String formatted = String.format("Erro ao executar docker build. Código de saída: %s", imageName);
+            log.error(formatted);
+            throw new IOException(formatted);
         } else {
             runDockerContainer(imageName, externalPort);
         }
@@ -98,8 +102,16 @@ public class DockerServiceImpl {
     public void runDockerContainer(String dockerImage, String externalPort, DockerClient client) throws IOException, InterruptedException {
 
         String containerName = getContainerName(dockerImage);
+        Optional<Container> container = findContainer(containerName, client);
 
+        if(container.isEmpty()){
+            geraContainerERoda(dockerImage, externalPort, client, containerName);
+        }else{
+            client.startContainerCmd(container.get().getId()).exec();
+        }
+    }
 
+    private static void geraContainerERoda(String dockerImage, String externalPort, DockerClient client, String containerName) throws IOException {
         String containerId = client.createContainerCmd(dockerImage)
                 .withName(containerName) // Nome do container
                 .withCmd("run")
@@ -111,6 +123,8 @@ public class DockerServiceImpl {
                 .getId();
 
         client.startContainerCmd(containerId).exec();
+
+        log.info("CONTAINER STARTED: Container {}", containerId);
 
         if (!StringUtils.hasText(containerId)) {
             throw new IOException(String.format("Erro ao executar docker run. Código de saída: %s", containerName));
@@ -164,6 +178,24 @@ public class DockerServiceImpl {
 
     public void stopAndRemoveContainer(String containerName) {
         stopAndRemoveContainer(getClient(),containerName);
+    }
+
+    public Optional<Container> findContainer(String containerName, DockerClient client) {
+        try {
+            List<Container> containers = client.listContainersCmd()
+                    .withShowAll(true)
+                    .exec();
+
+            return containers.stream()
+                    .filter(container -> Arrays.asList(container.getNames())
+                            .stream()
+                            .anyMatch(name -> name.contains(containerName)))
+                    .findFirst();
+
+        } catch (Exception e) {
+            log.error("Erro ao buscar container: " + containerName, e);
+            throw new RuntimeException("Erro ao buscar container: " + e.getMessage(), e);
+        }
     }
 
     public void stopAndRemoveContainer(DockerClient client, String containerName) {
