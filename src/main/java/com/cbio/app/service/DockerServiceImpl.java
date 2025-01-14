@@ -66,7 +66,7 @@ public class DockerServiceImpl {
         return DockerClientImpl.getInstance(config, httpClient);
     }
 
-
+    @Async
     public void buildDockerImageAndRunContainer(String companyId, String externalPort) throws IOException, InterruptedException {
 
         String baseTargetDir = BASE_TARGET_DIR.concat(File.separator).concat(companyId);
@@ -108,10 +108,11 @@ public class DockerServiceImpl {
             if(container.isEmpty()){
                 geraContainerERoda(dockerImage, externalPort, client, containerName);
             }else{
-                client.startContainerCmd(container.get().getId()).exec();
+                restartContainer(containerName, client);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            String msg = String.format("PROBLEMA: Geração ou restart de conteiner: %s", e.getMessage());
+            log.error(msg, e);
         }
 
     }
@@ -159,12 +160,12 @@ public class DockerServiceImpl {
     public static String getContainerName(String dockerImage) {
         return String.format(CONTAINER_INIT_NAME, dockerImage);
     }
-
+    @Async
     public void executeCompleteDockerFlow(String companyId, String externalPort) throws IOException, InterruptedException {
         executeCompleteDockerFlow(companyId, externalPort, getClient());
     }
 
-    @Async
+
     public void executeCompleteDockerFlow(String companyId, String externalPort, DockerClient client) throws IOException, InterruptedException {
 
         String imageName = getImageName(companyId);
@@ -203,6 +204,14 @@ public class DockerServiceImpl {
         }
     }
 
+    public void restartContainer(String containerName, DockerClient client) throws IOException, InterruptedException {
+        try {
+            client.restartContainerCmd(containerName).exec();
+            log.info("Container restartado: {}", containerName);
+        } catch (Exception e) {
+            log.warn("O container não estava rodando ou não existe: {}", containerName);
+        }
+    }
     public void stopAndRemoveContainer(DockerClient client, String containerName) {
         try {
             client.stopContainerCmd(containerName).exec();
