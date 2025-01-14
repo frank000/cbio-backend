@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -195,7 +196,8 @@ public class CompanyServiceImpl implements CompanyService {
         return companyConfigMapper.toDto(entity);
     }
 
-    private void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
+    @Async
+    protected void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
         try {
 
             String nluFilePath = BASE_TARGET_DIR
