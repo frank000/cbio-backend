@@ -53,7 +53,7 @@ public class DockerServiceImpl {
             throw new RuntimeException("Docker socket não está acessível para escrita");
         }
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost("unix:///var/run/docker.sock")  // ou seu host Docker
+                .withDockerHost("unix:///var/run/docker.sock")
                 .build();
 
         DockerHttpClient httpClient = new ZerodepDockerHttpClient.Builder()
@@ -77,11 +77,14 @@ public class DockerServiceImpl {
             String containerName = getContainerName(imageName);
 
             stopAndRemoveContainer(client, containerName);
+            client.stopContainerCmd(containerName).exec().wait();
             client.removeImageCmd(imageName).exec();
 
             log.info("CONTAINER REMOVED: Container {}", containerName);
             log.info("IMAGEM REMOVED: Imagem {}", imageName);
         }
+
+        log.info("IMAGEM DIRECTORY: TO {}", baseTargetDir);
 
         String imageId = client.buildImageCmd(new File(baseTargetDir))
                 .withTags(Set.of(imageName)) // Nome e tag da imagem
@@ -90,12 +93,12 @@ public class DockerServiceImpl {
 
         log.info("IMAGEM CREATED: Imagem {}", imageId);
 
-        if (!StringUtils.hasText(imageId)) {
+        if (StringUtils.hasText(imageId)) {
+            runDockerContainer(imageName, externalPort);
+        } else {
             String formatted = String.format("Erro ao executar docker build. Código de saída: %s", imageName);
             log.error(formatted);
             throw new IOException(formatted);
-        } else {
-            runDockerContainer(imageName, externalPort);
         }
     }
 
@@ -115,8 +118,11 @@ public class DockerServiceImpl {
         Optional<Container> container = findContainer(containerName, client);
         try{
             if(container.isEmpty()){
+                log.info("geraContainerERoda");
                 geraContainerERoda(dockerImage, externalPort, client, containerName);
+
             }else{
+                log.info("restartContainer");
                 restartContainer(containerName, client);
             }
         } catch (Exception e) {
