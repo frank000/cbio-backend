@@ -73,6 +73,15 @@ public class DockerServiceImpl {
         String imageName = getImageName(companyId);
         DockerClient client = getClient();
 
+        if(imageExists(imageName)) {
+            String containerName = getContainerName(imageName);
+
+            stopAndRemoveContainer(client, containerName);
+            client.removeImageCmd(imageName).exec();
+
+            log.info("CONTAINER REMOVED: Container {}", containerName);
+            log.info("IMAGEM REMOVED: Imagem {}", imageName);
+        }
 
         String imageId = client.buildImageCmd(new File(baseTargetDir))
                 .withTags(Set.of(imageName)) // Nome e tag da imagem
