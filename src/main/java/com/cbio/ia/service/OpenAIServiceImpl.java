@@ -26,7 +26,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     public String getOnlyQuestionFromRag(String term) {
 
         String prompt = String.format(
-                "Retire somente as perguntas do questionário seguinte: %s",
+                "Quero que Retire somente as perguntas do questionário seguinte, e retorne tão somente as perguntas desse questionário, sem nenhum comentário a mais por favor: %s",
                 term);
 
         return aiClient.getCompletion(prompt);
