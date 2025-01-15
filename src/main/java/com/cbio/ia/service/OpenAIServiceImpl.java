@@ -29,7 +29,10 @@ public class OpenAIServiceImpl implements OpenAIService {
                 "Quero que Retire somente as perguntas do questionário seguinte, e retorne tão somente as perguntas desse questionário, sem nenhum comentário a mais por favor: %s",
                 term);
 
-        return aiClient.getCompletion(prompt);
+        String completion = aiClient.getCompletion(prompt);
+        log.info("Prompt: {}", prompt);
+        log.info("Completion: {}", completion);
+        return completion;
     }
 
 
