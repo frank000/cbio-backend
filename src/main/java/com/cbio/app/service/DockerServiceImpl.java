@@ -122,7 +122,7 @@ public class DockerServiceImpl {
 
             }else{
                 stopAndRemoveContainer(containerName);
-                geraContainerERoda(containerName, externalPort, client, containerName);
+                geraContainerERoda(dockerImage, externalPort, client, containerName);
             }
         } catch (Exception e) {
             String msg = String.format("PROBLEMA: Geração ou restart de conteiner: %s", e.getMessage());
