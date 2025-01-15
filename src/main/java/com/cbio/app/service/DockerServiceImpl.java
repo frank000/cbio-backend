@@ -118,12 +118,11 @@ public class DockerServiceImpl {
         Optional<Container> container = findContainer(containerName, client);
         try{
             if(container.isEmpty()){
-                log.info("geraContainerERoda");
                 geraContainerERoda(dockerImage, externalPort, client, containerName);
 
             }else{
-                log.info("restartContainer");
-                restartContainer(containerName, client);
+                stopAndRemoveContainer(containerName);
+                geraContainerERoda(containerName, externalPort, client, containerName);
             }
         } catch (Exception e) {
             String msg = String.format("PROBLEMA: Geração ou restart de conteiner: %s", e.getMessage());
