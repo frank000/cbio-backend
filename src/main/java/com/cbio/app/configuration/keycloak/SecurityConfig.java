@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/whatsapp/**").permitAll()
                 .requestMatchers("/v1/public/**").permitAll()
                 .requestMatchers("/v1/google-calendar/**").permitAll()
+                .requestMatchers("/v1/payment/**").permitAll()
                 .anyRequest()
                 .authenticated());
 
