@@ -42,10 +42,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
 
                 .setAllowedOrigins(
-                        "https://atendimento190.policia.df.gov.br",
-                        "https://atendimento190-hml.policia.df.gov.br",
-                        "https://atendimento.policia.df.gov.br",
-                        "https://app190df.rs.pm.df.gov.br/",
+                        "https://bot.rayzatec.com.br",
+                        "https://bot.rayzatec.com.br/",
+                        "https://bot.rayzatec.com.br/*",
                         "http://localhost:4200/",
                         "http://localhost:4200/*",
                         "http://localhost:4200",
