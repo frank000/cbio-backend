@@ -1,5 +1,6 @@
 package com.cbio.app.repository;
 
+import com.cbio.app.base.utils.CbioDateUtils;
 import com.cbio.app.entities.UsuarioEntity;
 import com.cbio.core.v1.dto.SummaryDTO;
 import lombok.RequiredArgsConstructor;
@@ -132,7 +133,7 @@ public class SummaryCustomRepository {
                         "channels"
                 )
         );
-
+        int year = CbioDateUtils.LocalDate.now().getYear();
         // Add Fields Operation with Filter
         AggregationOperation addFieldsFilteredOperation = context -> {
             Document filterExpression = new Document("$filter",
@@ -140,7 +141,7 @@ public class SummaryCustomRepository {
                             .append("as", "item")
                             .append("cond", new Document("$eq", List.of(
                                     new Document("$year", "$$item.initTime"),
-                                    2024
+                                    year
                             )))
             );
 
