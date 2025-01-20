@@ -1,6 +1,7 @@
 package com.cbio.app.service.serder;
 
 import com.cbio.app.service.minio.MinioService;
+import com.cbio.app.service.minio.ResultGetFileFromMinio;
 import com.cbio.app.service.utils.ParametersUtils;
 import com.cbio.chat.dto.DialogoDTO;
 import com.cbio.core.v1.dto.RasaMessageDTO;
@@ -24,10 +25,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Component("whatsappSenderService")
 @RequiredArgsConstructor
@@ -105,26 +104,28 @@ public class WhatsappSenderService implements Sender {
 
     private Message getMessageToDocumentImage(DialogoDTO dialogoDTO, WhatsappBusinessCloudApi whatsappBusinessCloudApi) throws Exception {
         Message message;
-        InputStream file = minioService.getFile(dialogoDTO.getMedia().getId(), dialogoDTO.getChannelUuid());
-        byte[] fileBytes = file.readAllBytes();
-        Map<String, String> metadata = minioService.getMetadata(dialogoDTO.getMedia().getId(), dialogoDTO.getChannelUuid());
+        ResultGetFileFromMinio file = minioService.getResultGetFileFromMinio(dialogoDTO);
 
 
         FileType fileType = Arrays.stream(FileType.values())
                 .filter(fileType1 -> fileType1.getType().equals(dialogoDTO.getMedia().getMimeType()))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Tipo do arquivo não encontrada."));
-        UploadResponse name = whatsappBusinessCloudApi.uploadMedia(dialogoDTO.getCanal().getIdCanal(), metadata.get("name"), fileType, fileBytes);
+        UploadResponse name = whatsappBusinessCloudApi.uploadMedia(dialogoDTO.getCanal().getIdCanal(), file.metadata().get("name"), fileType, file.fileBytes());
 
         var documentMessage = new DocumentMessage()//
                 .setId(name.id())// media id (uploaded before)
-                .setCaption(metadata.get("name"))//
-                .setFileName(metadata.get("name"));
+                .setCaption(file.metadata().get("name"))//
+                .setFileName(file.metadata().get("name"));
 
         return Message.MessageBuilder.builder()//
                 .setTo(dialogoDTO.getOnlyIdentificadorRementente())//
                 .buildDocumentMessage(documentMessage);
     }
+
+
+
+
 
     private static Message getMessageTextButtonOption(DialogoDTO dialogoDTO, WhatsappBusinessCloudApi whatsappBusinessCloudApi) {
         Message message;

@@ -26,4 +26,8 @@ public interface CanalService {
     void deleta(String id);
 
     CanalDTO getCanalByCompanyIdAndNome(String companyId, String nome) throws CbioException;
+
+    Optional<CanalEntity> findCanalByNomeAndCliente(String canal, String cliente) throws Exception;
+
+    Optional<CanalEntity> findCanalByNomeCompanyIdAndCliente(String canal, String companyId, String cliente) throws Exception;
 }

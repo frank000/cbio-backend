@@ -1,5 +1,6 @@
 package com.cbio.app.service.minio;
 
+import com.cbio.chat.dto.DialogoDTO;
 import io.minio.errors.*;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -21,4 +22,10 @@ public interface MinioService {
     void removeDir(String repositorio) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 
     Map<String, String> getMetadata(String nome, String repositorio) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    ResultGetFileFromMinio getResultGetFileFromMinio(DialogoDTO dialogoDTO) throws Exception;
+
+    String getFileUrl(String fileId, String repositorio) throws ServerException,
+            InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException,
+            InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 }

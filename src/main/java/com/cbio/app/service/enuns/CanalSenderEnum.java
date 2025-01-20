@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum CanalSenderEnum {
 
     TELEGRAM("telegram","telegramSenderService"),
-    WHATSAPP("whatsapp","whatsappSenderService"),;
+    WHATSAPP("whatsapp","whatsappSenderService"),
+    INSTAGRAM("instagram","instagramSenderService"),;
 
     private String title;
     private String canalSender;
