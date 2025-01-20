@@ -3,11 +3,13 @@ package com.cbio.app.service;
 
 import com.cbio.app.service.minio.AbstractMinioService;
 import com.cbio.app.service.minio.MinioService;
+import com.cbio.app.service.minio.ResultGetFileFromMinio;
+import com.cbio.chat.dto.DialogoDTO;
 import io.minio.GetObjectArgs;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
-import io.minio.StatObjectArgs;
-import io.minio.StatObjectResponse;
 import io.minio.errors.*;
+import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
@@ -62,6 +64,13 @@ public class MinioServiceImpl extends AbstractMinioService implements MinioServi
  
     }
 
+    public ResultGetFileFromMinio getResultGetFileFromMinio(DialogoDTO dialogoDTO) throws Exception {
+        InputStream file = getFile(dialogoDTO.getMedia().getId(), dialogoDTO.getChannelUuid());
+        byte[] fileBytes = file.readAllBytes();
+        Map<String, String> metadata = getMetadata(dialogoDTO.getMedia().getId(), dialogoDTO.getChannelUuid());
+        ResultGetFileFromMinio result = new ResultGetFileFromMinio(fileBytes, metadata);
+        return result;
+    }
 
 
     @Override
@@ -71,5 +80,23 @@ public class MinioServiceImpl extends AbstractMinioService implements MinioServi
 
     public Map<String, String> getMetadata(String nome, String repositorio) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         return super.getMetadata(getChaveDoArquivo(nome, repositorio));
+    }
+
+    public String getFileUrl(String fileId, String repositorio) throws ServerException,
+            InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException,
+            InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+
+        String objectKey = getChaveDoArquivo(fileId, repositorio);
+
+        // Define o tempo de expiração do link (exemplo: 7 dias)
+        int expiryTime = 7 * 24 * 3600;
+
+        GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucket)
+                .object(objectKey)
+                .build();
+
+        return getMini().getPresignedObjectUrl(args);
     }
 }
