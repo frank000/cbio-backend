@@ -11,6 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("https://bot.rayzatec.com.br", "https://pleasing-elf-instantly.ngrok-free.app", "http://localhost:4200")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
+                .allowCredentials(true)  // Permite o envio de cookies
                 .exposedHeaders("Content-Disposition");
     }
 
