@@ -188,7 +188,7 @@ public class SessaoServiceImpl implements SessaoService {
                     .forEach(sessaoEntity ->
                             websocketNotificationDTOS.add(WebsocketNotificationDTO.builder()
                                     .userId(sessaoEntity.getId())
-                                    .nameCanal(sessaoEntity.getCanal().getNome())
+                                    .nameCanal(sessaoEntity.getCanal().getNome().trim())
                                     .channelId(sessaoEntity.getLastChannelChat().getChannelUuid())
                                     .name(getNameOrNumber(sessaoEntity))
                                     .name(getNameOrNumber(sessaoEntity))
