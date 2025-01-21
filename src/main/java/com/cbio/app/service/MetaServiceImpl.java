@@ -77,7 +77,7 @@ public class MetaServiceImpl implements MetaService {
         );
 
         CanalEntity canalEntity = findOrCreateCanal(state, token.getAccessToken());
-        Optional<InstagramCredentialEntity> byCompanyId = instagramCredentialRepository.findByCompanyId(canalEntity.getId());
+        Optional<InstagramCredentialEntity> byCompanyId = instagramCredentialRepository.findByCompanyId(canalEntity.getCompany().getId());
         InstagramCredentialEntity instagramCredentialEntity;
 
 
@@ -91,7 +91,7 @@ public class MetaServiceImpl implements MetaService {
         LocalDateTime expirateLocalDateTime = nowLocalDateTime.plus(Duration.ofSeconds(tokenResponseDTO.getExpiresIn()));
 
 
-        instagramCredentialEntity.setCompanyId(canalEntity.getId());
+        instagramCredentialEntity.setCompanyId(canalEntity.getCompany().getId());
         instagramCredentialEntity.setExpirateTime(expirateLocalDateTime);
         instagramCredentialEntity.setCreatedTime(nowLocalDateTime);
         instagramCredentialEntity.setCredential(tokenResponseDTO);

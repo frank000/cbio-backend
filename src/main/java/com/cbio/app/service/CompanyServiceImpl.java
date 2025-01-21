@@ -6,6 +6,7 @@ import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.CompanyConfigRepository;
 import com.cbio.app.repository.CompanyRepository;
 import com.cbio.app.repository.GoogleCredentialRepository;
+import com.cbio.app.repository.InstagramCredentialRepository;
 import com.cbio.app.service.enuns.TicketsTypeEnum;
 import com.cbio.app.service.mapper.CompanyConfigMapper;
 import com.cbio.app.service.mapper.CompanyMapper;
@@ -14,6 +15,7 @@ import com.cbio.core.service.CompanyService;
 import com.cbio.core.service.TicketService;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
+import com.cbio.core.v1.dto.InstagramCredentialDTO;
 import com.cbio.core.v1.dto.TicketDTO;
 import com.cbio.ia.service.OpenAIService;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +31,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,6 +55,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final OpenAIService openAIService;
     private final NluYamlManagerServiceImpl nluYamlManagerServiceImpl;
     private final DockerServiceImpl dockerServiceImpl;
+    private final InstagramCredentialRepository instagramCredentialRepository;
 
 
     @Value("${app.rasa.targe-path}")
@@ -172,11 +176,10 @@ public class CompanyServiceImpl implements CompanyService {
             String collectRag = String.join(" ", dto.getRag());
 
 
-
-            if(StringUtils.hasText(collectRag)){
+            if (StringUtils.hasText(collectRag)) {
                 String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
                 fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
-            }else{
+            } else {
                 String nluFilePath = BASE_TARGET_DIR
                         .concat(File.separator)
                         .concat(dto.getCompanyId())
@@ -221,16 +224,16 @@ public class CompanyServiceImpl implements CompanyService {
         geraTicket(dto);
     }
 
-    private void runDocker( String companyId) throws IOException, InterruptedException {
+    private void runDocker(String companyId) throws IOException, InterruptedException {
 
         Integer portByIdCompany = getPortByIdCompany(companyId);
 
         String imageName = DockerServiceImpl.getImageName(companyId);
         String containerName = DockerServiceImpl.getContainerName(imageName);
 
-        if(dockerServiceImpl.isContainerRunning(containerName)){
+        if (dockerServiceImpl.isContainerRunning(containerName)) {
             dockerServiceImpl.executeCompleteDockerFlow(companyId, String.valueOf(portByIdCompany));
-        }else{
+        } else {
             dockerServiceImpl.buildDockerImageAndRunContainer(companyId, String.valueOf(portByIdCompany));
         }
     }
@@ -273,7 +276,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
 
-    public CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id){
+    public CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id) {
         Optional<CompanyConfigEntity> byCompany = companyConfigRepository.getPreferencesByCompany(id);
 
         CompanyConfigEntity entity = byCompany
@@ -292,6 +295,21 @@ public class CompanyServiceImpl implements CompanyService {
         } else {
             return Boolean.FALSE;
         }
+    }
+
+    @Override
+    public InstagramCredentialDTO getCredentialInstagram(String id) {
+
+        LocalDateTime today = CbioDateUtils.LocalDateTimes.now();
+        Optional<InstagramCredentialEntity> byCompanyId = instagramCredentialRepository.findByCompanyIdAndExpirateTimeIsAfter(id, today);
+        return byCompanyId
+                .map(instagramCredentialEntity ->
+                        InstagramCredentialDTO.builder()
+                                .id(instagramCredentialEntity.getId())
+                                .expirateTime(instagramCredentialEntity.getExpirateTime())
+                                .createdTime(instagramCredentialEntity.getCreatedTime())
+                                .build()
+                ).orElse(null);
     }
 
     public Boolean hasGoogleCrendential() {

@@ -7,10 +7,7 @@ import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.CompanyService;
-import com.cbio.core.v1.dto.CompanyConfigDTO;
-import com.cbio.core.v1.dto.CompanyDTO;
-import com.cbio.core.v1.dto.CompanyFiltroGridDTO;
-import com.cbio.core.v1.dto.CompanyGridDTO;
+import com.cbio.core.v1.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +49,13 @@ public class CompanyController implements SecuredRestController {
 
         return ResponseEntity
                 .ok( companyService.findById(id));
+    }
+
+    @GetMapping("/credential-instagram/{id}")
+    public ResponseEntity<InstagramCredentialDTO> getCredential(@PathVariable String id) {
+
+        return ResponseEntity
+                .ok( companyService.getCredentialInstagram(id));
     }
 
     @DeleteMapping("{id}")
