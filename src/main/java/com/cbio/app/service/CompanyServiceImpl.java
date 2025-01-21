@@ -167,7 +167,16 @@ public class CompanyServiceImpl implements CompanyService {
             companyConfigMapper.fromDto(dto, entity);
             entity.setCompanyId(entity.getCompanyId());
         } else {
-            entity = companyConfigMapper.toEntity(dto);
+            entity = CompanyConfigEntity.builder()
+                    .rag(dto.getRag())
+                    .companyId(dto.getCompanyId())
+                    .model(dto.getModel())
+                    .autoSend(dto.getAutoSend())
+                    .emailCalendar(dto.getEmailCalendar())
+                    .keepSameAttendant(dto.getKeepSameAttendant())
+                    .googleCredential(dto.getGoogleCredential())
+                            .build();
+
             updateRagFields = true;
         }
 
