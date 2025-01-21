@@ -3,6 +3,7 @@ package com.cbio.core.service;
 import com.cbio.app.exception.CbioException;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
+import com.cbio.core.v1.dto.InstagramCredentialDTO;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,6 +33,8 @@ public interface CompanyService {
     Boolean hasGoogleCrendential();
 
     Boolean hasGoogleCrendential(String id);
+
+    InstagramCredentialDTO getCredentialInstagram(String id);
 
     CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id) throws CbioException;
 }

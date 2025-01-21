@@ -8,6 +8,6 @@ import java.util.Optional;
 
 public interface InstagramCredentialRepository extends MongoRepository<InstagramCredentialEntity, String> {
 
-    Optional<InstagramCredentialEntity> findByCompanyIdAndExpirateTimeBefore(String companyId, LocalDateTime expirationTime);
     Optional<InstagramCredentialEntity> findByCompanyId(String companyId);
+    Optional<InstagramCredentialEntity> findByCompanyIdAndExpirateTimeIsAfter(String companyId, LocalDateTime time);
 }
