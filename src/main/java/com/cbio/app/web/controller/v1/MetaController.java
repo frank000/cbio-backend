@@ -60,8 +60,9 @@ public class MetaController {
         <html>
         <body>
             <script>
+                            window.opener.postMessage('instagram-login-success', 'https://bot.rayzatec.com.br');
+
                 window.opener.postMessage('instagram-login-success', 'https://pleasing-elf-instantly.ngrok-free.app');
-                window.opener.postMessage('instagram-login-success', 'https://bot.rayzatec.com.br');
                 window.opener.postMessage('instagram-login-success', 'https://bot.rayzatec.com.br/dashboard/instagram');
                 window.opener.postMessage('instagram-login-success', 'http://localhost:4200');
                 window.close();

@@ -9,8 +9,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET","POST", "PUT", "DELETE", "OPTIONS", "HEAD")
+                .allowedOrigins("https://bot.rayzatec.com.br", "https://pleasing-elf-instantly.ngrok-free.app", "http://localhost:4200")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
                 .exposedHeaders("Content-Disposition");
     }
 
