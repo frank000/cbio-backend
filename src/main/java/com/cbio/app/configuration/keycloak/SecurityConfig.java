@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -49,8 +50,35 @@ public class SecurityConfig {
                 .authenticated());
 
 
-        http.cors(Customizer.withDefaults());
+        // Configuração de CORS
+        http.cors(cors -> cors
+                .configurationSource(request -> {
+                    var config = new org.springframework.web.cors.CorsConfiguration();
+                    config.addAllowedOrigin("https://bot.rayzatec.com.br");  // Adicione seu domínio aqui
+                    config.addAllowedOrigin("https://pleasing-elf-instantly.ngrok-free.app");  // Domínio para teste
+                    config.addAllowedOrigin("http://localhost:4200");  // Domínio local
+
+                    config.addAllowedMethod("*");
+                    config.addAllowedHeader("*");
+                    config.setAllowCredentials(true);  // Permite cookies em requisições cross-origin
+
+                    return config;
+                })
+        );
+
+        // Configuração de sessão e cookies
+        http.sessionManagement(sessionCustomizer ->
+                sessionCustomizer
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)  // Cria a sessão somente quando necessário
+        );
+        // Configuração para garantir cookies com SameSite=None, Secure e HttpOnly
+        http.sessionManagement(sessionCustomizer -> sessionCustomizer
+                .sessionFixation().none() // Evita alteração do ID da sessão após o login
+        );
+
+//        http.cors(Customizer.withDefaults());
         return http.build();
+
     }
 
 }
