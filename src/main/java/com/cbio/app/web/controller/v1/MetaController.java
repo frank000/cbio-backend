@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,8 @@ public class MetaController {
     private final MetaService metaService;
     private final MetaApiUtils metaApiUtils;
 
+    @Value("${app.external-url}")
+    private String externalUrl;
 
     @PostMapping("/v1/public/meta/webhook/{channelId}/{callbackToken}")
     @PreAuthorize("@validacaoCallbackService.validaHashFacebookEToken(#signature , #facebokRawMessage, 'INSTAGRAM', #identificador, #callbackToken)")
@@ -46,7 +49,7 @@ public class MetaController {
         metaService.exchangeCodeToTokenAndSave(state, code);
 
 
-        response.sendRedirect("https://pleasing-elf-instantly.ngrok-free.app/v1/public/meta/webhook/instagram/success");
+        response.sendRedirect(String.format("%s/v1/public/meta/webhook/instagram/success", externalUrl));
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
