@@ -31,7 +31,9 @@ public class CanalServiceImpl implements CanalService {
     @Override
     public CanalDTO incluirCanal(CanalDTO canal) {
 
-        CanalEntity save = canalRepository.save(mapper.canalDTOToCanalEntity(canal, new CycleAvoidingMappingContext()));
+        CanalEntity entity = mapper.canalDTOToCanalEntity(canal, new CycleAvoidingMappingContext());
+        entity.setNome(canal.getNome().trim());
+        CanalEntity save = canalRepository.save(entity);
         return mapper.canalEntityToCanalDTO(save, new CycleAvoidingMappingContext());
     }
 

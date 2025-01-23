@@ -100,7 +100,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
                     });
         } catch (Exception e) {
-            log.error("SAVE DIALOG - {}", e.getMessage());
+            log.error("FORWARD", e);
             throw new RuntimeException(e);
         }
 
