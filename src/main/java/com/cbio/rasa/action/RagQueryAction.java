@@ -19,6 +19,8 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.github.jrasa.Action;
 import io.github.jrasa.CollectingDispatcher;
@@ -107,10 +109,18 @@ public class RagQueryAction implements Action {
                             .embed(text)
                             .content();
 
-                    List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(queryEmbedding, 1);
+                    EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
+                            .maxResults(1)
+                            .minScore(0.72)
+                            .queryEmbedding(queryEmbedding)
+                            .build();
+
+                    EmbeddingSearchResult<TextSegment> search = embeddingStore.search(searchRequest);
+
+                    List<EmbeddingMatch<TextSegment>> relevant = search.matches();
                     String resposta;
                     if (CollectionUtils.isEmpty(relevant)) {
-                        resposta = "Desculpe, não consegui encontrar uma resposta.";
+                        resposta = "Desculpe, não consegui. Refaça a pergunta ou seja mais específico.";
                     } else {
                         resposta = relevant.get(0).embedded().text();
                     }
