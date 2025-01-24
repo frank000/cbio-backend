@@ -111,7 +111,7 @@ public class RagQueryAction implements Action {
 
                     EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
                             .maxResults(1)
-                            .minScore(0.6)
+                            .minScore(0.72)
                             .queryEmbedding(queryEmbedding)
                             .build();
 
