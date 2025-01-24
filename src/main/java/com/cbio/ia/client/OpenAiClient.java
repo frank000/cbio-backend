@@ -48,7 +48,7 @@ public class OpenAiClient {
 
         return results
                 .stream()
-                .map(generation -> generation.getOutput().getContent())
-                .collect(Collectors.joining("\n"));
+                .map(generation -> generation.getOutput().getText())
+                .collect(Collectors.joining());
     }
 }

@@ -184,10 +184,13 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-openai -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai</artifactId>
+            <version>1.0.0-M5</version>
         </dependency>
+
         <dependency>
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
