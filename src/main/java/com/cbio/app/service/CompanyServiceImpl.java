@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -155,13 +156,14 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException {
         CompanyConfigEntity entity;
         boolean updateRagFields = false;
-
+        boolean isNewConfigAndHasRag = false;
         if (StringUtils.hasText(dto.getId())) {
             entity = companyConfigRepository.findById(dto.getId())
                     .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
 
-            boolean isNewConfigAndHasRag = entity.getRag() == null && dto.getRag() != null;
-            updateRagFields = isNewConfigAndHasRag || !entity.getRag().get(0).equals(dto.getRag().get(0));
+            isNewConfigAndHasRag = CollectionUtils.isEmpty(entity.getRag()) &&  !CollectionUtils.isEmpty(dto.getRag());
+            updateRagFields =  !CollectionUtils.isEmpty(entity.getRag()) && !entity.getRag().get(0).equals(dto.getRag().get(0));
+
 
 
             companyConfigMapper.fromDto(dto, entity);
@@ -181,7 +183,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
 
-        if (updateRagFields && dto.getRag() != null) {
+        if (updateRagFields || isNewConfigAndHasRag) {
             String collectRag = String.join(" ", dto.getRag());
 
 

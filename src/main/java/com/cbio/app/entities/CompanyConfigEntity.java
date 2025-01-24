@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Document("companyConfig")
@@ -35,7 +36,15 @@ public class CompanyConfigEntity {
 
     private GoogleCredentialDTO googleCredential;
 
+    @Getter(AccessLevel.NONE)
     private List<String> rag;
+
+    public List<String> getRag() {
+        if(rag == null) {
+            rag = new ArrayList<>();
+        }
+        return rag;
+    }
 
     public boolean getKeepSameAttendant() {
         if (keepSameAttendant == null) {

@@ -7,6 +7,7 @@ import com.cbio.app.entities.InstagramCredentialEntity;
 import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.CanalRepository;
 import com.cbio.app.repository.InstagramCredentialRepository;
+import com.cbio.app.repository.grid.CanalConfigGridRepository;
 import com.cbio.app.service.enuns.CanalSenderEnum;
 import com.cbio.app.service.mapper.CanalMapper;
 import com.cbio.app.service.mapper.CycleAvoidingMappingContext;
@@ -49,6 +50,7 @@ public class MetaServiceImpl implements MetaService {
     private final CanalMapper canalMapper;
     private final CanalRepository canalRepository;
     private final ChatbotForwardService chatbotForwardService;
+    private final CanalConfigGridRepository canalConfigGridRepository;
 
     @Value("${app.meta.instagram.client-id}")
     private String clientId;
@@ -68,7 +70,6 @@ public class MetaServiceImpl implements MetaService {
      */
     public void exchangeCodeToTokenAndSave(String state, String code) throws Exception {
 
-
         Oauth2Client.TokenResponseDTO token = instagramOauthService.getAccessToken(
                 clientId,
                 clientSecret,
@@ -80,16 +81,13 @@ public class MetaServiceImpl implements MetaService {
         Optional<InstagramCredentialEntity> byCompanyId = instagramCredentialRepository.findByCompanyId(canalEntity.getCompany().getId());
         InstagramCredentialEntity instagramCredentialEntity;
 
-
         instagramCredentialEntity = byCompanyId.orElseGet(() -> InstagramCredentialEntity.builder()
                 .build());
-
 
         Oauth2Client.TokenResponseDTO tokenResponseDTO = instagramOauthService.exchangeTokenForLongLived(clientSecret, token.getAccessToken());
 
         LocalDateTime nowLocalDateTime = CbioDateUtils.LocalDateTimes.now();
         LocalDateTime expirateLocalDateTime = nowLocalDateTime.plus(Duration.ofSeconds(tokenResponseDTO.getExpiresIn()));
-
 
         instagramCredentialEntity.setCompanyId(canalEntity.getCompany().getId());
         instagramCredentialEntity.setExpirateTime(expirateLocalDateTime);
@@ -106,9 +104,16 @@ public class MetaServiceImpl implements MetaService {
         canalRepository.save(canalEntity);
     }
 
+    public Boolean existsByNomeAndCompanyId(String nome, String companyId){
+        return canalRepository.existsByNomeAndCompanyId(nome, companyId);
+    }
+
     private CanalEntity findOrCreateCanal(String state, String accessToken) throws Exception {
         CompanyDTO companyDTO = companyService.findById(state);
         InstagramOauthService.UserInfoMeta userInfo = instagramOauthService.getUserInfo(accessToken);
+        if(existsByNomeAndCompanyId(CanalSenderEnum.INSTAGRAM.name(), state)){
+            throw new CbioException("Limite de contas de Instagram. Contate os administradores.", HttpStatus.BAD_REQUEST.value());
+        }
         return canalService.findCanalByNomeCompanyIdAndCliente(CanalSenderEnum.INSTAGRAM.name(), state, userInfo.getUserId())
                 .orElseGet(() -> {
 
