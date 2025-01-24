@@ -30,6 +30,7 @@ import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -57,6 +58,11 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     private final ContactService contactService;
 
     private final EventMapper eventMapper;
+
+    @Value("${app.external-url}")
+    private String externalUrl;
+
+
     /**
      * Application name.
      */
@@ -121,7 +127,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         AuthorizationCodeFlow flow = getGoogleAuthorizationCodeFlow(companyConfigEntity.getGoogleCredential());
         // Cria a URL de autorização
         AuthorizationCodeRequestUrl authorizationUrl = flow.newAuthorizationUrl()
-                .setRedirectUri("http://localhost:8081/v1/google-calendar/callback")
+                .setRedirectUri(String.format("%s/v1/google-calendar/callback", externalUrl))
                 .setState(base64); // URL de callback
 
         // Retorna a URL de autorização
@@ -147,7 +153,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
         // Faz a troca do código de autorização por credenciais
         TokenResponse tokenResponse = flow.newTokenRequest(authorizationCode)
-                .setRedirectUri("http://localhost:8081/v1/google-calendar/callback") // Sua URL de callback
+                .setRedirectUri(String.format("%s/v1/google-calendar/callback", externalUrl)) // Sua URL de callback
                 .execute();
 
         Credential credential = flow.createAndStoreCredential(tokenResponse, companyId);

@@ -13,6 +13,7 @@ import com.google.api.services.calendar.model.Event;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +27,12 @@ import java.util.Map;
 @RequestMapping("/v1/google-calendar")
 @RequiredArgsConstructor
 public class GoogleCalendarController implements SecuredRestController {
+
     private final CalendarGoogleService calendarGoogleService;
     private final AuthService authService;
+
+    @Value("${app.external-front-url}")
+    private String externalUrl;
 
     @GetMapping("/authorize")
     public ResponseEntity<Map<String, String>> authorizeGoogleCalendar(
@@ -64,7 +69,7 @@ public class GoogleCalendarController implements SecuredRestController {
 
 
             calendarGoogleService.executa(stateDTO.getCompanyMail(), credential);
-            response.sendRedirect("http://localhost:4200/apps/agendai/calendar");
+            response.sendRedirect(String.format("%s/apps/agendai/calendar", externalUrl));
 
         }
     }
