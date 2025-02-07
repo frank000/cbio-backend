@@ -183,7 +183,18 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
 
-        if (!CollectionUtils.isEmpty(entity.getRag()) && !entity.getRag().get(0).equals(dto.getRag().get(0)) || isNewConfigAndHasRag) {
+        if(!CollectionUtils.isEmpty(entity.getRag())){
+            trataRagENlu(dto, entity, isNewConfigAndHasRag);
+        }
+
+
+        entity = companyConfigRepository.save(entity);
+
+        return companyConfigMapper.toDto(entity);
+    }
+
+    private void trataRagENlu(CompanyConfigDTO dto, CompanyConfigEntity entity, boolean isNewConfigAndHasRag) throws IOException, InterruptedException {
+        if (!entity.getRag().get(0).equals(dto.getRag().get(0)) || isNewConfigAndHasRag) {
             String collectRag = String.join(" ", dto.getRag());
 
 
@@ -204,10 +215,6 @@ public class CompanyServiceImpl implements CompanyService {
                 runDocker(dto.getCompanyId());
             }
         }
-
-        entity = companyConfigRepository.save(entity);
-
-        return companyConfigMapper.toDto(entity);
     }
 
     @Async
