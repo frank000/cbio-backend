@@ -74,8 +74,6 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Update db url
-        run: sed -i 's/<api_key_openia>/${{ secrets.IA_KEY }}/' src/main/resources/application-prd.properties
 
 
       #      - name: Update MINIO_PASSWORD
@@ -206,5 +204,4 @@ jobs:
              
             sed -i "0,/image: .*/s|image: .*|image: $IMAGE_BACKEND|" docker-compose-swarm2.yml
 
-            
             docker stack deploy -c docker-compose-swarm2.yml backend-app
