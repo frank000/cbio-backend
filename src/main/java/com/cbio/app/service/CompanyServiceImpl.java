@@ -154,43 +154,48 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     public CompanyConfigDTO saveConfigCompany(CompanyConfigDTO dto) throws CbioException, IOException, InterruptedException {
-        CompanyConfigEntity entity;
-        boolean updateRagFields = false;
-        boolean isNewConfigAndHasRag = false;
-        if (StringUtils.hasText(dto.getId())) {
-            entity = companyConfigRepository.findById(dto.getId())
-                    .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
+        try {
+            CompanyConfigEntity entity;
+            boolean updateRagFields = false;
+            boolean isNewConfigAndHasRag = false;
+            if (StringUtils.hasText(dto.getId())) {
+                entity = companyConfigRepository.findById(dto.getId())
+                        .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
 
-            isNewConfigAndHasRag = CollectionUtils.isEmpty(entity.getRag()) &&  !CollectionUtils.isEmpty(dto.getRag());
+                isNewConfigAndHasRag = CollectionUtils.isEmpty(entity.getRag()) &&  !CollectionUtils.isEmpty(dto.getRag());
 
 
 
 
-            companyConfigMapper.fromDto(dto, entity);
-            entity.setCompanyId(entity.getCompanyId());
-        } else {
-            entity = CompanyConfigEntity.builder()
-                    .rag(dto.getRag())
-                    .companyId(dto.getCompanyId())
-                    .model(dto.getModel())
-                    .autoSend(dto.getAutoSend())
-                    .emailCalendar(dto.getEmailCalendar())
-                    .keepSameAttendant(dto.getKeepSameAttendant())
-                    .googleCredential(dto.getGoogleCredential())
-                            .build();
+                companyConfigMapper.fromDto(dto, entity);
+                entity.setCompanyId(entity.getCompanyId());
+            } else {
+                entity = CompanyConfigEntity.builder()
+                        .rag(dto.getRag())
+                        .companyId(dto.getCompanyId())
+                        .model(dto.getModel())
+                        .autoSend(dto.getAutoSend())
+                        .emailCalendar(dto.getEmailCalendar())
+                        .keepSameAttendant(dto.getKeepSameAttendant())
+                        .googleCredential(dto.getGoogleCredential())
+                                .build();
 
-            updateRagFields = true;
+                updateRagFields = true;
+            }
+
+
+            if(!CollectionUtils.isEmpty(entity.getRag())){
+                trataRagENlu(dto, entity, isNewConfigAndHasRag);
+            }
+
+
+            entity = companyConfigRepository.save(entity);
+
+            return companyConfigMapper.toDto(entity);
+        } catch (CbioException | IOException | InterruptedException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-
-        if(!CollectionUtils.isEmpty(entity.getRag())){
-            trataRagENlu(dto, entity, isNewConfigAndHasRag);
-        }
-
-
-        entity = companyConfigRepository.save(entity);
-
-        return companyConfigMapper.toDto(entity);
     }
 
     private void trataRagENlu(CompanyConfigDTO dto, CompanyConfigEntity entity, boolean isNewConfigAndHasRag) throws IOException, InterruptedException {
