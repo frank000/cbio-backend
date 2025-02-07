@@ -192,7 +192,7 @@ public class CompanyServiceImpl implements CompanyService {
             entity = companyConfigRepository.save(entity);
 
             return companyConfigMapper.toDto(entity);
-        } catch (CbioException | IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
