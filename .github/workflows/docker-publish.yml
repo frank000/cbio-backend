@@ -207,4 +207,4 @@ jobs:
             sed -i "0,/image: .*/s|image: .*|image: $IMAGE_BACKEND|" docker-compose-swarm2.yml
 
             
-            docker stack deploy -c docker-compose-swarm.yml backend-app
+            docker stack deploy -c docker-compose-swarm2.yml backend-app
