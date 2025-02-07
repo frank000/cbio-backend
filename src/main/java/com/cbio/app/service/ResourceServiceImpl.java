@@ -224,6 +224,11 @@ public class ResourceServiceImpl implements ResourceService {
         }
     }
 
+    public List<ResourceDTO> getAllResourcesIsConfigured(){
+        List<ResourceEntity> all = resourceRepository.getAllByMorningIsNotNullOrAfternoonIsNotNullOrNightIsNotNullOrDawnIsNotNull();
+        return resourceMapper.toDto(all);
+    }
+
     public Optional<ResourceDTO> getResourceByCompanyAndDairyNameAndCompanyId(String dairyName, String companyId) {
         Optional<ResourceEntity> resourceEntity = resourceRepository.getResourceByCompanyIdAndDairyNameIgnoreCase(companyId, dairyName);
 

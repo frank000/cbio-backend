@@ -88,9 +88,6 @@ public class MinioServiceImpl extends AbstractMinioService implements MinioServi
 
         String objectKey = getChaveDoArquivo(fileId, repositorio);
 
-        // Define o tempo de expiração do link (exemplo: 7 dias)
-        int expiryTime = 7 * 24 * 3600;
-
         GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()
                 .method(Method.GET)
                 .bucket(bucket)

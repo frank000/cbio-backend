@@ -25,9 +25,15 @@ public interface CalendarGoogleService {
 
     List<EventDTO> listEventsByResource(String id, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException;
 
+    List<EventDTO> listEventsByResourceAndCompanyId(String id, QueryFilterCalendarDTO dateDTO, String companyId) throws CbioException, IOException;
+
+    Map<String, List<ScheduleDTO>> listScheduleByResource(String id, QueryFilterCalendarDTO dateDTO, String companyId) throws CbioException, IOException;
+
     Map<String, List<ScheduleDTO>> listScheduleByResource(String id, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException;
 
     void insertEvent(EventDTO dto) throws CbioException, IOException;
+
+    void insertEvent(EventDTO dto, String companyIdUserLogged) throws CbioException, IOException;
 
     void notifyEvent(EventDTO dto) throws CbioException, IOException;
 

@@ -24,4 +24,6 @@ public interface ResourceService {
     Optional<ResourceDTO> getResourceByCompanyAndDairyNameAndCompanyId(String dairyName, String companyId);
 
     void saveResourceByDairyName(String dairyName, String companyId);
+
+    List<ResourceDTO> getAllResourcesIsConfigured();
 }

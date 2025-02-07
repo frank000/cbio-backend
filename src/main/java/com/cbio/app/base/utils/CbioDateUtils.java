@@ -73,5 +73,18 @@ public class CbioDateUtils {
         public static LocalDateTime getFrom(String localDateTime) {
             return ZonedDateTime.of(LocalDateTime.parse(localDateTime), getZoneId()).toLocalDateTime();
         }
+
+        public static String getIsoDateTime() {
+            LocalDateTime localDateTime = now();
+            return localDateTime
+                    .atZone(getZoneId())
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
+        public static String formatToIsoDateTime(LocalDateTime localDateTime ) {
+
+            return localDateTime
+                    .atZone(getZoneId())
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
     }
 }

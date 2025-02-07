@@ -27,6 +27,7 @@ public class EventDTO implements Serializable {
     private String phone;
     private String email;
     private Boolean notified;
+    private Boolean appCreated;
     private CompanyDTO company;
 
 }

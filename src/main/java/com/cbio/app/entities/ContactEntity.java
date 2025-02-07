@@ -1,7 +1,6 @@
 package com.cbio.app.entities;
 
 import com.cbio.core.v1.dto.CompanyDTO;
-import com.cbio.core.v1.dto.UsuarioDTO;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,6 +38,17 @@ public class ContactEntity {
 
     @Getter(AccessLevel.NONE)
     private List<String> sessions;
+
+    @Getter(AccessLevel.NONE)
+    private Boolean appCreated;
+
+    public Boolean getAppCreated() {
+
+        if(appCreated == null){
+            appCreated = Boolean.FALSE;
+        }
+        return appCreated;
+    }
 
     public List<String> getSessions() {
         if(sessions == null){

@@ -237,12 +237,15 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
     public void insertEvent(EventDTO dto) throws CbioException, IOException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
+        insertEvent(dto, companyIdUserLogged);
+    }
+
+    public void insertEvent(EventDTO dto, String companyIdUserLogged) throws CbioException, IOException {
         if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
             Credential credential = getCredentialByCompanyId(companyIdUserLogged);
 
-            ResourceDTO resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyName(dto.getDairyName())
+            ResourceDTO resourceByCompanyAndDairyName = resourceService.getResourceByCompanyAndDairyNameAndCompanyId(dto.getDairyName(), companyIdUserLogged)
                     .orElseThrow(() -> new NotFoundException("Recurso não encontrado."));
-
 
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME)
@@ -282,11 +285,15 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             createContactIfDontExistIntoDTO(dto);
 
-            EventEntity entity = EventEntity.builder()
+            EventEntity.EventEntityBuilder builder = EventEntity.builder();
+            if(StringUtils.hasText(dto.getPhone())){
+                builder.phone(normalizePhone(dto.getPhone()));
+            }
+            EventEntity entity = builder
                     .startDate(LocalDateTime.parse(result.startStr()))
                     .endDate(LocalDateTime.parse(result.endStr()))
                     .title(dto.getTitle())
-                    .phone(normalizePhone(dto.getPhone()))
+
                     .email(dto.getEmail())
                     .name(dto.getName())
                     .contactId(dto.getContactId())
@@ -306,10 +313,15 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
     private void createContactIfDontExistIntoDTO(EventDTO dto) throws CbioException {
         if (!StringUtils.hasText(dto.getContactId())) {
-            ContactDTO contactDTO = ContactDTO.builder()
+            ContactDTO.ContactDTOBuilder builder = ContactDTO.builder();
+            if(dto.getCompany() != null && StringUtils.hasText(dto.getCompany().getId())){
+                builder.company(dto.getCompany());
+            }
+            ContactDTO contactDTO = builder
                     .email(dto.getEmail())
                     .name(dto.getName())
                     .phone(dto.getPhone())
+                    .appCreated(dto.getAppCreated())
                     .build();
             contactDTO = contactService.save(contactDTO);
             dto.setContactId(contactDTO.getId());
@@ -414,10 +426,15 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
     }
 
+
     @Override
     public List<EventDTO> listEventsByResource(String id, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
-        if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
+        return listEventsByResourceAndCompanyId(id, dateDTO, companyIdUserLogged);
+    }
+
+    public List<EventDTO> listEventsByResourceAndCompanyId(String id, QueryFilterCalendarDTO dateDTO, String companyId) throws CbioException, IOException {
+        if (!ObjectUtils.isEmpty(companyId)) {
             ResourceDTO resourceById = resourceService.getResourceById(id);
 
             if (ResourceEntity.StatusEnum.DESYNC.equals(resourceById.getStatus())) {
@@ -425,7 +442,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             }
 
 
-            Credential credential = getCredentialByCompanyId(companyIdUserLogged);
+            Credential credential = getCredentialByCompanyId(companyId);
 
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME)
@@ -474,11 +491,16 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     }
 
     @Override
-    public Map<String, List<ScheduleDTO>> listScheduleByResource(String id, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException {
+    public Map<String, List<ScheduleDTO>> listScheduleByResource(String resourceId, QueryFilterCalendarDTO dateDTO) throws CbioException, IOException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
+        return listScheduleByResource(resourceId, dateDTO, companyIdUserLogged);
+    }
+
+    @NotNull
+    public Map<String, List<ScheduleDTO>> listScheduleByResource(String id, QueryFilterCalendarDTO dateDTO, String companyId) throws CbioException, IOException {
         Map<String, List<ScheduleDTO>> resultMap = new HashMap<>();
 
-        if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
+        if (!ObjectUtils.isEmpty(companyId)) {
             ResourceDTO resourceById = resourceService.getResourceById(id);
 
             if (ResourceEntity.StatusEnum.DESYNC.equals(resourceById.getStatus())) {
@@ -486,7 +508,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             }
 
 
-            Credential credential = getCredentialByCompanyId(companyIdUserLogged);
+            Credential credential = getCredentialByCompanyId(companyId);
 
             Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME)
@@ -494,7 +516,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             CalendarListEntry calendar = getCalendar(resourceById.getDairyName(), service);
 
-            List<EventDTO> eventsDTO = recoveryEventsAndSaveFromGoogle(dateDTO, service, calendar, resourceById);
+            List<EventDTO> eventsDTO = recoveryEventsAndSaveFromGoogleByStartDate(dateDTO.getStartStr(), service, calendar, resourceById);
 
             LocalDateTime start = CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(dateDTO.getStartStr().replace("-03:00", "")));
             LocalDateTime end = CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(dateDTO.getEndStr().replace("-03:00", "")));
@@ -509,15 +531,15 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         return resultMap;
     }
 
-    private List<ScheduleDTO> mountListOfSchedule(ResourceDTO resourceById, LocalDateTime start, LocalDateTime end, List<EventDTO> eventsDTO) {
+    private List<ScheduleDTO> mountListOfSchedule(ResourceDTO resourceById, LocalDateTime start, LocalDateTime end, List<EventDTO> eventsHasScheculedYet) {
         List<ResourceEntity.PeriodoDTO> periods = getPeriods(resourceById);
         List<ScheduleDTO> schedulesList = new ArrayList<>();
 
         while (!start.isAfter(end)) {
             LocalDateTime finalStart = start;
-            boolean notHasCreatedSchedule = eventsDTO.stream()
+            boolean hasCreatedSchedule = eventsHasScheculedYet.stream()
                     .anyMatch(eventDTO -> {
-                        return !CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(eventDTO.getStart())).isEqual(finalStart);
+                        return CbioDateUtils.LocalDateTimes.getFrom(LocalDateTime.parse(eventDTO.getStart())).isEqual(finalStart);
                     });
 
             boolean isIntoPeriodValid = periods.stream().anyMatch(periodoDTO -> periodoDTO.isLocalDateTimeBetween(finalStart));
@@ -525,8 +547,9 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             boolean isValidDayOfWeek = resourceById.getSelectedDays()
                     .contains(finalStart.getDayOfWeek().getValue());
 
-            if (isValidDayOfWeek && notHasCreatedSchedule && isIntoPeriodValid ||
-                    isValidDayOfWeek && isIntoPeriodValid && CollectionUtils.isEmpty(eventsDTO)) {
+            if (isValidDayOfWeek && !hasCreatedSchedule && isIntoPeriodValid ||
+                    isValidDayOfWeek && isIntoPeriodValid && CollectionUtils.isEmpty(eventsHasScheculedYet)) {
+
                 String brazilianFormated = CbioDateUtils.getDateTimeWithSecFormated(finalStart, CbioDateUtils.FORMAT_BRL_DATE_TIME_FULL);
                 LocalDateTime dateTimePlusTimeAttendance = getDateTimePlusTimeAttendance(resourceById, start);
 
@@ -558,8 +581,9 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     }
 
     @NotNull
-    private List<EventDTO> recoveryEventsAndSaveFromGoogle(QueryFilterCalendarDTO dateDTO, Calendar service, CalendarListEntry calendar, ResourceDTO resourceById) throws IOException {
-        DateTime date = new DateTime(dateDTO.getStartStr());
+    private List<EventDTO> recoveryEventsAndSaveFromGoogleByStartDate(String startDateStr, Calendar service, CalendarListEntry calendar, ResourceDTO resourceById) throws IOException {
+
+        DateTime date = new DateTime(startDateStr);
         Events listEvents = service.events().list(calendar.getId())
                 .setTimeMin(date)
                 .setSingleEvents(true)
