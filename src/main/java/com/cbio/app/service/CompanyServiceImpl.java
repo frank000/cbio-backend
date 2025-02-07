@@ -162,7 +162,7 @@ public class CompanyServiceImpl implements CompanyService {
                     .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
 
             isNewConfigAndHasRag = CollectionUtils.isEmpty(entity.getRag()) &&  !CollectionUtils.isEmpty(dto.getRag());
-            updateRagFields =  !CollectionUtils.isEmpty(entity.getRag()) && !entity.getRag().get(0).equals(dto.getRag().get(0));
+
 
 
 
@@ -183,7 +183,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
 
-        if (updateRagFields || isNewConfigAndHasRag) {
+        if (!CollectionUtils.isEmpty(entity.getRag()) && !entity.getRag().get(0).equals(dto.getRag().get(0)) || isNewConfigAndHasRag) {
             String collectRag = String.join(" ", dto.getRag());
 
 
