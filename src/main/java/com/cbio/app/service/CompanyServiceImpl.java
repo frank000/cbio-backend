@@ -164,6 +164,7 @@ public class CompanyServiceImpl implements CompanyService {
 
                 isNewConfigAndHasRag = CollectionUtils.isEmpty(entity.getRag()) &&  !CollectionUtils.isEmpty(dto.getRag());
 
+                updateRagFields = !CollectionUtils.isEmpty(entity.getRag()) && dto.getRag() != null && !entity.getRag().get(0).equals(dto.getRag().get(0));
 
 
 
@@ -184,9 +185,28 @@ public class CompanyServiceImpl implements CompanyService {
             }
 
 
-            if(!CollectionUtils.isEmpty(entity.getRag())){
-                trataRagENlu(dto, entity, isNewConfigAndHasRag);
-            }
+                if (updateRagFields ||
+                        isNewConfigAndHasRag) {
+                    String collectRag = String.join(" ", dto.getRag());
+
+
+                    if (StringUtils.hasText(collectRag)) {
+                        String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
+                        fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
+                    } else {
+                        String nluFilePath = BASE_TARGET_DIR
+                                .concat(File.separator)
+                                .concat(dto.getCompanyId())
+                                .concat(File.separator)
+                                .concat("data/nlu.yml");
+
+                        NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
+
+                        nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
+                        nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
+                        runDocker(dto.getCompanyId());
+                    }
+                }
 
 
             entity = companyConfigRepository.save(entity);
@@ -198,29 +218,6 @@ public class CompanyServiceImpl implements CompanyService {
         }
     }
 
-    private void trataRagENlu(CompanyConfigDTO dto, CompanyConfigEntity entity, boolean isNewConfigAndHasRag) throws IOException, InterruptedException {
-        if (!entity.getRag().get(0).equals(dto.getRag().get(0)) || isNewConfigAndHasRag) {
-            String collectRag = String.join(" ", dto.getRag());
-
-
-            if (StringUtils.hasText(collectRag)) {
-                String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
-                fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
-            } else {
-                String nluFilePath = BASE_TARGET_DIR
-                        .concat(File.separator)
-                        .concat(dto.getCompanyId())
-                        .concat(File.separator)
-                        .concat("data/nlu.yml");
-
-                NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
-
-                nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
-                nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
-                runDocker(dto.getCompanyId());
-            }
-        }
-    }
 
     @Async
     protected void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
