@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -134,7 +136,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
     }
 
     private static boolean isNotCommand(DialogoDTO dialogoDTO1) {
-        return !dialogoDTO1.getMensagem().startsWith("/");
+        return StringUtils.hasText(dialogoDTO1.getMensagem()) && !dialogoDTO1.getMensagem().startsWith("/") || !CollectionUtils.isEmpty(dialogoDTO1.getButtons());
     }
 
     public Optional<DialogoDTO> notifyUserClosingAttendance(String mensagem, String channelId, SessaoEntity sessaoEntity) {

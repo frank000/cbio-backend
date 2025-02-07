@@ -47,9 +47,11 @@ public class ContactServiceImpl implements ContactService {
     @Override
     public ContactDTO save(ContactDTO contactDTO) throws CbioException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
-
+        if(StringUtils.isEmpty(companyIdUserLogged) && contactDTO.getCompany() != null) {
+            companyIdUserLogged = contactDTO.getCompany().getId();
+        }
         if (StringUtils.hasText(companyIdUserLogged)) {
-            String normalizedPhone = normalizePhone(contactDTO.getPhone());
+
 
 
             contactDTO.setCompany(
@@ -57,13 +59,20 @@ public class ContactServiceImpl implements ContactService {
                             .id(companyIdUserLogged)
                             .build()
             );
+            if(StringUtils.hasText(contactDTO.getPhone())){
+                String normalizedPhone = normalizePhone(contactDTO.getPhone());
+                contactDTO.setPhone(normalizedPhone);
 
-            contactDTO.setPhone(normalizedPhone);
+            }
+
             contactDTO.setActive(Boolean.TRUE);
             ContactEntity entity = contactMapper.toEntity(contactDTO);
             ContactEntity saved = contactRepository.save(entity);
 
-            sendBusinessCard(companyIdUserLogged, entity);
+            if(StringUtils.hasText(entity.getPhone())){
+                sendBusinessCard(companyIdUserLogged, entity);
+            }
+
 
             return contactMapper.toDto(saved);
 
@@ -132,7 +141,7 @@ public class ContactServiceImpl implements ContactService {
     public List<ContactDTO> getContacts() throws CbioException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
         if (StringUtils.hasText(companyIdUserLogged)) {
-            return contactMapper.toDto(contactRepository.findByCompanyId(companyIdUserLogged));
+            return contactMapper.toDto(contactRepository.findByCompanyIdAndAppCreatedIsFalse(companyIdUserLogged));
         } else {
             throw new CbioException("Companhia não encontrada", HttpStatus.NO_CONTENT.value());
         }

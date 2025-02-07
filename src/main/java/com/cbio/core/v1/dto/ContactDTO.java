@@ -32,4 +32,6 @@ public class ContactDTO  implements Serializable {
 
     private List<String> sessions;
 
+    private Boolean appCreated;
+
 }

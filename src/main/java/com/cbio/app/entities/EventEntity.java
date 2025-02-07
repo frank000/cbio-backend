@@ -37,7 +37,17 @@ public class EventEntity implements Serializable {
     private String email;
     private CompanyDTO company;
     @Getter(AccessLevel.NONE)
+    private Boolean appCreated;
+    @Getter(AccessLevel.NONE)
     private Boolean notified;
+
+    public Boolean getAppCreated() {
+
+        if(appCreated == null) {
+            appCreated = Boolean.FALSE;
+        }
+        return appCreated;
+    }
 
     public Boolean getNotified() {
         if(notified == null) {

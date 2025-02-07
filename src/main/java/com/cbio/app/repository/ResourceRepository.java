@@ -14,4 +14,6 @@ public interface ResourceRepository extends MongoRepository<ResourceEntity, Stri
     List<ResourceEntity> getResourcesByCompanyId(String companyId);
 
     Optional<ResourceEntity> getResourceByCompanyIdAndDairyNameIgnoreCase(String id, String dairyName);
+
+    List<ResourceEntity> getAllByMorningIsNotNullOrAfternoonIsNotNullOrNightIsNotNullOrDawnIsNotNull();
 }
