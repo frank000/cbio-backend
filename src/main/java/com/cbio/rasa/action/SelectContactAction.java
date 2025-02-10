@@ -15,11 +15,14 @@ import io.github.jrasa.event.Event;
 import io.github.jrasa.exception.RejectExecuteException;
 import io.github.jrasa.message.Message;
 import io.github.jrasa.tracker.Tracker;
+import io.minio.errors.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Component
@@ -90,7 +93,9 @@ public class SelectContactAction implements Action {
             calendarGoogleService.insertEvent(eventDTO, recurso.getCompany().getId());
             result = "Agendamento realizado com sucesso.";
 
-        } catch (CbioException e) {
+        } catch (CbioException | ServerException | InsufficientDataException | ErrorResponseException |
+                 NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException | XmlParserException |
+                 InternalException e) {
             log.error(e.getMessage(), e);
         } catch (IOException e) {
 

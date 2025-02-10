@@ -98,7 +98,13 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
                     .ifPresent(resposta -> {
 
                         resposta.setCanal(entradaMensagemDTO.getCanal());
-                        enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), resposta);
+                        try {
+                            enviaRespostaDialogoPorCanal(entradaMensagemDTO.getCanal(), resposta);
+                        } catch (ServerException | InsufficientDataException | ErrorResponseException | IOException |
+                                 NoSuchAlgorithmException | InvalidKeyException | InvalidResponseException |
+                                 XmlParserException | InternalException e) {
+                            throw new RuntimeException(e);
+                        }
 
                     });
         } catch (Exception e) {
@@ -117,7 +123,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
 
 
     @Transactional(rollbackFor = RuntimeException.class)
-    public DialogoDTO enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) {
+    public DialogoDTO enviaRespostaDialogoPorCanal(CanalDTO canal, DialogoDTO dialogoResposta) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         try{
 
             CanalSenderEnum canalSenderEnum = CanalSenderEnum.valueOf(canal.getNome().toUpperCase().trim());
@@ -139,7 +145,7 @@ public class ChatbotForwardServiceImpl implements ChatbotForwardService {
         return StringUtils.hasText(dialogoDTO1.getMensagem()) && !dialogoDTO1.getMensagem().startsWith("/") || !CollectionUtils.isEmpty(dialogoDTO1.getButtons());
     }
 
-    public Optional<DialogoDTO> notifyUserClosingAttendance(String mensagem, String channelId, SessaoEntity sessaoEntity) {
+    public Optional<DialogoDTO> notifyUserClosingAttendance(String mensagem, String channelId, SessaoEntity sessaoEntity) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
 
         DialogoDTO dialogoDTO = DialogoDTO.builder()
                 .mensagem(mensagem)

@@ -26,6 +26,7 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
+import io.minio.errors.*;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,8 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -228,19 +231,19 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
     }
 
     @Override
-    public void notifyEvent(EventDTO dto) throws CbioException, IOException {
+    public void notifyEvent(EventDTO dto) throws CbioException, IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
         if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
             eventService.notify(dto.getId());
         }
     }
 
-    public void insertEvent(EventDTO dto) throws CbioException, IOException {
+    public void insertEvent(EventDTO dto) throws CbioException, IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
         insertEvent(dto, companyIdUserLogged);
     }
 
-    public void insertEvent(EventDTO dto, String companyIdUserLogged) throws CbioException, IOException {
+    public void insertEvent(EventDTO dto, String companyIdUserLogged) throws CbioException, IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         if (!ObjectUtils.isEmpty(companyIdUserLogged)) {
             Credential credential = getCredentialByCompanyId(companyIdUserLogged);
 
@@ -311,7 +314,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         }
     }
 
-    private void createContactIfDontExistIntoDTO(EventDTO dto) throws CbioException {
+    private void createContactIfDontExistIntoDTO(EventDTO dto) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         if (!StringUtils.hasText(dto.getContactId())) {
             ContactDTO.ContactDTOBuilder builder = ContactDTO.builder();
             if(dto.getCompany() != null && StringUtils.hasText(dto.getCompany().getId())){
