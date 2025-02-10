@@ -85,6 +85,8 @@ public interface InstagramFeignClient {
                     private String templateType;
                     private String text;
                     private List<Buttons> buttons;
+                    private List<Element> elements; // Generic Templates
+
 
                 }
             }
@@ -101,6 +103,17 @@ public interface InstagramFeignClient {
             private String url;
             private String payload;
             private String title;
+        }
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class Element implements Serializable {
+            private String title; // Título do elemento
+            private String imageUrl; // URL da imagem
+            private String subtitle; // Subtítulo do elemento
+            private List<Buttons> buttons; // Lista de botões (máximo 3)
         }
 
     }

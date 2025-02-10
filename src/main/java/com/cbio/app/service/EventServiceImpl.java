@@ -14,11 +14,15 @@ import com.cbio.core.service.*;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.ModelDTO;
 import com.cbio.core.v1.dto.ResourceDTO;
+import io.minio.errors.*;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 
 
@@ -46,7 +50,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void notify(String id) throws CbioException {
+    public void notify(String id) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
 
         EventEntity entity = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado."));

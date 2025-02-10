@@ -15,7 +15,8 @@ public class InstagramEnuns {
     @Getter
     @AllArgsConstructor
     public static enum TemplateTypeEnum{
-        BUTTON("button");
+        BUTTON("button"),
+        GENERIC_TEMPLATE("generic");
         private String value;
     }
     @Getter

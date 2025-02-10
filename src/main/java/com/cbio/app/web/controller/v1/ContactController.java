@@ -1,16 +1,15 @@
 package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
-import com.cbio.app.entities.CompanyEntity;
 import com.cbio.app.entities.ContactEntity;
 import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.grid.ContactsGridRepository;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.ContactService;
-import com.cbio.core.service.EtapaService;
-import com.cbio.core.v1.dto.*;
-import lombok.RequiredArgsConstructor;
+import com.cbio.core.v1.dto.ContactDTO;
+import com.cbio.core.v1.dto.ContactFiltroGridDTO;
+import io.minio.errors.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @RestController
@@ -28,7 +30,7 @@ public record ContactController(ContactService service,
                                 ) implements SecuredRestController {
 
     @PostMapping
-    private ResponseEntity<ContactDTO> save(@RequestBody ContactDTO dto) throws CbioException {
+    private ResponseEntity<ContactDTO> save(@RequestBody ContactDTO dto) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(dto));
     }

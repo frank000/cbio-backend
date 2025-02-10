@@ -16,6 +16,7 @@ import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.ContactDTO;
 import com.cbio.core.v1.dto.ModelDTO;
+import io.minio.errors.*;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,7 +49,7 @@ public class ContactServiceImpl implements ContactService {
 
 
     @Override
-    public ContactDTO save(ContactDTO contactDTO) throws CbioException {
+    public ContactDTO save(ContactDTO contactDTO) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         String companyIdUserLogged = authService.getCompanyIdUserLogged();
         if(StringUtils.isEmpty(companyIdUserLogged) && contactDTO.getCompany() != null) {
             companyIdUserLogged = contactDTO.getCompany().getId();
@@ -82,7 +86,7 @@ public class ContactServiceImpl implements ContactService {
         }
     }
 
-    private void sendBusinessCard(String companyIdUserLogged, ContactEntity entity) throws CbioException {
+    private void sendBusinessCard(String companyIdUserLogged, ContactEntity entity) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         CompanyConfigEntity companyConfigEntity = companyConfigRepository.findByCompanyId(companyIdUserLogged)
                 .orElseThrow(() -> new NotFoundException("Configuração não encontrada."));
 

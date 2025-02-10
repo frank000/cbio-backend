@@ -19,6 +19,7 @@ import com.cbio.core.v1.dto.ModelDTO;
 import com.cbio.core.v1.dto.ResourceDTO;
 import com.cbio.core.v1.dto.google.EventDTO;
 import com.cbio.core.v1.dto.notification.NotificationJobDTO;
+import io.minio.errors.*;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +107,23 @@ public class ResourceServiceImpl implements ResourceService {
 
                                         alterNotifiedEvent(eventDTO);
 
-                                    } catch (CbioException e) {
+                                    } catch (CbioException | ServerException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (InsufficientDataException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (ErrorResponseException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (NoSuchAlgorithmException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (InvalidKeyException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (InvalidResponseException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (XmlParserException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (InternalException e) {
                                         throw new RuntimeException(e);
                                     }
 

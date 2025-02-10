@@ -10,6 +10,7 @@ import com.cbio.core.v1.dto.google.ScheduleDTO;
 import com.cbio.core.v1.dto.google.StateDTO;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.model.Event;
+import io.minio.errors.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,14 +97,14 @@ public class GoogleCalendarController implements SecuredRestController {
 
     @PostMapping("/event")
     public ResponseEntity<Void> insertEvent(
-            @RequestBody EventDTO dto) throws CbioException, IOException {
+            @RequestBody EventDTO dto) throws CbioException, IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         calendarGoogleService.insertEvent(dto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/event/notify")
     public ResponseEntity<Void> notifyEvent(
-            @RequestBody EventDTO dto) throws CbioException, IOException {
+            @RequestBody EventDTO dto) throws CbioException, IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         calendarGoogleService.notifyEvent(dto);
         return ResponseEntity.ok().build();
     }
