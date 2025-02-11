@@ -140,7 +140,11 @@ public class MetaServiceImpl implements MetaService {
             String id = data.getId();
             MessagingItem messagingItem = data.getMessaging().stream().findFirst().orElseThrow();
             AtomicReference<MessagingAttachment> mediaReference = new AtomicReference<>();
-            if (id.equals(messagingItem.getSender().getId())) {
+
+            boolean haventSender = id.equals(messagingItem.getSender().getId());
+            boolean readingMensage = messagingItem.getRead() != null;
+
+            if (haventSender || readingMensage) {
                 return;
             }
 
@@ -159,13 +163,13 @@ public class MetaServiceImpl implements MetaService {
                 message.set(messagingItem.getPostback().getPayload());
                 mid.set(messagingItem.getPostback().getMid());
 
-            }else if(StringUtils.hasText(messagingItem.getMessage().getText())) {
+            }else if(messagingItem.getMessage() != null && StringUtils.hasText(messagingItem.getMessage().getText())) {
 
                 typeMessage.set("TEXT");
                 message.set(messagingItem.getMessage().getText());
                 mid.set(messagingItem.getMessage().getMid());
 
-            } else if (messagingItem.getMessage().hasAttachment()) {
+            } else if (messagingItem.getMessage() != null && messagingItem.getMessage().hasAttachment()) {
 
                 MessagingAttachment first = messagingItem.getMessage().getAttachments().stream().findFirst().get();
                 mediaReference.set(first);
