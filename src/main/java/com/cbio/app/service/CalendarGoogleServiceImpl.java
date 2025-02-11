@@ -43,7 +43,9 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -527,11 +529,35 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
 
             List<ScheduleDTO> schedulesList = mountListOfSchedule(resourceById, start, end, eventsDTO);
 
-            return schedulesList.stream()
+            Map<String, List<ScheduleDTO>> collect = schedulesList.stream()
                     .collect(Collectors.groupingBy(ScheduleDTO::getStrDate));
+
+            return getSortedCollection(collect);
 
         }
         return resultMap;
+    }
+
+    @NotNull
+    private static Map<String, List<ScheduleDTO>> getSortedCollection(Map<String, List<ScheduleDTO>> collect) {
+        // Criar um TreeMap com um comparador personalizado para ordenar as datas
+        Map<LocalDate, List<ScheduleDTO>> sortedMap = new TreeMap<>();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        // Converter as chaves do Map para LocalDate e ordenar
+        collect.forEach((key, value) -> {
+            LocalDate date = LocalDate.parse(key, formatter);
+            sortedMap.put(date, value);
+        });
+
+        // Se necessário, converter de volta para Map<String, List<ScheduleDTO>>
+        Map<String, List<ScheduleDTO>> finalMap = new LinkedHashMap<>();
+        sortedMap.forEach((key, value) -> {
+            String formattedDate = key.format(formatter);
+            finalMap.put(formattedDate, value);
+        });
+        return finalMap;
     }
 
     private List<ScheduleDTO> mountListOfSchedule(ResourceDTO resourceById, LocalDateTime start, LocalDateTime end, List<EventDTO> eventsHasScheculedYet) {
