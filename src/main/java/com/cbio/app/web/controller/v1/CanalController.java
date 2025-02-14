@@ -2,13 +2,11 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.CanalEntity;
-import com.cbio.app.entities.CompanyEntity;
 import com.cbio.app.repository.grid.CanalConfigGridRepository;
 import com.cbio.app.web.SecuredRestController;
 import com.cbio.core.service.CanalService;
 import com.cbio.core.v1.dto.CanalDTO;
 import com.cbio.core.v1.dto.CompanyFiltroGridDTO;
-import com.cbio.core.v1.dto.CompanyGridDTO;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

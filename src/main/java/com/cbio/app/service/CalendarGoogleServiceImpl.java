@@ -143,6 +143,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         return new GoogleAuthorizationCodeFlow.Builder(
                 HTTP_TRANSPORT, JSON_FACTORY, dto.getClientId(), dto.getClientSecret(), Collections.singleton(CalendarScopes.CALENDAR))
                 .setAccessType("offline")
+                .setApprovalPrompt("force")
                 .build();
     }
 
@@ -745,29 +746,75 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         return calendar;
     }
 
-    private Credential getCredentialByCompanyId(String companyIdUserLogged) throws CbioException {
+    private Credential getCredentialByCompanyId(String companyIdUserLogged) throws CbioException, IOException {
         Optional<GoogleCredentialEntity> optByUserId = googleCredentialRepository.findByUserId(companyIdUserLogged);
         if (optByUserId.isPresent()) {
             GoogleCredentialEntity googleCredentialEntity = optByUserId.get();
             CompanyConfigEntity companyConfigEntity = companyConfigRepository.findByCompanyId(companyIdUserLogged)
                     .orElseThrow(() -> new CbioException("Configuração não encontrada.", HttpStatus.NO_CONTENT.value()));
 
-            return new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
-                    .setTransport(HTTP_TRANSPORT)  // transporte HTTP
-                    .setJsonFactory(JSON_FACTORY)  // JSON factory
+
+            // Adicione um CredentialRefreshListener para atualizar o token no banco de dados
+            CredentialRefreshListener credentialRefreshListener = new CredentialRefreshListener() {
+                @Override
+                public void onTokenResponse(Credential credential, TokenResponse tokenResponse) throws IOException {
+                    log.info("TENTATIVA REFRESHTOKEN: {}", companyConfigEntity.getEmailCalendar());
+                    // Atualiza o token no banco de dados quando ele for renovado
+                    updateCredentialInDatabase(companyIdUserLogged, credential);
+                }
+
+                @Override
+                public void onTokenErrorResponse(Credential credential, TokenErrorResponse tokenErrorResponse) throws IOException {
+                    // Lidar com erros de renovação de token
+                    log.error("Erro ao renovar token: {}", tokenErrorResponse.getError());
+                }
+            };
+
+
+
+            Credential credential = new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
+                    .addRefreshListener(credentialRefreshListener)
+                    .setTransport(HTTP_TRANSPORT)
+                    .setJsonFactory(JSON_FACTORY)
                     .setClientAuthentication(
                             new ClientParametersAuthentication(
                                     companyConfigEntity.getGoogleCredential().getClientId(),
                                     companyConfigEntity.getGoogleCredential().getClientSecret()
-                            ))  // autenticação do cliente
-                    .setTokenServerUrl(new GenericUrl("https://oauth2.googleapis.com/token"))  // URL do servidor de tokens
+                            ))
+                    .setTokenServerUrl(new GenericUrl("https://oauth2.googleapis.com/token"))
                     .build()
-                    .setAccessToken(googleCredentialEntity.getCredential().getAccessToken())  // token de acesso
-                    .setRefreshToken(googleCredentialEntity.getCredential().getRefreshToken())  // token de refresh
+                    .setAccessToken(googleCredentialEntity.getCredential().getAccessToken())
+                    .setRefreshToken(googleCredentialEntity.getCredential().getRefreshToken())
                     .setExpirationTimeMilliseconds(googleCredentialEntity.getCredential().getExpirationTimeMillis());
+
+
+
+            return credential;
         } else {
             return null;
         }
+    }
 
+    // Método auxiliar para atualizar as credenciais no banco de dados
+    private void updateCredentialInDatabase(String companyId, Credential credential) {
+        try {
+            GoogleCredentialEntity googleCredentialEntity = googleCredentialRepository.findByUserId(companyId)
+                    .orElseThrow(() -> new RuntimeException("Credencial não encontrada para atualização"));
+
+            CredentialData credentialData = CredentialData.builder()
+                    .accessToken(credential.getAccessToken())
+                    .refreshToken(credential.getRefreshToken())
+                    .expirationTimeMillis(credential.getExpirationTimeMilliseconds())
+                    .jsonFactory(credential.getJsonFactory())
+                    .build();
+
+            googleCredentialEntity.setCredential(credentialData);
+            googleCredentialEntity.setCreatedTime(LocalDateTime.now());
+
+            googleCredentialRepository.save(googleCredentialEntity);
+            log.info("Credencial atualizada com sucesso para o companyId: {}", companyId);
+        } catch (Exception e) {
+            log.error("Erro ao atualizar credencial no banco de dados: {}", e.getMessage(), e);
+        }
     }
 }
