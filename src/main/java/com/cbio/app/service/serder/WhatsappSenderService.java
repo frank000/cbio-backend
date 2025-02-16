@@ -21,6 +21,7 @@ import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -41,8 +42,7 @@ public class WhatsappSenderService implements Sender {
     public void envia(DialogoDTO dialogoDTO) {
 
         try {
-            SendMessage sendMessage;
-            Message message;
+            Message message = null;
             WhatsappApiFactory factory = WhatsappApiFactory.newInstance(dialogoDTO.getCanal().getApiKey());
             WhatsappBusinessCloudApi whatsappBusinessCloudApi = factory.newBusinessCloudApi(ApiVersion.V20_0);
 
@@ -59,11 +59,20 @@ public class WhatsappSenderService implements Sender {
                 message = getMessageModel(dialogoDTO);
 
             } else {
-                message = getMessageTextButtonOption(dialogoDTO, whatsappBusinessCloudApi);
+
+                if (dialogoDTO.getButtons() != null && dialogoDTO.getButtons().size() > 10) {
+                    enviaListaDividida(dialogoDTO, whatsappBusinessCloudApi);
+                } else {
+                    message = getMessageTextButtonOption(dialogoDTO, whatsappBusinessCloudApi);
+                }
+
             }
-           
-            MessageResponse messageResponse = whatsappBusinessCloudApi.sendMessage(dialogoDTO.getCanal().getIdCanal(), message);
-            log.info("WHATSAPP SENDER {}", messageResponse.toString());
+
+            if(message != null){
+                MessageResponse messageResponse = whatsappBusinessCloudApi.sendMessage(dialogoDTO.getCanal().getIdCanal(), message);
+                log.info("WHATSAPP SENDER {}", messageResponse.toString());
+            }
+
         }catch (WhatsappApiException e){
             e.printStackTrace();
             String msg = String.format("WHATSAPP PROBLEMA: %s", e.getMessage());
@@ -126,6 +135,24 @@ public class WhatsappSenderService implements Sender {
 
 
 
+    private void enviaListaDividida(DialogoDTO dialogoDTO, WhatsappBusinessCloudApi whatsappBusinessCloudApi) {
+        List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
+        int totalItens = itens.size();
+        int limite = 10; // Limite de itens por mensagem
+
+        for (int i = 0; i < totalItens; i += limite) {
+            List<RasaMessageDTO.Button> subLista = itens.subList(i, Math.min(i + limite, totalItens));
+
+            // Cria uma cópia do DTO com a sublista de botões
+            DialogoDTO dialogoCopy =  DialogoDTO.builder().build();
+            BeanUtils.copyProperties(dialogoDTO, dialogoCopy); // Copia as propriedades do DTO original
+            dialogoCopy.setButtons(subLista);
+
+            // Envia a mensagem com a sublista
+            Message message = getMessageTextButtonOption(dialogoCopy, whatsappBusinessCloudApi);
+            whatsappBusinessCloudApi.sendMessage(dialogoCopy.getCanal().getIdCanal(), message);
+        }
+    }
 
     private static Message getMessageTextButtonOption(DialogoDTO dialogoDTO, WhatsappBusinessCloudApi whatsappBusinessCloudApi) {
         Message message;
