@@ -149,7 +149,7 @@ public class WhatsappSenderService implements Sender {
             dialogoCopy.setButtons(subLista);
 
             // Envia a mensagem com a sublista
-            Message message = getMessageTextButtonOption(dialogoCopy, whatsappBusinessCloudApi);
+            Message message = montaOptions(dialogoCopy);
             whatsappBusinessCloudApi.sendMessage(dialogoCopy.getCanal().getIdCanal(), message);
         }
     }
@@ -191,37 +191,43 @@ public class WhatsappSenderService implements Sender {
                     );
 
         } else {
-            // Mensagem com lista de opções
-            List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
-            Action actionButtons = new Action();
-            actionButtons.setButtonText("Escolha uma opção"); // Texto do botão que abre a lista
-
-            Section opcoes = new Section()
-                    .setTitle("Opções");
-            itens.forEach(button -> {
-                opcoes.addRow(new Row()
-                        .setId(button.getPayload())
-                        .setTitle(button.getTitle())
-                        .setDescription(button.getPayload())
-                );
-            });
-
-            actionButtons.addSection(opcoes);
-
-            message = Message.MessageBuilder.builder()
-                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())
-                    .buildInteractiveMessage(
-                            InteractiveMessage.build()
-                                    .setAction(actionButtons)
-                                    .setType(InteractiveMessageType.LIST)
-                                    .setHeader(new Header()
-                                            .setType(HeaderType.TEXT)
-                                            .setText(dialogoDTO.getMensagem()))
-                                    .setBody(new Body()
-                                            .setText("Escolha uma opção da lista")) // Corpo da mensagem obrigatório
-                    );
+            message = montaOptions(dialogoDTO);
         }
 
+        return message;
+    }
+
+    private static Message montaOptions(DialogoDTO dialogoDTO) {
+        Message message;
+        // Mensagem com lista de opções
+        List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
+        Action actionButtons = new Action();
+        actionButtons.setButtonText("Escolha uma opção"); // Texto do botão que abre a lista
+
+        Section opcoes = new Section()
+                .setTitle("Opções");
+        itens.forEach(button -> {
+            opcoes.addRow(new Row()
+                    .setId(button.getPayload())
+                    .setTitle(button.getTitle())
+                    .setDescription(button.getPayload())
+            );
+        });
+
+        actionButtons.addSection(opcoes);
+
+        message = Message.MessageBuilder.builder()
+                .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())
+                .buildInteractiveMessage(
+                        InteractiveMessage.build()
+                                .setAction(actionButtons)
+                                .setType(InteractiveMessageType.LIST)
+                                .setHeader(new Header()
+                                        .setType(HeaderType.TEXT)
+                                        .setText(dialogoDTO.getMensagem()))
+                                .setBody(new Body()
+                                        .setText("Escolha uma opção da lista")) // Corpo da mensagem obrigatório
+                );
         return message;
     }
 
