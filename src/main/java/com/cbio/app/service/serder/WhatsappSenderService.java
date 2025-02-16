@@ -61,7 +61,7 @@ public class WhatsappSenderService implements Sender {
             } else {
                 message = getMessageTextButtonOption(dialogoDTO, whatsappBusinessCloudApi);
             }
-
+           
             MessageResponse messageResponse = whatsappBusinessCloudApi.sendMessage(dialogoDTO.getCanal().getIdCanal(), message);
             log.info("WHATSAPP SENDER {}", messageResponse.toString());
         }catch (WhatsappApiException e){
@@ -130,69 +130,70 @@ public class WhatsappSenderService implements Sender {
     private static Message getMessageTextButtonOption(DialogoDTO dialogoDTO, WhatsappBusinessCloudApi whatsappBusinessCloudApi) {
         Message message;
         if (CollectionUtils.isEmpty(dialogoDTO.getButtons())) {
-            //TEXT
-            message = Message.MessageBuilder.builder()//
-                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())//
-                    .buildTextMessage(new TextMessage()//
-                            .setBody(dialogoDTO.getMensagem())//
+            // Mensagem de texto simples
+            message = Message.MessageBuilder.builder()
+                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())
+                    .buildTextMessage(new TextMessage()
+                            .setBody(dialogoDTO.getMensagem())
                             .setPreviewUrl(false));
 
         } else if (dialogoDTO.getButtons().size() <= QNTD_MAX_BUTTONS) {
-            //BUTTONS
+            // Mensagem com botões
             List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
             Action actionButtons = new Action();
-            itens
-                    .stream()
-                    .forEach(
-                            button -> {
-                                actionButtons.addButton(
-                                        new Button()
-                                                .setType(ButtonType.REPLY)
-                                                .setReply(new Reply()
-                                                        .setId(button.getPayload())
-                                                        .setTitle(button.getTitle()
-                                                        ))
-                                );
-                            }
-                    );
-            message = Message.MessageBuilder.builder()//
-                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())//
+            itens.forEach(button -> {
+                actionButtons.addButton(
+                        new Button()
+                                .setType(ButtonType.REPLY)
+                                .setReply(new Reply()
+                                        .setId(button.getPayload())
+                                        .setTitle(button.getTitle())
+                                )
+                );
+            });
+
+            message = Message.MessageBuilder.builder()
+                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())
                     .buildInteractiveMessage(
-                            InteractiveMessage.build() //
-                                    .setAction(actionButtons) //
-                                    .setType(InteractiveMessageType.BUTTON) //
-                                    .setBody(new Body() //
-                                            .setText(dialogoDTO.getMensagem())) //
+                            InteractiveMessage.build()
+                                    .setAction(actionButtons)
+                                    .setType(InteractiveMessageType.BUTTON)
+                                    .setBody(new Body()
+                                            .setText(dialogoDTO.getMensagem())
+                                    )
                     );
 
         } else {
-            //OPTION
+            // Mensagem com lista de opções
             List<RasaMessageDTO.Button> itens = dialogoDTO.getButtons();
             Action actionButtons = new Action();
-            actionButtons.setButtonText(dialogoDTO.getMensagem());
+            actionButtons.setButtonText("Escolha uma opção"); // Texto do botão que abre a lista
+
             Section opcoes = new Section()
                     .setTitle("Opções");
-            itens
-                    .stream()
-                    .forEach(
-                            button -> opcoes.addRow(new Row()
-                                    .setId(button.getPayload())
-                                    .setTitle(button.getTitle())
-                                    .setDescription(button.getPayload()))
-                    );
+            itens.forEach(button -> {
+                opcoes.addRow(new Row()
+                        .setId(button.getPayload())
+                        .setTitle(button.getTitle())
+                        .setDescription(button.getPayload())
+                );
+            });
 
-            message = Message.MessageBuilder.builder()//
-                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())//
+            actionButtons.addSection(opcoes);
+
+            message = Message.MessageBuilder.builder()
+                    .setTo("+" + dialogoDTO.getOnlyIdentificadorRementente())
                     .buildInteractiveMessage(
                             InteractiveMessage.build()
                                     .setAction(actionButtons)
                                     .setType(InteractiveMessageType.LIST)
-                                    .setHeader(new Header() //
-                                            .setType(HeaderType.TEXT) //
+                                    .setHeader(new Header()
+                                            .setType(HeaderType.TEXT)
                                             .setText(dialogoDTO.getMensagem()))
+                                    .setBody(new Body()
+                                            .setText("Escolha uma opção da lista")) // Corpo da mensagem obrigatório
                     );
         }
-
 
         return message;
     }

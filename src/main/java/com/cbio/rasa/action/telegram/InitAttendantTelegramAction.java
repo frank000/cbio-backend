@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -61,8 +62,10 @@ public class InitAttendantTelegramAction implements Action {
 
             String[] idUsuarioAndIdCanal = tracker.getCurrentState().getSenderId().split("_");
 
+            log.info("SESSAO CONSULTA: {} - {}",Long.valueOf(idUsuarioAndIdCanal[0]), idUsuarioAndIdCanal[1] );
             SessaoEntity sessaoEntity = sessaoService
                     .buscaSessaoAtivaPorIdentificadorUsuario(Long.valueOf(idUsuarioAndIdCanal[0]), idUsuarioAndIdCanal[1]);
+            log.info("SESSAO ACHADA tem ulitmo canal: {}", sessaoEntity.getLastChannelChat() != null);
 
             try {
                 LocalDateTime now = LocalDateTime.now();
