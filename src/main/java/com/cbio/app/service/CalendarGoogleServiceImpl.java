@@ -84,7 +84,10 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
     private static final List<String> SCOPES =
-            Collections.singletonList(CalendarScopes.CALENDAR);
+            Arrays.asList(
+                    CalendarScopes.CALENDAR,
+                    CalendarScopes.CALENDAR_EVENTS
+            );
 
     private final CompanyConfigRepository companyConfigRepository;
 
@@ -162,6 +165,8 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
         TokenResponse tokenResponse = flow.newTokenRequest(authorizationCode)
                 .setRedirectUri(String.format("%s/v1/google-calendar/callback", externalUrl)) // Sua URL de callback
                 .execute();
+
+        log.info("Refresh Token Recebido: {}", tokenResponse.getRefreshToken()); // Adicione este log
 
         Credential credential = flow.createAndStoreCredential(tokenResponse, companyId);
 
