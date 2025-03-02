@@ -45,6 +45,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -771,6 +772,7 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             };
 
 
+            Long expirationTimeMillis = googleCredentialEntity.getCredential().getExpirationTimeMillis();
 
             Credential credential = new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
                     .addRefreshListener(credentialRefreshListener)
@@ -785,9 +787,13 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
                     .build()
                     .setAccessToken(googleCredentialEntity.getCredential().getAccessToken())
                     .setRefreshToken(googleCredentialEntity.getCredential().getRefreshToken())
-                    .setExpirationTimeMilliseconds(googleCredentialEntity.getCredential().getExpirationTimeMillis());
+                    .setExpirationTimeMilliseconds(
+                            expirationTimeMillis);
 
+            LocalDateTime date =
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(expirationTimeMillis), ZoneId.systemDefault());
 
+            log.info("EXPIRATION GOOGLE CREDENTIAL: {}", date.toString());
 
             return credential;
         } else {
