@@ -793,6 +793,9 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             LocalDateTime date =
                     LocalDateTime.ofInstant(Instant.ofEpochMilli(expirationTimeMillis), ZoneId.systemDefault());
 
+            log.info("EXPIRATION GOOGLE CREDENTIAL id : {}", googleCredentialEntity.getId());
+            log.info("EXPIRATION GOOGLE CREDENTIAL refresh : {}", googleCredentialEntity.getCredential().getRefreshToken());
+            log.info("EXPIRATION GOOGLE CREDENTIAL getExpirationTimeMillis : {}", googleCredentialEntity.getCredential().getExpirationTimeMillis());
             log.info("EXPIRATION GOOGLE CREDENTIAL: {}", date.toString());
 
             return credential;
@@ -807,15 +810,14 @@ public class CalendarGoogleServiceImpl implements CalendarGoogleService {
             GoogleCredentialEntity googleCredentialEntity = googleCredentialRepository.findByUserId(companyId)
                     .orElseThrow(() -> new RuntimeException("Credencial não encontrada para atualização"));
 
-            CredentialData credentialData = CredentialData.builder()
-                    .accessToken(credential.getAccessToken())
-                    .refreshToken(credential.getRefreshToken())
-                    .expirationTimeMillis(credential.getExpirationTimeMilliseconds())
-                    .jsonFactory(credential.getJsonFactory())
-                    .build();
+            // Atualiza o refresh token apenas se um novo foi fornecido
+            String newRefreshToken = credential.getRefreshToken();
+            if (newRefreshToken != null) {
+                googleCredentialEntity.getCredential().setRefreshToken(newRefreshToken);
+            }
 
-            googleCredentialEntity.setCredential(credentialData);
-            googleCredentialEntity.setCreatedTime(LocalDateTime.now());
+            googleCredentialEntity.getCredential().setAccessToken(credential.getAccessToken());
+            googleCredentialEntity.getCredential().setExpirationTimeMillis(credential.getExpirationTimeMilliseconds());
 
             googleCredentialRepository.save(googleCredentialEntity);
             log.info("Credencial atualizada com sucesso para o companyId: {}", companyId);
