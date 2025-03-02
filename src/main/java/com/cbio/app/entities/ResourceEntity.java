@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Document("resource")
@@ -64,10 +65,20 @@ public class ResourceEntity {
         private String end;
 
         public Boolean isLocalDateTimeBetween(LocalDateTime localDateTime){
-            LocalDateTime startUnzoned = LocalDateTime.parse(getDateTimeString(localDateTime, init));
-            LocalDateTime endUnzoned = LocalDateTime.parse(getDateTimeString(localDateTime, end));
 
-            return startUnzoned.isBefore(localDateTime) || startUnzoned.isEqual(localDateTime) && endUnzoned.isAfter(localDateTime);
+            // Converte as strings init e end para LocalTime
+            LocalTime startTime = LocalTime.parse(init);
+            LocalTime endTime = LocalTime.parse(end);
+            LocalTime currentTime = localDateTime.toLocalTime();
+
+            // Verifica se o período cruza a meia-noite
+            if (startTime.isBefore(endTime)) {
+                // Período normal (não cruza a meia-noite)
+                return !currentTime.isBefore(startTime) && currentTime.isBefore(endTime); // Exclui endTime
+            } else {
+                // Período que cruza a meia-noite
+                return !currentTime.isBefore(startTime) || currentTime.isBefore(endTime); // Exclui endTime
+            }
         }
 
         @NotNull
