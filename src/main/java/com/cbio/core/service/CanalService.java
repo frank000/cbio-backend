@@ -13,6 +13,8 @@ public interface CanalService {
 
     CanalDTO obtemPorId(String id);
 
+    Optional<CanalEntity> findCanalByNomeCompanyIdAndIdCanal(String canal, String companyId, String idCanal) throws Exception;
+
     void delete(String id);
 
     CanalDTO incluirCanal(CanalDTO canal);

@@ -13,6 +13,8 @@ public interface CanalRepository extends MongoRepository<CanalEntity, String> {
 
     Optional<CanalEntity> findCanalByNomeAndCompanyIdAndCliente(String nome, String companyId, String cliente);
 
+    Optional<CanalEntity> findCanalByNomeAndCompanyIdAndIdCanal(String nome, String companyId, String idCanal);
+
     Boolean existsByTokenAndNomeAndAtivoTrue(String token, String nome);
 
     Boolean existsByNomeAndCompanyId(String nome, String companyId);
