@@ -114,7 +114,7 @@ public class MetaServiceImpl implements MetaService {
         if(existsByNomeAndCompanyId(CanalSenderEnum.INSTAGRAM.name(), state)){
             throw new CbioException("Limite de contas de Instagram. Contate os administradores.", HttpStatus.BAD_REQUEST.value());
         }
-        return canalService.findCanalByNomeCompanyIdAndCliente(CanalSenderEnum.INSTAGRAM.name(), state, userInfo.getUserId())
+        return canalService.findCanalByNomeCompanyIdAndIdCanal(CanalSenderEnum.INSTAGRAM.name(), state, userInfo.getId())
                 .orElseGet(() -> {
 
                     CanalDTO canalDTO = canalService.incluirCanal(
@@ -123,7 +123,7 @@ public class MetaServiceImpl implements MetaService {
                                     .primeiroNome(userInfo.getUsername())
                                     .idCanal(userInfo.getId())
                                     .ativo(Boolean.TRUE)
-                                    .cliente(userInfo.getUserId())
+                                    .cliente(userInfo.getId())
                                     .company(companyDTO)
                                     .build()
                     );

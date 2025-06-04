@@ -31,7 +31,7 @@ public record ContactController(ContactService service,
 
     @PostMapping
     private ResponseEntity<ContactDTO> save(@RequestBody ContactDTO dto) throws CbioException, ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-
+        dto.setAppCreated(Boolean.FALSE);
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(dto));
     }
 

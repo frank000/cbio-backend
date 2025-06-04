@@ -56,6 +56,15 @@ public class CanalServiceImpl implements CanalService {
     }
 
     @Override
+    public Optional<CanalEntity> findCanalByNomeCompanyIdAndIdCanal(String canal, String companyId, String idCanal) throws Exception {
+        try {
+            return canalRepository.findCanalByNomeAndCompanyIdAndIdCanal(canal, companyId, idCanal);
+        } catch (Exception e) {
+            throw new Exception("Erro ao consultar canal.");
+        }
+    }
+
+    @Override
     public Optional<CanalEntity> findCanalByTokenAndCliente(String token, String cliente) throws Exception {
         try {
             return canalRepository.findCanalByTokenAndClienteAndAtivoTrue(token, cliente);
