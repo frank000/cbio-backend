@@ -185,29 +185,28 @@ public class CompanyServiceImpl implements CompanyService {
             }
 
 
-                if (updateRagFields ||
-                        isNewConfigAndHasRag) {
-                    String collectRag = String.join(" ", dto.getRag());
+            if ( dto.getRag() != null && (updateRagFields ||
+                    isNewConfigAndHasRag )) {
+                String collectRag = String.join(" ", dto.getRag());
 
 
-                    if (StringUtils.hasText(collectRag)) {
-                        String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
-                        fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
-                    } else {
-                        String nluFilePath = BASE_TARGET_DIR
-                                .concat(File.separator)
-                                .concat(dto.getCompanyId())
-                                .concat(File.separator)
-                                .concat("data/nlu.yml");
+                if (StringUtils.hasText(collectRag)) {
+                    String onlyQuestionFromRag = openAIService.getOnlyQuestionFromRag(collectRag);
+                    fullUpdateNLUFromRasa(dto, onlyQuestionFromRag);
+                } else {
+                    String nluFilePath = BASE_TARGET_DIR
+                            .concat(File.separator)
+                            .concat(dto.getCompanyId())
+                            .concat(File.separator)
+                            .concat("data/nlu.yml");
 
-                        NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
+                    NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
 
-                        nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
-                        nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
-                        runDocker(dto.getCompanyId());
-                    }
+                    nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
+                    nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
+                    runDocker(dto.getCompanyId());
                 }
-
+            }
 
             entity = companyConfigRepository.save(entity);
 
