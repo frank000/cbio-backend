@@ -129,6 +129,8 @@ public class IAMServiceImpl implements IAMService {
                 .orElseThrow(() -> new NotFoundException("Usuário Keycloak não encontrado"));
 
         userKeycloak.setCredentials(Collections.singletonList(credential));
+        userKeycloak.setFirstName(userVO.getFirstname());
+        userKeycloak.setLastName(userVO.getLastName());
 
         usersResource.get(userID).update(userKeycloak);
     }
@@ -151,6 +153,9 @@ public class IAMServiceImpl implements IAMService {
                 .orElseThrow(() -> new NotFoundException("User Keyclaok não encontrado"));
 
         userKeyclaok.setEmail(userVO.getEmail());
+        userKeyclaok.setFirstName(userVO.getFirstname());
+        userKeyclaok.setLastName(userVO.getLastName());
+
 //        userKeyclaok.setUsername(userVO.getUserName()); //READ-ONLY
         userKeyclaok.setCredentials(Collections.singletonList(credential));
 
