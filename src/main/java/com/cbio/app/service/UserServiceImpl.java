@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
@@ -61,8 +63,11 @@ public class UserServiceImpl implements UserService {
             usuarioEntity = usuarioRepository.save(usuarioEntity);
 
 
+            String[] nameParts = usuarioEntity.getName().split(" ");
+
             builder.userName(usuarioEntity.getEmail())
-                    .firstname(usuarioEntity.getName())
+                    .firstname(nameParts[0])
+                    .lastName(nameParts.length > 1 ? String.join(" ", Arrays.copyOfRange(nameParts, 1, nameParts.length)) : "")
                     .idUser(usuarioEntity.getId())
                     .idCompany(usuarioEntity.getCompany().getId())
                     .password(password)
