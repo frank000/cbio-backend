@@ -1,5 +1,7 @@
 package com.cbio.app.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.util.EnumSet;
 @Service
 public class DirectoryRasaServiceImpl {
 
+    private static final Logger log = LoggerFactory.getLogger(DirectoryRasaServiceImpl.class);
     @Value("${app.rasa.default-path}")
     private String SOURCE_DIR;
 
@@ -68,24 +71,25 @@ public class DirectoryRasaServiceImpl {
         Path projectPath = Path.of(BASE_TARGET_DIR, projectName);
 
         if (!Files.exists(projectPath)) {
-            throw new IOException("Diretório não encontrado: " + projectPath);
+            IOException ioException = new IOException("Diretório não encontrado: " + projectPath);
+            log.error(String.format("Diretório não encontrado: %s", projectName), ioException);
+        }else{
+            // Deleta recursivamente o diretório e seu conteúdo
+            Files.walkFileTree(projectPath, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if (exc != null) throw exc;
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
         }
-
-        // Deleta recursivamente o diretório e seu conteúdo
-        Files.walkFileTree(projectPath, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (exc != null) throw exc;
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
     }
 
 
