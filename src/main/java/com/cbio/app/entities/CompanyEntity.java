@@ -7,6 +7,7 @@ import com.cbio.core.v1.enuns.EstadosEnum;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,4 +49,15 @@ public class CompanyEntity {
     private String tier;
 
     private Integer porta;
+
+    @Getter(AccessLevel.NONE)
+    @Enumerated(EnumType.STRING)
+    private StatusPaymentEnum statusPayment;
+
+    public StatusPaymentEnum getStatusPayment() {
+        if(statusPayment == null){
+            statusPayment = StatusPaymentEnum.TRIAL;
+        }
+        return statusPayment;
+    }
 }

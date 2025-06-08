@@ -1,5 +1,6 @@
 package com.cbio.core.service;
 
+import com.cbio.app.entities.StatusPaymentEnum;
 import com.cbio.app.exception.CbioException;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
@@ -13,6 +14,10 @@ public interface CompanyService {
     CompanyDTO save(CompanyDTO companyDTO) throws CbioException;
 
     CompanyDTO edit(CompanyDTO companyDTO);
+
+    void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException;
+
+
 
     void delete(String id);
 

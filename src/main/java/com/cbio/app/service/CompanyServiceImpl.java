@@ -68,6 +68,9 @@ public class CompanyServiceImpl implements CompanyService {
             CompanyEntity entity = companyMapper.toEntity(companyDTO);
             CompanyEntity save = companyRepository.save(entity);
 
+
+            entity.setStatusPayment(StatusPaymentEnum.TRIAL);
+
             CompanyConfigDTO configDTO = CompanyConfigDTO.builder()
                     .companyId(save.getId())
                     .emailCalendar(save.getEmail())
@@ -87,6 +90,14 @@ public class CompanyServiceImpl implements CompanyService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException {
+        CompanyEntity companyEntity = companyRepository.findById(companyId).orElseThrow(() -> new EntityNotFoundException("Company not found"));
+        companyEntity.setStatusPayment(statusPayment);
+
+        companyRepository.save(companyEntity);
     }
 
     public CompanyDTO findById(String id) {
@@ -340,5 +351,19 @@ public class CompanyServiceImpl implements CompanyService {
         } else {
             return Boolean.FALSE;
         }
+    }
+
+    public Object getPaymentInfoAboutCompanyLogged() {
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+
+        if(companyIdUserLogged != null) {
+            return getPaymentInfoAboutCompany(companyIdUserLogged);
+        }else{
+            return null;
+        }
+    }
+
+    public Object getPaymentInfoAboutCompany(String id) {
+        return null;
     }
 }

@@ -25,7 +25,7 @@ public class InstagramOauthService {
      */
     public UserInfoMeta getUserInfo(String accessToken) {
 
-        String url = "https://graph.instagram.com/v21.0/me?fields=id,user_id,username&access_token=" + accessToken;
+        String url = "https://graph.instagram.com/v21.0/me?fields=id,name,user_id&access_token=" + accessToken;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

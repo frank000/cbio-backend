@@ -9,4 +9,5 @@ public interface CheckoutSessionRepository extends MongoRepository<CheckoutSessi
 
 
     Optional<CheckoutSessionEntity> findBySessionId(String sessionId);
+    Optional<CheckoutSessionEntity> findBySubscriptionId(String subscriptionId);
 }
