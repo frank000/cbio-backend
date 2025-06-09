@@ -4,6 +4,9 @@ import com.cbio.core.service.EmailService;
 import freemarker.template.Template;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,6 +19,7 @@ import java.util.Map;
 @Service
 public class EmailServiceImpl implements EmailService {
 
+    private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
     private final JavaMailSender mailSender;
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
@@ -25,13 +29,18 @@ public class EmailServiceImpl implements EmailService {
     }
 
     public void enviarEmailSimples(String para, String assunto, String conteudo) {
-        SimpleMailMessage mensagem = new SimpleMailMessage();
-        mensagem.setFrom("noreplay@rayzatec.com.br");
-        mensagem.setTo(para);
-        mensagem.setSubject(assunto);
-        mensagem.setText(conteudo);
+        try {
+            SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setFrom("noreplay@rayzatec.com.br");
+            mensagem.setTo(para);
+            mensagem.setSubject(assunto);
+            mensagem.setText(conteudo);
 
-        mailSender.send(mensagem);
+            mailSender.send(mensagem);
+            log.info(String.format("MAIL SERVICE: ok, to: %s, subject: %s",  para, assunto));
+        } catch (MailException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void enviarEmailHtml(String para, String assunto, String conteudoHtml)
@@ -46,6 +55,7 @@ public class EmailServiceImpl implements EmailService {
         helper.setText(conteudoHtml, true); // true indica que é HTML
 
         mailSender.send(mensagem);
+        log.info(String.format("MAIL SERVICE: ok, to: %s, subject: %s", para, assunto));
     }
 
     @Override
@@ -64,6 +74,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(html, true); // true indica que é HTML
 
             mailSender.send(message);
+            log.info(String.format("MAIL SERVICE: ok, to: %s, subject: %s", para, assunto));
         } catch (Exception e) {
             throw new RuntimeException("Falha ao enviar email", e);
         }

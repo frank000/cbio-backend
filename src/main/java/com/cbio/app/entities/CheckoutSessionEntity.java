@@ -3,6 +3,7 @@ package com.cbio.app.entities;
 import com.cbio.core.v1.dto.EventSessionDTO;
 import jakarta.persistence.Id;
 import lombok.*;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -39,7 +40,21 @@ public class CheckoutSessionEntity {
     private String urlHostedInvoice;
     private String urlInvoicePdf;
 
+    @Indexed
     private String subscriptionId;
 
+    private String companyId;
+
+    private String reason;
+
+    @Getter(AccessLevel.NONE)
+    private Boolean active;
+
+    public Boolean getActive() {
+        if (active==null) {
+            active = Boolean.TRUE;
+        }
+        return active;
+    }
 }
 
