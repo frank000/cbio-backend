@@ -291,6 +291,26 @@
     </dependencyManagement>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <excludes>
+                    <exclude>application.properties</exclude>
+                    <exclude>application-prd.properties</exclude>
+                    <exclude>application-hml.properties</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering> <!-- Desativa filtering para application.properties -->
+                <includes>
+                    <include>application.properties</include>
+                    <include>application-prd.properties</include>
+                    <include>application-hml.properties</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
