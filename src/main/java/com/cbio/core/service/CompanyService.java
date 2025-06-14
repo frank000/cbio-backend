@@ -9,6 +9,7 @@ import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public interface CompanyService {
 
@@ -18,7 +19,7 @@ public interface CompanyService {
 
     void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException;
 
-
+    Optional<StatusPaymentEnum> getStatusPayment(String companyId);
 
     void delete(String id);
 

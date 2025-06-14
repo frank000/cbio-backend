@@ -45,6 +45,8 @@ public class CheckoutSessionEntity {
 
     private String companyId;
 
+    private String invoiceId;
+
     private String reason;
 
     @Getter(AccessLevel.NONE)

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -34,4 +35,7 @@ public class CompanyDTO implements Serializable {
     private Integer porta;
 
     private StatusPaymentEnum statusPayment;
+
+
+    private LocalDateTime dataAlteracaoStatus;
 }
