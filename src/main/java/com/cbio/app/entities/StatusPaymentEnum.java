@@ -5,5 +5,6 @@ public enum StatusPaymentEnum {
     TRIAL,
     SEMESTRAL,
     ANUAL,
-    MENSAL;
+    MENSAL,
+    CANCELLED;
 }
