@@ -12,16 +12,20 @@ import com.cbio.app.service.mapper.CompanyConfigMapper;
 import com.cbio.app.service.mapper.CompanyMapper;
 import com.cbio.core.service.AuthService;
 import com.cbio.core.service.CompanyService;
+import com.cbio.core.service.EmailService;
 import com.cbio.core.service.TicketService;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.InstagramCredentialDTO;
 import com.cbio.core.v1.dto.TicketDTO;
 import com.cbio.ia.service.OpenAIService;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -33,16 +37,14 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
     public static final String INTENT_NAME_FAQ = "faq";
+    private static final Logger log = LoggerFactory.getLogger(CompanyServiceImpl.class);
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
     private final CompanyConfigMapper companyConfigMapper;
@@ -57,6 +59,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final NluYamlManagerServiceImpl nluYamlManagerServiceImpl;
     private final DockerServiceImpl dockerServiceImpl;
     private final InstagramCredentialRepository instagramCredentialRepository;
+    private final EmailService emailService;
 
 
     @Value("${app.rasa.targe-path}")
@@ -67,6 +70,9 @@ public class CompanyServiceImpl implements CompanyService {
         try {
             CompanyEntity entity = companyMapper.toEntity(companyDTO);
             CompanyEntity save = companyRepository.save(entity);
+
+
+            entity.setStatusPayment(StatusPaymentEnum.TRIAL);
 
             CompanyConfigDTO configDTO = CompanyConfigDTO.builder()
                     .companyId(save.getId())
@@ -87,6 +93,14 @@ public class CompanyServiceImpl implements CompanyService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException {
+        CompanyEntity companyEntity = companyRepository.findById(companyId).orElseThrow(() -> new EntityNotFoundException("Company not found"));
+        companyEntity.setStatusPayment(statusPayment);
+
+        companyRepository.save(companyEntity);
     }
 
     public CompanyDTO findById(String id) {
@@ -339,6 +353,44 @@ public class CompanyServiceImpl implements CompanyService {
             return byUserId.isEmpty() || byUserId.get().getCredential().getExpirationTimeMillis() - now.toEpochMilli() < 0 ? Boolean.FALSE : Boolean.TRUE;
         } else {
             return Boolean.FALSE;
+        }
+    }
+
+    public Object getPaymentInfoAboutCompanyLogged() {
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+
+        if(companyIdUserLogged != null) {
+            return getPaymentInfoAboutCompany(companyIdUserLogged);
+        }else{
+            return null;
+        }
+    }
+
+    public Object getPaymentInfoAboutCompany(String id) {
+        return null;
+    }
+
+    @Override
+    public void completeProfile(String id, String pass) throws MessagingException {
+        Optional<CompanyEntity> companyEntity = companyRepository.findById(id).stream().findFirst();
+        if(companyEntity.isPresent()) {
+            CompanyEntity company = companyEntity.get();
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("companyName", company.getNome());
+            model.put("tier", company.getTier());
+            model.put("emailAdministrador", company.getEmail());
+            model.put("passwordAdministrador", pass);
+            model.put("modo", "trial");
+
+            emailService.enviarEmailModel(
+                    company.getEmail(),
+                    "Bem vindo a RayzaTEC - Acesso ao Dunamis",
+                    "email-welcome.ftlh",
+                    model
+                    );
+        }else{
+            log.error("COMPANY SERVICE: Não pode completar o formulario, id: " + id);
         }
     }
 }

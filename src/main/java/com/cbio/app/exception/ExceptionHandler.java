@@ -34,7 +34,7 @@ public class ExceptionHandler {
         return ResponseEntity
                 .status(e.getStatus())
                 .body(
-                        Map.of("error", e.getMessage())
+                        Map.of("message", e.getMessage())
                 );
     }
 }

@@ -1,9 +1,11 @@
 package com.cbio.core.service;
 
+import com.cbio.app.entities.StatusPaymentEnum;
 import com.cbio.app.exception.CbioException;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.InstagramCredentialDTO;
+import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,6 +15,10 @@ public interface CompanyService {
     CompanyDTO save(CompanyDTO companyDTO) throws CbioException;
 
     CompanyDTO edit(CompanyDTO companyDTO);
+
+    void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException;
+
+
 
     void delete(String id);
 
@@ -37,4 +43,6 @@ public interface CompanyService {
     InstagramCredentialDTO getCredentialInstagram(String id);
 
     CompanyConfigDTO fetchOrCreateConfigPreferencesCompany(String id) throws CbioException;
+
+    void completeProfile(String id, String pass) throws MessagingException;
 }

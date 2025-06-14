@@ -134,4 +134,6 @@ public class CompanyController implements SecuredRestController {
         return ResponseEntity.ok(companyService.hasGoogleCrendential());
     }
 
+
+
 }

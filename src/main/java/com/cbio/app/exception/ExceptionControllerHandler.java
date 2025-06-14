@@ -33,14 +33,7 @@ public class ExceptionControllerHandler {
         return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(CbioException.class)
-    public ResponseEntity<Map<String, String>> cbioExceptionHandler(CbioException e) {
-        log.error(e.getMessage());
-        Map<String, String> response = new HashMap<>();
-        response.put("message", e.getMessage()); // Adiciona a mensagem de erro no formato JSON
 
-        return ResponseEntity.status(e.getStatus()).body(response);
-    }
 
 
 }
