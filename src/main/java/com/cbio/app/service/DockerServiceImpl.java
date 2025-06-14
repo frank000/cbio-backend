@@ -137,7 +137,7 @@ public class DockerServiceImpl {
                 .withCmd("run")
                 .withExposedPorts(ExposedPort.tcp(Integer.parseInt(externalPort))) // Expor a porta (se necessário)
                 .withHostConfig(HostConfig.newHostConfig()
-                        .withPortBindings(new PortBinding(Ports.Binding.bindPort(5005), ExposedPort.tcp(Integer.parseInt(externalPort)))) // Mapear portas
+                        .withPortBindings(new PortBinding(Ports.Binding.bindPort(Integer.parseInt(externalPort)), ExposedPort.tcp(5005))) // Mapear portas
                 )
                 .exec()
                 .getId();
