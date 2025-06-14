@@ -1,9 +1,11 @@
 package com.cbio.core.v1.dto;
 
+import com.cbio.app.entities.CheckoutSessionEntity;
 import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,6 +26,8 @@ public class SubscriptionDTO implements Serializable {
     private String name;
 
     private  String email;
+
+    private List<CheckoutSessionEntity.InvoiceDTO> invoice;
 
     private String status;
 

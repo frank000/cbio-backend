@@ -69,10 +69,12 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDTO save(CompanyDTO companyDTO) throws CbioException {
         try {
             CompanyEntity entity = companyMapper.toEntity(companyDTO);
-            CompanyEntity save = companyRepository.save(entity);
-
 
             entity.setStatusPayment(StatusPaymentEnum.TRIAL);
+            entity.setDataAlteracaoStatus(CbioDateUtils.LocalDateTimes.now());
+
+            CompanyEntity save = companyRepository.save(entity);
+
 
             CompanyConfigDTO configDTO = CompanyConfigDTO.builder()
                     .companyId(save.getId())
@@ -98,6 +100,8 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public void changeStatusPayment(String companyId, StatusPaymentEnum statusPayment) throws CbioException {
         CompanyEntity companyEntity = companyRepository.findById(companyId).orElseThrow(() -> new EntityNotFoundException("Company not found"));
+        companyEntity.setDataAlteracaoStatus(CbioDateUtils.LocalDateTimes.now());
+
         companyEntity.setStatusPayment(statusPayment);
 
         companyRepository.save(companyEntity);
@@ -143,6 +147,16 @@ public class CompanyServiceImpl implements CompanyService {
         Optional<TierEntity> tierByCompanyId = companyRepository.getTierById(id);
         return tierByCompanyId
                 .orElseThrow().getNumAttendants();
+    }
+
+    @Override
+    public Optional<StatusPaymentEnum> getStatusPayment(String companyId) {
+        Optional<CompanyEntity> byId = companyRepository.findById(companyId);
+        if(byId.isPresent()){
+            return Optional.of(byId.get().getStatusPayment());
+        }else{
+            return Optional.ofNullable(null);
+        }
     }
 
     @Override

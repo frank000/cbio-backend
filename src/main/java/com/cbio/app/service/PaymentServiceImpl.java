@@ -105,7 +105,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             return Map.of("sessionId", session.getId());
 
-        }else{
+        } else {
             log.error("Checkout precisa de ume empresa para ser completo.");
             return null;
         }
@@ -167,6 +167,10 @@ public class PaymentServiceImpl implements PaymentService {
                 case "customer.subscription.deleted":
                     handleSubscriptionDeleted(event);
                     break;
+                case "invoice_payment.paid":
+                    log.info("Received Stripe event: invoice_payment");
+
+                    break;
                 default:
                     log.debug("Unhandled event type: {}", event.getType());
             }
@@ -190,16 +194,15 @@ public class PaymentServiceImpl implements PaymentService {
             updateSubscriptionStatusInDatabase(subscriptionId, reason);
 
 
-
             return Map.of(
                     "status", "canceled",
                     "message", "Assinatura cancelada com sucesso"
             );
         } catch (StripeException e) {
 
-            if("resource_missing".equals(e.getCode())) {
+            if ("resource_missing".equals(e.getCode())) {
                 throw new CbioException("Inscrição não encontrada na Stripe. Abra um ticket para nossa equipe de atendimento.", HttpStatus.BAD_REQUEST.value());
-            }else{
+            } else {
                 throw new CbioException("Problema generico. Abra um ticket para nossa equipe de atendimento.", HttpStatus.BAD_REQUEST.value());
             }
         } catch (MessagingException e) {
@@ -221,8 +224,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .customerDetails(checkoutSessionEntity.getCustomerDetails())
                 .paidAt(checkoutSessionEntity.getPaidAt())
                 .updatedAt(checkoutSessionEntity.getUpdatedAt())
-                .urlInvoicePdf(checkoutSessionEntity.getUrlInvoicePdf())
-                .urlHostedInvoice(checkoutSessionEntity.getUrlHostedInvoice())
+                .invoice(checkoutSessionEntity.getInvoice())
                 .name(checkoutSessionEntity.getName())
                 .email(checkoutSessionEntity.getEmail())
                 .status(checkoutSessionEntity.getStatus())
@@ -315,12 +317,13 @@ public class PaymentServiceImpl implements PaymentService {
         ResultSessionAndCheckout result = getResultSessionAndCheckout(event);
 
         if ("paid".equals(result.session().getPaymentStatus())) {
-            String companyIdUserLogged = authService.getCompanyIdUserLogged();
 
             Map<String, Object> eventMap = objectMapper.readValue(
                     event.getData().toJson(),
-                    new TypeReference<Map<String, Object>>() {}
+                    new TypeReference<Map<String, Object>>() {
+                    }
             );
+//            String idSession = result.session().getId();
 
             Map<String, Object> objectData = (Map<String, Object>) eventMap.get("object");
             String sessionId = (String) objectData.get("id");
@@ -329,7 +332,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             result.checkoutSession().setCustomerDetails(result.session().getCustomerDetails());
             result.checkoutSession().setStatus("paid");
-            result.checkoutSession().setSubscriptionId((String)result.session().getSubscription());
+            result.checkoutSession().setSubscriptionId((String) result.session().getSubscription());
             result.checkoutSession().setPaidAt(CbioDateUtils.LocalDateTimes.now());
             checkoutSessionRepository.save(result.checkoutSession());
         }
@@ -338,19 +341,42 @@ public class PaymentServiceImpl implements PaymentService {
     private void handleInvoiceUpdated(Event event) throws JsonProcessingException, MessagingException {
         Map<String, Object> eventMap = objectMapper.readValue(
                 event.getData().toJson(),
-                new TypeReference<Map<String, Object>>() {}
+                new TypeReference<Map<String, Object>>() {
+                }
         );
 
         Map<String, Object> objectData = (Map<String, Object>) eventMap.get("object");
         Map<String, Object> objectParent = (Map<String, Object>) objectData.get("parent");
-        String subscriptionID = (String) ((Map<String, Object>)objectParent.get("subscription_details")).get("subscription");
+        String subscriptionID = (String) ((Map<String, Object>) objectParent.get("subscription_details")).get("subscription");
+
+
+        String invoceId = (String) objectData.get("id");
+        String hostedInvoiceUrl = (String) objectData.get("hosted_invoice_url");
+        String invoicePdf = (String) objectData.get("invoice_pdf");
+
+        Optional<CheckoutSessionEntity> bySubscriptionId = checkoutSessionRepository.findBySubscriptionId(subscriptionID);
+        if (bySubscriptionId.isPresent()) {
+
+            bySubscriptionId.get().getInvoice()
+                    .add(
+                            CheckoutSessionEntity.InvoiceDTO.builder()
+                                    .invoiceId(invoceId)
+                                    .urlHostedInvoice(hostedInvoiceUrl)
+                                    .invoiceId(invoicePdf)
+                                    .date(CbioDateUtils.LocalDateTimes.now())
+                                    .build()
+                    )
+            ;
+
+
+            checkoutSessionRepository.save(bySubscriptionId.get());
+        }
 
         Map<String, Object> model = new HashMap<>();
         model.put("nome", (String) objectData.get("customer_name"));
-        model.put("invoiceId", (String) objectData.get("id"));
-        model.put("urlInvoice", (String) objectData.get("hosted_invoice_url"));
-        model.put("urlPDF", (String) objectData.get("invoice_pdf"));
-        model.put("urlCancelamento", frontExternalUrl +"/cancelation-subscription/" + subscriptionID );
+        model.put("invoiceId", invoceId);
+        model.put("urlInvoice", hostedInvoiceUrl);
+        model.put("urlCancelamento", frontExternalUrl + "/cancelation-subscription/" + subscriptionID);
 
         emailService.enviarEmailModel(
                 (String) objectData.get("customer_email"),
@@ -362,7 +388,8 @@ public class PaymentServiceImpl implements PaymentService {
     private void handleSubscriptionDeleted(Event event) throws JsonProcessingException {
         Map<String, Object> eventMap = objectMapper.readValue(
                 event.getData().toJson(),
-                new TypeReference<Map<String, Object>>() {}
+                new TypeReference<Map<String, Object>>() {
+                }
         );
 
         Map<String, Object> objectData = (Map<String, Object>) eventMap.get("object");
@@ -376,6 +403,8 @@ public class PaymentServiceImpl implements PaymentService {
                     checkoutSessionRepository.save(session);
 
                     CompanyDTO companyDTO = companyService.findById(session.getCompanyId());
+
+                    companyDTO.setDataAlteracaoStatus(CbioDateUtils.LocalDateTimes.now());
                     companyDTO.setStatusPayment(StatusPaymentEnum.CANCELLED);
                     try {
                         companyService.save(companyDTO);
@@ -424,7 +453,7 @@ public class PaymentServiceImpl implements PaymentService {
         Map<String, Object> model = new HashMap<>();
         model.put("companyName", companyDTO.getNome());
         model.put("tier", companyDTO.getTier());
-        model.put("dataCancelamento",  CbioDateUtils.getDateTimeWithSecFormated(now, CbioDateUtils.FORMAT_BRL_DATE_TIME));
+        model.put("dataCancelamento", CbioDateUtils.getDateTimeWithSecFormated(now, CbioDateUtils.FORMAT_BRL_DATE_TIME));
         model.put("dataFinalAcesso", CbioDateUtils.getDateTimeWithSecFormated(nowPLusThirty, CbioDateUtils.FORMAT_BRL_DATE_TIME));
 
 
@@ -436,5 +465,6 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
 
-    private record ResultSessionAndCheckout(EventSessionDTO session, CheckoutSessionEntity checkoutSession) {}
+    private record ResultSessionAndCheckout(EventSessionDTO session, CheckoutSessionEntity checkoutSession) {
+    }
 }

@@ -31,7 +31,7 @@ public class CompanyConfigEntity {
 
     private String model;
 
-    @Indexed
+    @Indexed(unique = true)
     private String companyId;
 
     private GoogleCredentialDTO googleCredential;
