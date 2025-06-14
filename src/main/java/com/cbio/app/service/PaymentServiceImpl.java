@@ -224,8 +224,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .customerDetails(checkoutSessionEntity.getCustomerDetails())
                 .paidAt(checkoutSessionEntity.getPaidAt())
                 .updatedAt(checkoutSessionEntity.getUpdatedAt())
-                .urlInvoicePdf(checkoutSessionEntity.getUrlInvoicePdf())
-                .urlHostedInvoice(checkoutSessionEntity.getUrlHostedInvoice())
+                .invoice(checkoutSessionEntity.getInvoice())
                 .name(checkoutSessionEntity.getName())
                 .email(checkoutSessionEntity.getEmail())
                 .status(checkoutSessionEntity.getStatus())
@@ -357,9 +356,19 @@ public class PaymentServiceImpl implements PaymentService {
 
         Optional<CheckoutSessionEntity> bySubscriptionId = checkoutSessionRepository.findBySubscriptionId(subscriptionID);
         if (bySubscriptionId.isPresent()) {
-            bySubscriptionId.get().setUrlInvoicePdf(invoicePdf);
-            bySubscriptionId.get().setUrlHostedInvoice(hostedInvoiceUrl);
-            bySubscriptionId.get().setInvoiceId(invoceId);
+
+            bySubscriptionId.get().getInvoice()
+                    .add(
+                            CheckoutSessionEntity.InvoiceDTO.builder()
+                                    .invoiceId(invoceId)
+                                    .urlHostedInvoice(hostedInvoiceUrl)
+                                    .invoiceId(invoicePdf)
+                                    .date(CbioDateUtils.LocalDateTimes.now())
+                                    .build()
+                    )
+            ;
+
+
             checkoutSessionRepository.save(bySubscriptionId.get());
         }
 

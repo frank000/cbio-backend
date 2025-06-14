@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @Getter
@@ -37,15 +39,14 @@ public class CheckoutSessionEntity {
 
     private EventSessionDTO.CustomerDetails customerDetails;
 
-    private String urlHostedInvoice;
-    private String urlInvoicePdf;
+    @Getter(AccessLevel.NONE)
+    private List<InvoiceDTO> invoice;
 
     @Indexed
     private String subscriptionId;
 
     private String companyId;
 
-    private String invoiceId;
 
     private String reason;
 
@@ -57,6 +58,30 @@ public class CheckoutSessionEntity {
             active = Boolean.TRUE;
         }
         return active;
+    }
+
+
+    public List<InvoiceDTO> getInvoice() {
+        if(invoice == null){
+            invoice = new ArrayList<>();
+        }
+        return invoice;
+    }
+
+    @Builder
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InvoiceDTO{
+
+        private String invoiceId;
+
+        private String urlHostedInvoice;
+
+        private String urlInvoicePdf;
+
+        private LocalDateTime date;
     }
 }
 
