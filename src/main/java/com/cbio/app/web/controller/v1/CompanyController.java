@@ -2,6 +2,7 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.base.grid.PageableResponse;
 import com.cbio.app.entities.CompanyEntity;
+import com.cbio.app.entities.StatusPaymentEnum;
 import com.cbio.app.exception.CbioException;
 import com.cbio.app.repository.grid.CompanyGridRepository;
 import com.cbio.app.web.SecuredRestController;
@@ -17,6 +18,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -134,6 +137,23 @@ public class CompanyController implements SecuredRestController {
         return ResponseEntity.ok(companyService.hasGoogleCrendential());
     }
 
+
+    @GetMapping("/status-payment")
+    public ResponseEntity<StatusPaymentEnum> statusPayment() {
+        return ResponseEntity.ok(companyService.getStatusPayment());
+    }
+
+    @GetMapping("/status-payment/list")
+    public ResponseEntity<List<ItemSelecaoDTO>> statusPaymentList() {
+        List<ItemSelecaoDTO> list = Arrays.stream(StatusPaymentEnum.values()).toList()
+                .stream().map(statusPaymentEnum -> {
+                    return ItemSelecaoDTO.builder()
+                            .id(statusPaymentEnum.name())
+                            .label(statusPaymentEnum.name())
+                            .build();
+                }).toList();
+        return ResponseEntity.ok(list);
+    }
 
 
 }
