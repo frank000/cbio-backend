@@ -3,6 +3,7 @@ package com.cbio.app.web.controller.v1;
 
 import com.cbio.app.service.minio.MinioService;
 import com.cbio.chat.dto.DialogoDTO;
+import com.cbio.core.service.AuthService;
 import com.cbio.core.service.DialogoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,24 @@ public class MediaController {
 
     private final DialogoService dialogoService;
     private final MinioService minioService;
+    private final AuthService authService;
+
+    @GetMapping("/images/ticket/{ticketId}/{imageName}")
+    public ResponseEntity<InputStreamResource> downloadImage(
+            @PathVariable String imageName,
+            @PathVariable String ticketId) {
+        try {
+            // Verifique se o arquivo é realmente uma imagem (opcional)
+            if (!imageName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String repositorio = "tickets/" + ticketId;
+            return minioService.getResponseEntityFile(imageName, repositorio);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @GetMapping("/media-by-dialog/{dialogId}")
     public ResponseEntity<InputStreamResource> getMedia(@PathVariable String dialogId) {

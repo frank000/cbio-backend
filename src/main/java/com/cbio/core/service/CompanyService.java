@@ -38,6 +38,7 @@ public interface CompanyService {
     CompanyConfigDTO getConfigCompany(String id) throws CbioException;
 
     Boolean hasGoogleCrendential();
+    StatusPaymentEnum getStatusPayment();
 
     Boolean hasGoogleCrendential(String id);
 

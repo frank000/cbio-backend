@@ -164,6 +164,10 @@ public class CompanyServiceImpl implements CompanyService {
         CompanyEntity companyEntity = companyRepository.findById(companyDTO.getId())
                 .orElseThrow(() -> new RuntimeException("Companhia não encontrada."));
 
+        if(!companyEntity.getStatusPayment().equals(companyDTO.getStatusPayment())){
+            companyDTO.setDataAlteracaoStatus(CbioDateUtils.LocalDateTimes.now());
+        }
+
         companyMapper.fromDto(companyDTO, companyEntity);
 
         return companyMapper.toDto(companyRepository.save(companyEntity));
@@ -311,7 +315,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .createdAt(CbioDateUtils.LocalDateTimes.now())
                 .build();
 
-        TicketDTO savedTicket = ticketService.save(ticketDTO);
+        TicketDTO savedTicket = ticketService.save(ticketDTO, null);
     }
 
 
@@ -367,6 +371,18 @@ public class CompanyServiceImpl implements CompanyService {
             return byUserId.isEmpty() || byUserId.get().getCredential().getExpirationTimeMillis() - now.toEpochMilli() < 0 ? Boolean.FALSE : Boolean.TRUE;
         } else {
             return Boolean.FALSE;
+        }
+    }
+
+    @Override
+    public StatusPaymentEnum getStatusPayment() {
+        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+
+        Optional<CompanyEntity> byId = companyRepository.findById(companyIdUserLogged);
+        if(byId.isPresent()){
+            return byId.get().getStatusPayment();
+        }else{
+            return null;
         }
     }
 

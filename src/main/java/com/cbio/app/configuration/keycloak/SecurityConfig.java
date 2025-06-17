@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/google-calendar/**").permitAll()
                 .requestMatchers("/v1/payment/**").permitAll()
                 .requestMatchers("/v1/whatsapp/**").permitAll()
+                .requestMatchers("/v1/media/images/**").permitAll()
                 .anyRequest()
                 .authenticated());
 

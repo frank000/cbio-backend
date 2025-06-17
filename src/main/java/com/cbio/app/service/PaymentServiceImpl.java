@@ -362,7 +362,7 @@ public class PaymentServiceImpl implements PaymentService {
                             CheckoutSessionEntity.InvoiceDTO.builder()
                                     .invoiceId(invoceId)
                                     .urlHostedInvoice(hostedInvoiceUrl)
-                                    .invoiceId(invoicePdf)
+                                    .urlInvoicePdf(invoicePdf)
                                     .date(CbioDateUtils.LocalDateTimes.now())
                                     .build()
                     )
