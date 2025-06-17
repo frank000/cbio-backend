@@ -2,6 +2,7 @@ package com.cbio.app.entities;
 
 import com.cbio.app.service.enuns.StatusTicketsEnum;
 import com.cbio.core.v1.dto.CompanyDTO;
+import com.cbio.core.v1.dto.MediaDTO;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -44,6 +45,7 @@ public class TicketEntity {
 
     private LocalDateTime createdAt;
 
+
     @Getter
     @Setter
     @Builder
@@ -53,6 +55,8 @@ public class TicketEntity {
         private String userId;
 
         private Boolean fromCompany = false;
+
+        private MediaDTO imagem;
 
         @JsonFormat(locale = "pt-BR", shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
         private LocalDateTime createdAt;

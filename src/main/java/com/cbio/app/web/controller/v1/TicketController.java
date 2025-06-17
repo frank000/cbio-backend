@@ -16,8 +16,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,16 +66,22 @@ public class TicketController implements SecuredRestController {
     }
 
 
-    @PostMapping
-    public ResponseEntity<TicketDTO> save(@RequestBody TicketDTO dto) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TicketDTO> create(
+            @RequestPart("ticket") TicketDTO ticketDTO,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        return ResponseEntity.ok(ticketService.save(dto));
+
+
+        TicketDTO savedTicket = ticketService.save(ticketDTO, image);
+        return ResponseEntity.ok(savedTicket);
     }
 
-    @PutMapping
-    public ResponseEntity<TicketDTO> updtade(@RequestBody TicketDTO dto) {
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TicketDTO> updtade(@RequestPart("ticket") TicketDTO dto,
+                                             @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        return ResponseEntity.ok(ticketService.update(dto));
+        return ResponseEntity.ok(ticketService.update(dto, image));
     }
 
     @GetMapping("grid")

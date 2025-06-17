@@ -315,7 +315,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .createdAt(CbioDateUtils.LocalDateTimes.now())
                 .build();
 
-        TicketDTO savedTicket = ticketService.save(ticketDTO);
+        TicketDTO savedTicket = ticketService.save(ticketDTO, null);
     }
 
 
