@@ -13,9 +13,13 @@ import com.cbio.chat.repositories.ChatChannelRepository;
 import com.cbio.core.service.DialogoService;
 import com.cbio.core.service.SessaoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,21 +62,26 @@ public class DialogoServiceImpl implements DialogoService {
     }
 
     @Override
-    public List<DialogoDTO> getAllBySender(String sessionId) {
-        List<DialogoEntity> allsessionId = dialogoRepository.findAllBySessionIdOrderByCreatedDateTime(sessionId);
+    public Page<DialogoEntity> getAllBySender(String sessionId, Pageable pageable) {
+        Page<DialogoEntity> allBySessionIdOrderByCreatedDateTime = dialogoRepository.findAllBySessionIdOrderByCreatedDateTime(sessionId, pageable);
 
-        return dialogoMapper.toDto(allsessionId);
+        return allBySessionIdOrderByCreatedDateTime;
     }
 
-    public List<ChatDTO> mountChatFromDioalogBySessionIdAndChannelId(String sessionId, String channelId) {
+    @Override
+    public Page<ChatDTO> mountChatFromDioalogBySessionIdAndChannelIdPaginated(String sessionId, String channelId, Pageable pageable) {
+
+
         ChatChannelEntity chatChannelEntity = chatChannelRepository.findById(channelId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel não encontrado."));
 
         SessaoEntity sessionByChannelId = sessaoService.getSessionById(sessionId);
-        List<DialogoDTO> allBySender = getAllBySender(sessionId);
+        Page<DialogoEntity> dialogPage = getAllBySender(sessionId, pageable);
 
-        List<ChatDTO> collect = allBySender.stream().map(dialogoDTO -> {
-
+        // Mapeia para List<ChatDTO> (igual ao seu código original)
+        List<ChatDTO> chatDTOs = dialogPage.stream()
+                .map(dialogoMapper::toDto)
+                .map(dialogoDTO -> {
                     if (AssistentEnum.RASA.name().equals(dialogoDTO.getFrom()) ||
                             AssistentEnum.ATTENDANT.name().equals(dialogoDTO.getFrom())) {
 
@@ -96,14 +105,31 @@ public class DialogoServiceImpl implements DialogoService {
                                 .time(CbioDateUtils.getDateTimeWithSecFormated(dialogoDTO.getCreatedDateTime()))
                                 .build();
                     }
-
                 })
                 .collect(Collectors.toList());
-        return collect;
+
+        // Cria um novo Page<ChatDTO> mantendo a paginação original
+        return new PageImpl<>(
+                chatDTOs,
+                pageable,
+                dialogPage.getTotalElements()
+        );
     }
+
 
     @Override
     public Boolean hasDialogByUuid(String uuid) {
         return dialogoRepository.countDialogoEntitiesByUuid(uuid) > 0 ? Boolean.TRUE : Boolean.FALSE;
+    }
+
+
+    public Page<ChatDTO> getPaginatedMessages(String sessionId, String channelId, Pageable pageable) {
+        // Busca todas as mensagens (mantenha sua lógica original)
+        Optional<ChatChannelEntity> byId = chatChannelRepository.findById(channelId);
+
+
+        return mountChatFromDioalogBySessionIdAndChannelIdPaginated(sessionId, channelId, pageable);
+
+
     }
 }

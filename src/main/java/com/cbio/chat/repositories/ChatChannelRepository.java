@@ -20,20 +20,20 @@ public interface ChatChannelRepository extends MongoRepository<ChatChannelEntity
 //  public List<ChatChannel> findExistingChannel(
 //      @Param("userOneId") long userOneId, @Param("userTwoId") long userTwoId);
 
-  @Query(value="{'userOne.uuid' :  ?0, 'userTwo.uuid' :  ?1}", fields="{'id' : 1, 'userOne' : 1, 'userTwo' : 1}")
-  List<ChatChannelEntity> findByUserOneUuidAndUserTwoUuid(String userOneId, String userTwoId);
+    @Query(value = "{'userOne.uuid' :  ?0, 'userTwo.uuid' :  ?1}", fields = "{'id' : 1, 'userOne' : 1, 'userTwo' : 1}")
+    List<ChatChannelEntity> findByUserOneUuidAndUserTwoUuid(String userOneId, String userTwoId);
 
-  @Query(" SELECT"
-      + "    uuid"
-      + "  FROM"
-      + "    ChatChannel c"
-      + "  WHERE"
-      + "    c.userOne.id IN (:userIdOne, :userIdTwo)"
-      + "  AND"
-      + "    c.userTwo.id IN (:userIdOne, :userIdTwo)")
-  public String getChannelUuid(
-      @Param("userIdOne") long userIdOne, @Param("userIdTwo") long userIdTwo);
+    @Query(" SELECT"
+            + "    uuid"
+            + "  FROM"
+            + "    ChatChannel c"
+            + "  WHERE"
+            + "    c.userOne.id IN (:userIdOne, :userIdTwo)"
+            + "  AND"
+            + "    c.userTwo.id IN (:userIdOne, :userIdTwo)")
+    public String getChannelUuid(
+            @Param("userIdOne") long userIdOne, @Param("userIdTwo") long userIdTwo);
 
 
-   Optional<ChatChannelEntity> findById(@Param("id") String id);
+    Optional<ChatChannelEntity> findById(@Param("id") String id);
 }
