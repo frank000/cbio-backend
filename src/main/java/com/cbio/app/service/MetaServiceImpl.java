@@ -123,7 +123,7 @@ public class MetaServiceImpl implements MetaService {
                                     .primeiroNome(userInfo.getUsername())
                                     .idCanal(userInfo.getId())
                                     .ativo(Boolean.TRUE)
-                                    .cliente(userInfo.getId())
+                                    .cliente(userInfo.getUserId())
                                     .company(companyDTO)
                                     .build()
                     );
