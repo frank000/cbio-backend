@@ -19,6 +19,10 @@ public class CompanyConfigDTO implements Serializable {
 
     private Boolean autoSend;
 
+    private Boolean isScheduler;
+
+    private String msgNotScheduler;
+
     private String emailCalendar;
 
     private String companyId;

@@ -27,6 +27,10 @@ public class CompanyConfigEntity {
     @Getter(AccessLevel.NONE)
     private Boolean autoSend;
 
+    private Boolean isScheduler;
+
+    private String msgNotScheduler;
+
     private String emailCalendar;
 
     private String model;

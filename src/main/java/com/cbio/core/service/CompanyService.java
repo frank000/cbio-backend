@@ -21,6 +21,10 @@ public interface CompanyService {
 
     Optional<StatusPaymentEnum> getStatusPayment(String companyId);
 
+    void toggleSchedulingToCompany() throws IOException;
+
+    Boolean isCompanyScheduler() throws IOException;
+
     void delete(String id);
 
     CompanyDTO findById(String id);

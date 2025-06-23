@@ -1,6 +1,8 @@
 package com.cbio.rasa.action;
 
+import com.cbio.app.entities.CompanyConfigEntity;
 import com.cbio.app.entities.SessaoEntity;
+import com.cbio.app.repository.CompanyConfigRepository;
 import com.cbio.core.service.CalendarGoogleService;
 import com.cbio.core.service.ResourceService;
 import com.cbio.core.service.SessaoService;
@@ -21,6 +23,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -31,6 +34,7 @@ public class InitScheduleAction implements Action {
     private final SessaoService sessaoService;
     private final CalendarGoogleService calendarGoogleService;
     private final ResourceService resourceService;
+    private final CompanyConfigRepository companyConfigRepository;
 
     @Override
     public String name() {
@@ -49,6 +53,18 @@ public class InitScheduleAction implements Action {
 
             SessaoEntity sessaoEntity = sessaoService
                     .buscaSessaoAtivaPorIdentificadorUsuario(Long.valueOf(idUsuarioAndIdCanal[0]), idUsuarioAndIdCanal[1]);
+
+            Optional<CompanyConfigEntity> byCompanyId = companyConfigRepository.findByCompanyId(sessaoEntity.getCanal().getCompany().getId());
+
+            if(!byCompanyId.get().getIsScheduler()){
+                String msg = StringUtils.hasText(byCompanyId.get().getMsgNotScheduler()) ? byCompanyId.get().getMsgNotScheduler() : "Agendamento não permitido!";
+
+                dispatcher
+                        .utterMessage(messageBuilder
+                                .text(msg)
+                                .build());
+                return Action.empty();
+            }
 
             try {
 
