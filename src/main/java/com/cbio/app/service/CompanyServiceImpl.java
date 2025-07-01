@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
@@ -81,9 +84,25 @@ public class CompanyServiceImpl implements CompanyService {
 
             saveConfigCompany(configDTO);
 
-            directoryRasaService.copyRasaProject(save.getId());
+            // Chamando e esperando a conclusão
+            try {
+                directoryRasaService.copyRasaProjectAsync(save.getId())
+                        .get(2, TimeUnit.MINUTES); // Espera explicitamente com timeout
 
-            dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
+                // Só executa Docker após confirmação do clone
+                dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
+            } catch (TimeoutException e) {
+                log.error("Timeout ao clonar repositório", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Operação interrompida", e);
+            } catch (ExecutionException e) {
+                log.error("Falha ao copiar projeto", e.getCause());
+            }
+
+//            directoryRasaService.copyRasaProject(save.getId());
+//
+//            dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
 
 
             return companyMapper.toDto(save);
@@ -172,7 +191,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     public Integer getFreePort() {
-        CompanyEntity company = companyRepository.findFirstByOrderByDataCadastroAsc()
+        CompanyEntity company = companyRepository.findFirstByOrderByPortaDesc()
                 .orElseThrow(() -> new NotFoundException("Nenhum encontrado"));
 
         return company.getPorta() + 1;
