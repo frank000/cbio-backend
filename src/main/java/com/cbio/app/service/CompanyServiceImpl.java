@@ -10,10 +10,7 @@ import com.cbio.app.repository.InstagramCredentialRepository;
 import com.cbio.app.service.enuns.TicketsTypeEnum;
 import com.cbio.app.service.mapper.CompanyConfigMapper;
 import com.cbio.app.service.mapper.CompanyMapper;
-import com.cbio.core.service.AuthService;
-import com.cbio.core.service.CompanyService;
-import com.cbio.core.service.EmailService;
-import com.cbio.core.service.TicketService;
+import com.cbio.core.service.*;
 import com.cbio.core.v1.dto.CompanyConfigDTO;
 import com.cbio.core.v1.dto.CompanyDTO;
 import com.cbio.core.v1.dto.InstagramCredentialDTO;
@@ -38,6 +35,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
@@ -61,6 +61,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final InstagramCredentialRepository instagramCredentialRepository;
     private final EmailService emailService;
 
+    private final StoriesService storiesService;
 
     @Value("${app.rasa.targe-path}")
     public String BASE_TARGET_DIR;
@@ -83,9 +84,25 @@ public class CompanyServiceImpl implements CompanyService {
 
             saveConfigCompany(configDTO);
 
-            directoryRasaService.copyRasaProject(save.getId());
+            // Chamando e esperando a conclusão
+            try {
+                directoryRasaService.copyRasaProjectAsync(save.getId())
+                        .get(2, TimeUnit.MINUTES); // Espera explicitamente com timeout
 
-            dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
+                // Só executa Docker após confirmação do clone
+                dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
+            } catch (TimeoutException e) {
+                log.error("Timeout ao clonar repositório", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Operação interrompida", e);
+            } catch (ExecutionException e) {
+                log.error("Falha ao copiar projeto", e.getCause());
+            }
+
+//            directoryRasaService.copyRasaProject(save.getId());
+//
+//            dockerService.buildDockerImageAndRunContainer(save.getId(), String.valueOf(save.getPorta()));
 
 
             return companyMapper.toDto(save);
@@ -174,7 +191,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     public Integer getFreePort() {
-        CompanyEntity company = companyRepository.findFirstByOrderByDataCadastroAsc()
+        CompanyEntity company = companyRepository.findFirstByOrderByPortaDesc()
                 .orElseThrow(() -> new NotFoundException("Nenhum encontrado"));
 
         return company.getPorta() + 1;
@@ -249,22 +266,142 @@ public class CompanyServiceImpl implements CompanyService {
         }
     }
 
+    @Override
+    public Boolean isCompanyScheduler() throws IOException {
+        String companyId = authService.getCompanyIdUserLogged();
+
+        if(companyId != null){
+            return companyConfigRepository.existsByCompanyIdAndIsSchedulerTrue(companyId);
+        }else{
+            return Boolean.FALSE;
+        }
+    }
+
+    public void toggleSchedulingToCompany() throws IOException {
+
+        String companyId = authService.getCompanyIdUserLogged();
+
+        if(companyId != null){
+            CompanyConfigEntity companyConfigEntity = companyConfigRepository.findByCompanyId(companyId).orElseThrow();
+            CompanyConfigDTO dto = companyConfigMapper.toDto(companyConfigEntity);
+
+            if(Boolean.FALSE.equals(companyConfigEntity.getIsScheduler())){
+
+                fullUpdateNLUFromRasaToScheduling(dto);
+                companyConfigEntity.setIsScheduler(Boolean.TRUE);
+
+            }else{
+                ResultFileNlu result = getResultFileNlu(dto);
+                removeSchedulingIntents(result.nluConfig());
+
+                companyConfigEntity.setIsScheduler(Boolean.FALSE);
+
+            }
+            companyConfigRepository.save(companyConfigEntity);
+
+        }
+
+    }
+
+
+    @Async
+    protected void fullUpdateNLUFromRasaToScheduling(CompanyConfigDTO dto) {
+        try {
+            ResultFileNlu result = getResultFileNlu(dto);
+
+            // Adiciona ou atualiza os intents de agendamento
+            updateSchedulingIntents(result.nluConfig());
+
+            nluYamlManagerServiceImpl.saveNluFile(result.nluFilePath(), result.nluConfig());
+            runDocker(dto.getCompanyId());
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateSchedulingIntents(NluYamlManagerServiceImpl.NluConfig nluConfig) {
+        // Intent: agendamento
+        nluYamlManagerServiceImpl.removeIntent(nluConfig, "agendamento");
+        List<String> agendamentoExamples = Arrays.asList(
+                "Quero agendar",
+                "Desejo marcar uma agendamento",
+                "Pode marcar um dia para min?",
+                "Pode marcar um horário por favor?",
+                "Quero agendar uma consulta para próxima semana",
+                "Preciso marcar um horário com o dentista",
+                "Como posso agendar um serviço?",
+                "Gostaria de reservar um horário para corte de cabelo",
+                "Pode me ajudar a agendar uma reunião?",
+                "Quero marcar uma sessão de terapia",
+                "Desejo agendar uma avaliação médica",
+                "Qual horário disponível para manutenção do meu carro?",
+                "Preciso de um agendamento com o veterinário",
+                "Como faço para marcar um horário no salão?",
+                "Quero reservar uma consulta com o médico",
+                "Posso agendar um serviço de encanamento?",
+                "Gostaria de marcar uma consulta com o oftalmologista",
+                "Desejo agendar uma massagem",
+                "Pode me ajudar a marcar um horário para meu filho?",
+                "Quero reservar uma consulta com o nutricionista",
+                "Como posso agendar um serviço de limpeza?",
+                "Preciso marcar um horário no mecânico",
+                "Gostaria de agendar uma consulta de fisioterapia",
+                "Desejo marcar um horário para documentos"
+        );
+        nluYamlManagerServiceImpl.addIntent(nluConfig, "agendamento", agendamentoExamples);
+
+        // Intent: agendamento_confirmacao
+        nluYamlManagerServiceImpl.removeIntent(nluConfig, "agendamento_confirmacao");
+        List<String> confirmacaoExamples = Arrays.asList(
+                "Sim",
+                "Quero agendar",
+                "Claro",
+                "Vamos lá"
+        );
+        nluYamlManagerServiceImpl.addIntent(nluConfig, "agendamento_confirmacao", confirmacaoExamples);
+
+        // Intent: escolher_recurso
+        nluYamlManagerServiceImpl.removeIntent(nluConfig, "escolher_recurso");
+        List<String> recursoExamples = Arrays.asList(
+                "Pode ser o [672c2781ae950201dedb39f7](recurso)",
+                "Doutor [672c2781ae950201dedb39f7](recurso)",
+                "recurso [672c2781ae950201dedb39f7](recurso)",
+                "/escolher_recurso{\"recurso\": \"672c2781ae950201dedb39f7\"}"
+        );
+        nluYamlManagerServiceImpl.addIntent(nluConfig, "escolher_recurso", recursoExamples);
+
+        // Intent: escolher_data
+        nluYamlManagerServiceImpl.removeIntent(nluConfig, "escolher_data");
+        List<String> dataExamples = Arrays.asList(
+                "quero agendar para [04/01/2025](data)",
+                "escolher data [04/01/2025](data)",
+                "data [04/01/2025](data)",
+                "/escolher_data{\"data\": \"04/01/2025\"}"
+        );
+        nluYamlManagerServiceImpl.addIntent(nluConfig, "escolher_data", dataExamples);
+
+        // Intent: escolher_hora
+        nluYamlManagerServiceImpl.removeIntent(nluConfig, "escolher_hora");
+        List<String> horaExamples = Arrays.asList(
+                "hora escolhida [2025-02-01T12:00&2025-02-01T13:00](horario)",
+                "agendar para hora [2025-02-01T12:00&2025-02-01T13:00](horario)",
+                "escolher data [2025-02-01T12:00&2025-02-01T13:00](horario)",
+                "hora [2025-02-01T12:00&2025-02-01T13:00](horario)",
+                "/escolher_hora{\"horario\": \"2025-01-04T12:00&2025-02-01T13:00\"}"
+        );
+        nluYamlManagerServiceImpl.addIntent(nluConfig, "escolher_hora", horaExamples);
+    }
 
     @Async
     protected void fullUpdateNLUFromRasa(CompanyConfigDTO dto, String onlyQuestionFromRag) {
         try {
 
-            String nluFilePath = BASE_TARGET_DIR
-                    .concat(File.separator)
-                    .concat(dto.getCompanyId())
-                    .concat(File.separator)
-                    .concat("data/nlu.yml");
+            ResultFileNlu result = getResultFileNlu(dto);
 
-            NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
-
-            nluYamlManagerServiceImpl.removeIntent(nluConfig, INTENT_NAME_FAQ);
-            nluYamlManagerServiceImpl.addIntent(nluConfig, INTENT_NAME_FAQ, getExempleList(onlyQuestionFromRag));
-            nluYamlManagerServiceImpl.saveNluFile(nluFilePath, nluConfig);
+            nluYamlManagerServiceImpl.removeIntent(result.nluConfig(), INTENT_NAME_FAQ);
+            nluYamlManagerServiceImpl.addIntent(result.nluConfig(), INTENT_NAME_FAQ, getExempleList(onlyQuestionFromRag));
+            nluYamlManagerServiceImpl.saveNluFile(result.nluFilePath(), result.nluConfig());
 
             runDocker(dto.getCompanyId());
 
@@ -273,6 +410,52 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         geraTicket(dto);
+    }
+
+    @NotNull
+    private ResultFileNlu getResultFileNlu(CompanyConfigDTO dto) throws IOException {
+        String nluFilePath = BASE_TARGET_DIR
+                .concat(File.separator)
+                .concat(dto.getCompanyId())
+                .concat(File.separator)
+                .concat("data/nlu.yml");
+
+        NluYamlManagerServiceImpl.NluConfig nluConfig = nluYamlManagerServiceImpl.readNluFile(nluFilePath);
+        ResultFileNlu result = new ResultFileNlu(nluFilePath, nluConfig);
+        return result;
+    }
+
+    @Async
+    protected void disableSchedulingIntents(CompanyConfigDTO dto) {
+        try {
+            ResultFileNlu result = getResultFileNlu(dto);
+
+            // Remove todos os intents de agendamento
+            removeSchedulingIntents(result.nluConfig());
+
+            nluYamlManagerServiceImpl.saveNluFile(result.nluFilePath(), result.nluConfig());
+            runDocker(dto.getCompanyId());
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private void removeSchedulingIntents(NluYamlManagerServiceImpl.NluConfig nluConfig) {
+        // Lista de todos os intents de agendamento que devem ser removidos
+        List<String> schedulingIntents = Arrays.asList(
+                "agendamento",
+                "agendamento_confirmacao",
+                "escolher_recurso",
+                "escolher_data",
+                "escolher_hora"
+        );
+
+        // Remove cada intent da lista
+        schedulingIntents.forEach(intentName ->
+                nluYamlManagerServiceImpl.removeIntent(nluConfig, intentName)
+        );
+    }
+    private record ResultFileNlu(String nluFilePath, NluYamlManagerServiceImpl.NluConfig nluConfig) {
     }
 
     private void runDocker(String companyId) throws IOException, InterruptedException {

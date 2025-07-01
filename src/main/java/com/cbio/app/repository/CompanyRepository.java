@@ -11,5 +11,5 @@ public interface CompanyRepository extends MongoRepository<CompanyEntity, String
 
     Optional<TierEntity> getTierById(String companyId);
 
-    Optional<CompanyEntity> findFirstByOrderByDataCadastroAsc();
+    Optional<CompanyEntity> findFirstByOrderByPortaDesc();
 }

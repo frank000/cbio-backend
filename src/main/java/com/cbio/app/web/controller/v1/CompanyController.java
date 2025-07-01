@@ -108,6 +108,21 @@ public class CompanyController implements SecuredRestController {
         return ResponseEntity.ok(save);
     }
 
+    @PutMapping("/scheduler")
+    public ResponseEntity<CompanyConfigDTO> schedulerConfig() throws IOException {
+
+        companyService.toggleSchedulingToCompany();
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/scheduler")
+    public ResponseEntity<Boolean> isShedulerConfig() throws IOException {
+
+        return ResponseEntity.ok(companyService.isCompanyScheduler());
+    }
+
+
     @GetMapping("/config")
     public ResponseEntity<CompanyConfigDTO> getConfig() throws CbioException {
 
