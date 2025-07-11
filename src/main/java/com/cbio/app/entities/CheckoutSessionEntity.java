@@ -47,6 +47,8 @@ public class CheckoutSessionEntity {
 
     private String companyId;
 
+    @Getter(AccessLevel.NONE)
+    private List<EventStripeDTO> event;
 
     private String reason;
 
@@ -60,6 +62,12 @@ public class CheckoutSessionEntity {
         return active;
     }
 
+    public List<EventStripeDTO> getEvent() {
+        if(event == null){
+            event = new ArrayList<>();
+        }
+        return event;
+    }
 
     public List<InvoiceDTO> getInvoice() {
         if(invoice == null){
@@ -80,6 +88,25 @@ public class CheckoutSessionEntity {
         private String urlHostedInvoice;
 
         private String urlInvoicePdf;
+
+        private String customer;
+
+        private Integer totalAmount;
+
+        private LocalDateTime date;
+    }
+    @Builder
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EventStripeDTO{
+
+        private String eventId;
+
+        private String number;
+
+        private String subscription;
 
         private LocalDateTime date;
     }
