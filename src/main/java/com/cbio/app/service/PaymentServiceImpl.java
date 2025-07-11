@@ -171,6 +171,10 @@ public class PaymentServiceImpl implements PaymentService {
                     log.info("Received Stripe event: invoice_payment");
 
                     break;
+                case "invoice.paid":
+                    log.info("Received Stripe event: invoice.paid");
+                    handleInvoicePaid(event);
+                    break;
                 default:
                     log.debug("Unhandled event type: {}", event.getType());
             }
@@ -364,9 +368,10 @@ public class PaymentServiceImpl implements PaymentService {
                                     .urlHostedInvoice(hostedInvoiceUrl)
                                     .urlInvoicePdf(invoicePdf)
                                     .date(CbioDateUtils.LocalDateTimes.now())
+                                    .totalAmount(Integer.parseInt((String) objectData.get("amount_paid")))
+                                    .customer((String) objectData.get("customer"))
                                     .build()
-                    )
-            ;
+                    );
 
 
             checkoutSessionRepository.save(bySubscriptionId.get());
@@ -384,6 +389,65 @@ public class PaymentServiceImpl implements PaymentService {
                 "email-invoice.ftlh",
                 model);
     }
+
+
+    private void handleInvoicePaid(Event event) throws JsonProcessingException, MessagingException {
+        Map<String, Object> eventMap = objectMapper.readValue(
+                event.getData().toJson(),
+                new TypeReference<Map<String, Object>>() {
+                }
+        );
+
+        Map<String, Object> objectData = (Map<String, Object>) eventMap.get("object");
+        Map<String, Object> objectParent = (Map<String, Object>) objectData.get("parent");
+        String subscriptionID = (String) ((Map<String, Object>) objectParent.get("subscription_details")).get("subscription");
+
+
+        String invoceId = (String) objectData.get("id");
+        String hostedInvoiceUrl = (String) objectData.get("hosted_invoice_url");
+        String invoicePdf = (String) objectData.get("invoice_pdf");
+
+        Optional<CheckoutSessionEntity> bySubscriptionId = checkoutSessionRepository.findBySubscriptionId(subscriptionID);
+        if (bySubscriptionId.isPresent()) {
+
+            bySubscriptionId.get().getInvoice()
+                    .add(
+                            CheckoutSessionEntity.InvoiceDTO.builder()
+                                    .invoiceId(invoceId)
+                                    .urlHostedInvoice(hostedInvoiceUrl)
+                                    .urlInvoicePdf(invoicePdf)
+                                    .date(CbioDateUtils.LocalDateTimes.now())
+                                    .totalAmount(Integer.parseInt((String) objectData.get("amount_paid")))
+                                    .customer((String) objectData.get("customer"))
+                                    .build()
+                    );
+
+            bySubscriptionId.get().getEvent()
+                    .add(
+                            CheckoutSessionEntity.EventStripeDTO.builder()
+                                    .eventId(event.getId())
+                                    .number((String) objectData.get("number"))
+                                    .subscription(subscriptionID)
+                                    .date(CbioDateUtils.LocalDateTimes.now())
+                                    .build()
+                    );
+
+            checkoutSessionRepository.save(bySubscriptionId.get());
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("nome", (String) objectData.get("customer_name"));
+        model.put("invoiceId", invoceId);
+        model.put("urlInvoice", hostedInvoiceUrl);
+        model.put("urlCancelamento", frontExternalUrl + "/cancelation-subscription/" + subscriptionID);
+
+        emailService.enviarEmailModel(
+                (String) objectData.get("customer_email"),
+                "RayzaTEC - Seu comprovante de pagamento foi emitido",
+                "email-invoice.ftlh",
+                model);
+    }
+
 
     private void handleSubscriptionDeleted(Event event) throws JsonProcessingException {
         Map<String, Object> eventMap = objectMapper.readValue(
