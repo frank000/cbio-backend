@@ -31,23 +31,17 @@ public class SubscriptionGridRepository extends AbstractRepositoryGrid<Subscript
 
     @Override
     protected void addProjectionAndMatch(SubscriptionFiltroGridDTO filtroDTO, List<AggregationOperation> aggregations) {
-        String companyIdUserLogged = authService.getCompanyIdUserLogged();
+//        String companyIdUserLogged = authService.getCompanyIdUserLogged();
 
         aggregations.add(Aggregation.match(Criteria.where("active").is(Boolean.TRUE)));
 
-        if(StringUtils.hasText(companyIdUserLogged)) {
-
-            aggregations.add(
-                    Aggregation.match(
-                            Criteria.where("companyId")
-                                    .is(companyIdUserLogged)));
-        }else if(StringUtils.hasText(filtroDTO.getIdCompany())){
+         if(StringUtils.hasText(filtroDTO.getIdCompany())){
 
 
             aggregations.add(
                     Aggregation.match(
                             Criteria.where("companyId")
-                                    .is(companyIdUserLogged )));
+                                    .is(filtroDTO.getIdCompany() )));
 
 
         }
